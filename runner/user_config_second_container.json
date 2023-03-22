@@ -1,0 +1,12 @@
+{
+   "federates": [
+      "mock_dopf_nrel",
+      "mock_dsse_nrel",
+      "mock_dopf_anl",
+      "mock_dsse_anl"
+   ],
+   "run_broker":false,
+   "private_federates":[
+      
+   ]
+}

@@ -1,0 +1,32 @@
+{
+   "name": "mock_dopf_nrel",
+   "coreType": "zmq",
+   "only_transmit_on_change": true,
+   "period": 300,
+   "time_delta": 0.01,
+   "uninterruptible": false,
+   "publications": [
+      {
+         "key": "mock_dopf_nrel/voltages_magnitude",
+         "type": "double",
+         "unit": "PU"
+      },
+      {
+         "key": "mock_dopf_nrel/voltages_angle",
+         "type": "double",
+         "unit": "radian"
+      }
+   ],
+   "subscriptions": [
+      {
+         "required": false,
+         "key": "sensor_power_real/publication",
+         "type": "string"
+      },
+      {
+         "required": false,
+         "key": "local_feeder/topology",
+         "type": "string"
+      }
+   ]
+}

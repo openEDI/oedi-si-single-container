@@ -1,0 +1,29 @@
+{
+   "name": "gadal_single_container_example",
+   "federates": [
+      {
+         "directory": "../federates/mock_dopf_anl",
+         "name": "mock_dopf_anl",
+         "exec": "python3 main.py",
+         "hostname": "localhost"
+      },
+      {
+         "directory": "../federates/mock_dopf_pnnl",
+         "name": "mock_dopf_pnnl",
+         "exec": "/home/app/federates/mock_dopf_pnnl/run.sh",
+         "hostname": "localhost"
+      },
+      {
+         "directory": "../federates/mock_dsse_pnnl",
+         "name": "mock_dsse_pnnl",
+         "exec": "/home/app/federates/mock_dsse_pnnl/run.sh",
+         "hostname": "localhost"
+      },
+      {
+         "directory": ".",
+         "name": "broker",
+         "exec": "helics_broker -f 3 --loglevel=debug",
+         "hostname": "localhost"
+      }
+   ]
+}
