@@ -4,7 +4,7 @@
 docker build -t singlecontainerapp:0.1.0 .
 ```
 
-Or download the prebuilt image at "" and load it,
+Or download the prebuilt image at "https://anl.app.box.com/folder/200074080875" and load it,
 
 ```
 docker load -i singlecontainerapp.zip
