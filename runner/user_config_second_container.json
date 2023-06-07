@@ -1,12 +1,15 @@
 {
-   "federates": [
-      "mock_dopf_nrel",
-      "mock_dsse_nrel",
-      "mock_dopf_anl",
-      "mock_dsse_anl"
+   "name": "runtime_example with externally connected federates",
+   "use_oedisi_runtime": false,
+   "oedisi_runtime_federates": [
+      "state_estimator_nrel"
    ],
-   "run_broker":false,
-   "private_federates":[
-      
-   ]
+   "run_broker": false,
+   "user_provided_federates": [],
+   "externally_connected_federates": [],
+   "simulation_config": {
+      "start_date": "2017-01-01 00:00:00",
+      "number_of_timesteps": 4,
+      "run_freq_sec": 900
+   }
 }

@@ -1,15 +1,20 @@
 {
-   "federates": [
-      "mock_dopf_pnnl",
-      "mock_dsse_pnnl",
-      "mock_dopf_ornl",
-      "mock_dsse_ornl"
+   "name": "runtime_example with externally connected federates",
+   "use_oedisi_runtime": true,
+   "oedisi_runtime_federates": [
+      "state_estimator_nrel",
+      "state_estimator_pnnl"
    ],
-   "run_broker":true,
-   "private_federates":[
-      "mock_dopf_nrel",
-      "mock_dsse_nrel",
-      "mock_dopf_anl",
-      "mock_dsse_anl"
-   ]
+   "run_broker": true,
+   "user_provided_federates": [],
+   "externally_connected_federates": ["state_estimator_nrel"],
+   "simulation_config": {
+      "opendss_location": "/home/oedisi/gadal-ieee123/qsts",
+      "profile_location": "/home/oedisi/gadal-ieee123/profiles",
+      "sensor_location": "/home/oedisi/gadal-ieee123/sensors.json",
+      "start_date": "2017-01-01 00:00:00",
+      "number_of_timesteps": 4,
+      "run_freq_sec": 900,
+      "topology_output": "/home/outputs/topology.json"
+   }
 }

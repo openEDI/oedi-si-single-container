@@ -1,0 +1,80 @@
+{
+   "state_estimator_nrel": {
+      "components": [
+         {
+            "name": "state_estimator_nrel",
+            "type": "StateEstimatorComponent",
+            "parameters": {
+               "algorithm_parameters": {
+                  "tol": 1e-05
+               }
+            }
+         }
+      ],
+      "links": [
+         {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "state_estimator_nrel",
+            "target_port": "topology"
+         },
+         {
+            "source": "sensor_voltage_magnitude",
+            "source_port": "publication",
+            "target": "state_estimator_nrel",
+            "target_port": "voltages_magnitude"
+         },
+         {
+            "source": "sensor_power_real",
+            "source_port": "publication",
+            "target": "state_estimator_nrel",
+            "target_port": "powers_real"
+         },
+         {
+            "source": "sensor_power_imaginary",
+            "source_port": "publication",
+            "target": "state_estimator_nrel",
+            "target_port": "powers_imaginary"
+         }
+      ]
+   },
+   "state_estimator_pnnl": {
+      "components": [
+         {
+            "name": "state_estimator_pnnl",
+            "type": "StateEstimatorComponent",
+            "parameters": {
+               "algorithm_parameters": {
+                  "tol": 1e-05
+               }
+            }
+         }
+      ],
+      "links": [
+         {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "state_estimator_pnnl",
+            "target_port": "topology"
+         },
+         {
+            "source": "sensor_voltage_magnitude",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "voltages_magnitude"
+         },
+         {
+            "source": "sensor_power_real",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "powers_real"
+         },
+         {
+            "source": "sensor_power_imaginary",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "powers_imaginary"
+         }
+      ]
+   }
+}

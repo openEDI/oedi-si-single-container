@@ -1,58 +1,118 @@
 {
    "mock_dopf_anl": {
-      "directory": "../federates/mock_dopf_anl",
+      "directory": "/home/run/mock_dopf_anl",
       "name": "mock_dopf_anl",
       "exec": "python3 main.py",
       "hostname": "localhost"
    },
    "mock_dopf_pnnl": {
-      "directory": "../federates/mock_dopf_pnnl",
+      "directory": "/home/run/mock_dopf_pnnl",
       "name": "mock_dopf_pnnl",
-      "exec": "/home/app/federates/mock_dopf_pnnl/run.sh",
+      "exec": "/home/run/mock_dopf_pnnl/run.sh",
       "hostname": "localhost"
    },
    "mock_dopf_nrel": {
-      "directory": "../federates/mock_dopf_nrel",
+      "directory": "/home/run/mock_dopf_nrel",
       "name": "mock_dopf_nrel",
       "exec": "python3 main.py",
       "hostname": "localhost"
    },
    "mock_dopf_ornl": {
-      "directory": "../federates/mock_dopf_ornl",
+      "directory": "/home/run/mock_dopf_ornl",
       "name": "mock_dopf_ornl",
       "exec": "python3 main.py",
       "hostname": "localhost"
    },
    "mock_dsse_anl": {
-      "directory": "../federates/mock_dsse_anl",
+      "directory": "/home/run/mock_dsse_anl",
       "name": "mock_dsse_anl",
       "exec": "python3 main.py",
       "hostname": "localhost"
    },
    "mock_dsse_pnnl": {
-      "directory": "../federates/mock_dsse_pnnl",
+      "directory": "/home/run/mock_dsse_pnnl",
       "name": "mock_dsse_pnnl",
-      "exec": "/home/app/federates/mock_dsse_pnnl/run.sh",
+      "exec": "/home/run/mock_dsse_pnnl/run.sh",
       "hostname": "localhost"
    },
    "mock_dsse_nrel": {
-      "directory": "../federates/mock_dsse_nrel",
+      "directory": "/home/run/mock_dsse_nrel",
       "name": "mock_dsse_nrel",
       "exec": "python3 main.py",
       "hostname": "localhost"
    },
    "mock_dsse_ornl": {
-      "directory": "../federates/mock_dsse_ornl",
+      "directory": "/home/run/mock_dsse_ornl",
       "name": "mock_dsse_ornl",
       "exec": "python3 main.py",
       "hostname": "localhost"
    },
    "sensor_power_real": {
-      "directory": "../federates/sensor_power_real",
+      "directory": "/home/run/sensor_power_real",
       "name": "sensor_power_real",
       "exec": "python3 main.py",
       "hostname": "localhost"
    },
+   "feeder": {
+      "directory": "/home/run/feeder",
+      "name": "feeder",
+      "exec": "python sender_cosim.py",
+      "hostname": "localhost"
+   },
+   "sensor_voltage_real":{
+      "directory": "/home/run/sensor_voltage_real",
+      "name": "sensor_voltage_real",
+      "exec": "python measuring_federate.py",
+      "hostname": "localhost"
+    },
+   "sensor_voltage_imaginary":{
+      "directory": "/home/run/sensor_voltage_imaginary",
+      "name": "sensor_voltage_imaginary",
+      "exec": "python measuring_federate.py",
+      "hostname": "localhost"
+    },
+    "sensor_power_real":{
+      "directory": "/home/run/sensor_power_real",
+      "name": "sensor_power_real",
+      "exec": "python measuring_federate.py",
+      "hostname": "localhost"
+    },
+    "sensor_power_imaginary":{
+      "directory": "/home/run/sensor_power_imaginary",
+      "name": "sensor_power_imaginary",
+      "exec": "python measuring_federate.py",
+      "hostname": "localhost"
+    },
+    "recorder_voltage_real":{
+      "directory": "/home/run/recorder_voltage_real",
+      "name": "recorder_voltage_real",
+      "exec": "python record_subscription.py",
+      "hostname": "localhost"
+    },
+    "recorder_voltage_imag":{
+      "directory": "/home/run/recorder_voltage_imag",
+      "name": "recorder_voltage_imag",
+      "exec": "python record_subscription.py",
+      "hostname": "localhost"
+    },
+    "state_estimator_nrel":{
+      "directory": "/home/run/state_estimator_nrel",
+      "name": "state_estimator_nrel",
+      "exec": "python state_estimator_federate.py",
+      "hostname": "localhost"
+    },
+    "state_estimator_pnnl":{
+      "directory": "/home/run/state_estimator_pnnl",
+      "name": "state_estimator_pnnl",
+      "exec": "/home/build/gridappsd-state-estimator/state-estimator/bin/state-estimator-gadal",
+      "hostname": "localhost"
+    },
+    "sensor_voltage_magnitude":{
+      "source": "/home/run/sensor_voltage_magnitude",
+      "source_port": "publication",
+      "target": "state_estimator",
+      "target_port": "voltages_magnitude"
+     },
    "broker": {
       "directory": ".",
       "name": "broker",
