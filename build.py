@@ -16,7 +16,7 @@ if __name__=="__main__":
 	if not os.path.exists(tmpDir):
 		os.system(f'mkdir {tmpDir}')
 
-	copyCmd='cp' if 'linux' in sys.platform else 'copy'
+	copyCmd='copy' if 'win' in sys.platform else 'cp'
 
 	data=''
 	thisFolder=os.path.join(buildDir,'oedisi')
