@@ -1,0 +1,30 @@
+{
+   "federate_config": {
+      "name": "federate_dopf",
+      "coreType": "zmq",
+      "only_transmit_on_change": true,
+      "period": 1,
+      "time_delta": 0.001,
+      "uninterruptible": false,
+      "publications": [
+         {
+            "global": true,
+            "type": "string",
+            "key": "dopf/voltages_magnitude"
+         },
+         {
+            "global": true,
+            "type": "string",
+            "key": "dopf/voltages_angle"
+         }
+      ],
+      "subscriptions": []
+   },
+   "simulation_config": {
+      "casename": "case123",
+      "cosim_uuid": "cb4573af4f6648e6be4a40b2b90f10d0",
+      "start_time": 0,
+      "end_time": 4,
+      "step_time": 1
+   }
+}

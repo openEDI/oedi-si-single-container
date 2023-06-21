@@ -2,11 +2,12 @@
    "name": "runtime_example",
    "use_oedisi_runtime": true,
    "oedisi_runtime_federates": [
+      "state_estimator_nrel",
       "state_estimator_pnnl"
    ],
    "run_broker": true,
    "user_provided_federates": [
-      	{"name":"user_dsse","language":"python",
+   	{"name":"user_dsse","directory":"user_dsse","language":"python",
    	"executable":"python main.py","application_type":"dsse","filepath":"/home/runtime/user_federates/user_dsse/main.py",
    	"parameters":{}}
 	],
@@ -16,7 +17,7 @@
       "profile_location": "/home/oedisi/gadal-ieee123/profiles",
       "sensor_location": "/home/oedisi/gadal-ieee123/sensors.json",
       "start_date": "2017-01-01 00:00:00",
-      "number_of_timesteps": 2,
+      "number_of_timesteps": 4,
       "run_freq_sec": 900
    }
 }

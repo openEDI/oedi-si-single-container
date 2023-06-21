@@ -2,3 +2,5 @@
 *.log
 *.feather
 *.csv
+runner/wiring_diagram.json
+*egg-info

@@ -62,8 +62,8 @@
          "name": "recorder_voltage_imag",
          "type": "Recorder",
          "parameters": {
-            "feather_filename": "/home/output/voltage_real.feather",
-            "csv_filename": "/home/output/voltage_real.csv"
+            "feather_filename": "/home/output/voltage_imag.feather",
+            "csv_filename": "/home/output/voltage_imag.csv"
          }
       },
         {

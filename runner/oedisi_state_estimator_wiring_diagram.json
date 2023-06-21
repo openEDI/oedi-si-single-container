@@ -9,7 +9,23 @@
                   "tol": 1e-05
                }
             }
+         },
+      {
+         "name": "recorder_voltage_magnitude_nrel",
+         "type": "Recorder",
+         "parameters": {
+            "feather_filename": "/home/output/voltage_magnitude_nrel.feather",
+            "csv_filename": "/home/output/voltage_magnitude_nrel.csv"
          }
+      },
+      {
+         "name": "recorder_voltage_angle_nrel",
+         "type": "Recorder",
+         "parameters": {
+            "feather_filename": "/home/output/voltage_angle_nrel.feather",
+            "csv_filename": "/home/output/voltage_angle_nrel.csv"
+         }
+      }
       ],
       "links": [
          {
@@ -35,6 +51,18 @@
             "source_port": "publication",
             "target": "state_estimator_nrel",
             "target_port": "powers_imaginary"
+         },
+         {
+            "source": "state_estimator_nrel",
+            "source_port": "voltage_mag",
+            "target": "recorder_voltage_magnitude_nrel",
+            "target_port": "subscription"
+         },
+         {
+            "source": "state_estimator_nrel",
+            "source_port": "voltage_angle",
+            "target": "recorder_voltage_angle_nrel",
+            "target_port": "subscription"
          }
       ]
    },
@@ -48,7 +76,23 @@
                   "tol": 1e-05
                }
             }
+         },
+      {
+         "name": "recorder_voltage_magnitude_pnnl",
+         "type": "Recorder",
+         "parameters": {
+            "feather_filename": "/home/output/voltage_magnitude_pnnl.feather",
+            "csv_filename": "/home/output/voltage_magnitude_pnnl.csv"
          }
+      },
+      {
+         "name": "recorder_voltage_angle_pnnl",
+         "type": "Recorder",
+         "parameters": {
+            "feather_filename": "/home/output/voltage_angle_pnnl.feather",
+            "csv_filename": "/home/output/voltage_angle_pnnl.csv"
+         }
+      }
       ],
       "links": [
          {
@@ -74,6 +118,18 @@
             "source_port": "publication",
             "target": "state_estimator_pnnl",
             "target_port": "powers_imaginary"
+         },
+         {
+            "source": "state_estimator_pnnl",
+            "source_port": "voltage_mag",
+            "target": "recorder_voltage_magnitude_pnnl",
+            "target_port": "subscription"
+         },
+         {
+            "source": "state_estimator_pnnl",
+            "source_port": "voltage_angle",
+            "target": "recorder_voltage_angle_pnnl",
+            "target_port": "subscription"
          }
       ]
    }

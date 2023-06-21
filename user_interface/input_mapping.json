@@ -1,0 +1,39 @@
+{
+   "subscriptions": [
+      {
+         "required": true,
+         "key": "local_feeder/voltages_magnitude",
+         "type": "string"
+      },
+      {
+         "required": true,
+         "key": "local_feeder/voltages_real",
+         "type": "string"
+      },
+      {
+         "required": true,
+         "key": "local_feeder/voltages_imag",
+         "type": "string"
+      },
+      {
+         "required": true,
+         "key": "local_feeder/powers_real",
+         "type": "string"
+      },
+      {
+         "required": true,
+         "key": "local_feeder/powers_imag",
+         "type": "string"
+      },
+      {
+         "required": true,
+         "key": "local_feeder/topology",
+         "type": "string"
+      },
+      {
+         "required": true,
+         "key": "sensor_power_real/publication",
+         "type": "string"
+      }
+   ]
+}

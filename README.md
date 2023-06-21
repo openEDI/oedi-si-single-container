@@ -1,3 +1,29 @@
+# CLI
+
+## Installation
+
+```
+pip install -e .
+```
+
+## Using the CLI
+
+```
+oedisisc create_project -p sampleProject
+```
+
+```
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json
+```
+
+## Output
+
+Check /path/to/project/output
+
+## Integrating external/user federates without writing federate code
+
+One can integrate DSSE (supported in this version) and DOPF (to be supported in the next version) in a manner that is completely decoupled from co-simulation and oedisi framework. Check /path/to/project/user_federates/user_dsse/main.py for more details.
+
 # Build and Runtime System
 
 ## Introduction

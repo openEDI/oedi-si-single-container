@@ -108,10 +108,10 @@
       "hostname": "localhost"
     },
     "sensor_voltage_magnitude":{
-      "source": "/home/run/sensor_voltage_magnitude",
-      "source_port": "publication",
-      "target": "state_estimator",
-      "target_port": "voltages_magnitude"
+      "directory": "/home/run/sensor_voltage_magnitude",
+      "name": "sensor_voltage_magnitude",
+      "exec": "python measuring_federate.py",
+      "hostname": "localhost"
      },
    "broker": {
       "directory": ".",
