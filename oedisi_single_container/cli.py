@@ -44,9 +44,9 @@ def create_project(project_dir_path):
 @main.command(name="build")
 @click.option("-t","--tag", required=True, help="Tag to be applied during docker build")
 @click.option("-p","--python_cmd", required=False, default='python3' ,help="Python command to use i.e. python or python3")
-def create_project(tag,python_cmd):
+def build(tag,python_cmd):
 	err=os.system(f'{python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}')
-	assert err==0,f'Build resulted in error:{err}'
+	assert err==0,f'Build resulted in error:{err} for directive={python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}'
 
 
 if __name__ == '__main__':
