@@ -11,15 +11,15 @@ pip install -e .
 Before running the CLI make sure that the required Docker image is available. If not, the image can be built using,
 
 ```
-oedisisc build --tag 0.2.0
+oedisisc build --tag singlecontainerapp:0.2.0
 ```
 
 ```
-oedisisc create_project -p sampleProject
+oedisisc init -p sampleProject
 ```
 
 ```
-oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag 0.2.0
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.0
 ```
 
 ## Output

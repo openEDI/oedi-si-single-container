@@ -72,7 +72,12 @@ if __name__=="__main__":
 
 	os.chdir(baseDir)
 	f=open(os.path.join(tmpDir,'Dockerfile'),'w')
-	f.write(data+'\n'+copyStatements+'\nENTRYPOINT /home/runtime/runner/run.sh')
+	if isWindows:
+		data+='\nRUN apt install -y dos2unix'
+		f.write(data+'\n'+copyStatements+'\nENTRYPOINT dos2unix /home/runtime/runner/run.sh && '+\
+			'/home/runtime/runner/run.sh')
+	else:
+		f.write(data+'\n'+copyStatements+'\nENTRYPOINT /home/runtime/runner/run.sh')
 	f.close()
 
 	# build

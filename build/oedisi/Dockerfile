@@ -9,4 +9,5 @@ RUN apt install -y python3-pip git nano python-is-python3 && \
 	git clone https://github.com/openEDI/GADAL.git && \
 	git clone https://github.com/openEDI/gadal-ieee123.git && \
 	cd /home/oedisi/GADAL && git checkout v0.2.4 && pip install -e . && \
-	cd /home/oedisi/sgidal-example && pip install -r requirements.txt
+	cd /home/oedisi/sgidal-example && git checkout c82c4135cf && \
+	sed -i 's/pydantic/pydantic>=1.7,<2/g' requirements.txt && pip install -r requirements.txt
