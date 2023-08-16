@@ -40,6 +40,8 @@ class ExceptionUtil(object):
 		self._formatterStr=None
 		self._formatterStrSep=None
 		self.logDir=os.path.join(os.path.dirname(datapreprocessor.__path__[0]),'logs')
+		if not os.path.exists(self.logDir):
+			os.system(f'mkdir -p {self.logDir}')
 		return None
 
 #===================================================================================================

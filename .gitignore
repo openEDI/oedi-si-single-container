@@ -2,5 +2,6 @@
 *.log
 *.feather
 *.csv
+!build/datapreprocessor/datapreprocessor/datapreprocessor/data/solarhome/*.csv
 runner/wiring_diagram.json
 *egg-info
