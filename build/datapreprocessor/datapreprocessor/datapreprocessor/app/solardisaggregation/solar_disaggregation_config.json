@@ -1,0 +1,26 @@
+{
+
+"nodeload_data_details":{
+"selected_timeseries_file":"solarhome_customers-300_days-365.csv",
+"selected_months":[7],
+"n_days":10,
+"n_customers":300,
+"max_solar_penetration":0.3,
+"distribution_system":"smartds_no_load_shape",
+"distribution_system_file":"smartds_no_load_shape/Master.dss",
+"upsample_original_time_series":true,
+"upsample_time_period":"15Min"},
+
+"train_data_details":{
+"n_nodes":100,
+"load_block_length":4},
+
+"model_arch_details":{
+"model_type":"bilstm"
+},
+
+"model_training_details":{"n_epochs":2,
+"batch_size": 32,
+"model_identifier":"v0"}
+
+}

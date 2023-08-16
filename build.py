@@ -15,16 +15,27 @@ if __name__=="__main__":
 	buildDir=os.path.join(baseDir,'build')
 	noCache='--no-cache' if args.nocache else ''
 
-	tmpDir=os.path.join(baseDir,'tmp')
-	if not os.path.exists(tmpDir):
-		os.system(f'mkdir {tmpDir}')
-
 	if 'win' in sys.platform:
 		isWindows=True
 		copyCmd='robocopy'
 	else:
 		isWindows=False
 		copyCmd='cp'
+
+	tmpDir=os.path.join(baseDir,'tmp')
+	if not os.path.exists(tmpDir):
+		os.system(f'mkdir {tmpDir}')
+	if '.gitignore' in os.listdir(tmpDir):# ensure that this is the correct directory
+		f=open(os.path.join(tmpDir,'.gitignore'))
+		tempData=f.read()
+		f.close()
+		if isWindows:
+			os.system(f'rmdir /s {tmpDir} && mkdir {tmpDir}')
+		else:
+			os.system(f'rm -r {tmpDir} && mkdir {tmpDir}')
+		f=open(os.path.join(tmpDir,'.gitignore'),'w')
+		f.write(tempData)
+		f.close()
 
 	data=''
 	thisFolder=os.path.join(buildDir,'oedisi')
@@ -49,7 +60,9 @@ if __name__=="__main__":
 		assert flag==0,f"directive: {directive} returned non-zero flag {flag}"
 	os.chdir(buildDir)
 
-	for entry in set(os.listdir(buildDir)).difference(['oedisi']):
+	dockerItems=list(set(os.listdir(buildDir)).difference(['oedisi','datapreprocessor']))
+	dockerItems.append('datapreprocessor')
+	for entry in dockerItems:
 		thisFolder=os.path.join(buildDir,entry)
 		f=open(os.path.join(buildDir,entry,'Dockerfile'))
 		data+=f.read()+'\n'
@@ -66,7 +79,7 @@ if __name__=="__main__":
 			if isWindows:
 				directive=f"{copyCmd} . {tmpDir} {' '.join(contents)}"
 			else:
-				directive=f"{copyCmd} {' '.join(contents)} {tmpDir}"
+				directive=f"{copyCmd} -r {' '.join(contents)} {tmpDir}"
 
 			flag=os.system(directive)
 			assert flag==0,f"directive: {directive} returned non-zero flag {flag}"

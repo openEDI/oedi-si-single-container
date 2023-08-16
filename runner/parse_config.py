@@ -23,7 +23,6 @@ class Build(object):
 		self.userFederateOptions={'allowedApplicationTypes':['dsse','dopf'],'supportedLanguages':['python']}
 
 
-
 	def _convertToOedisiLinks(self,data):
 		res=[]
 		for sourceData,targetData in data:
@@ -96,6 +95,19 @@ class Build(object):
 			wiringDiagramData['components'].extend(stateEstimatorWiringData[thisAppFederate]['components'])
 			wiringDiagramData['links'].extend(stateEstimatorWiringData[thisAppFederate]['links'])
 
+		# make mods for preprocessor
+		if self.config['userConfig']['use_oedisi_preprocessor']:
+			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
+			preprocessorFederatesDir='/home/datapreprocessor/datapreprocessor/federates'
+			availablePreprocessorFederates=os.listdir(preprocessorFederatesDir)
+			if not os.path.exists('/home/run'):
+				os.system('mkdir /home/run')
+			for thisFederate in preprocessorFederates:
+				thisFederate=thisFederate.replace('-','').replace('_','') #### TODO: foo_bar to foobar
+				if thisFederate in availablePreprocessorFederates:
+					flag=os.system(f'cp -r {os.path.join(preprocessorFederatesDir,thisFederate)} /home/run')
+					assert flag==0, f'copying {thisFederate} failed with error flag={flag}'
+
 		# write wiring diagram and generate config_runner
 		wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
 		json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
@@ -158,6 +170,17 @@ class Build(object):
 					config_runner['federates'][n]['directory']=thisFederate['name']
 					config_runner['federates'][n]['exec']='python user_federate.py'
 
+		# mods for preprocessor
+		if self.config['userConfig']['use_oedisi_preprocessor']:
+			if 'data_imputation' in self.config['userConfig']['oedisi_preprocessor_federates']:
+				config_runner['federates'].append({"directory": "dataimputation","name": "dataimputation",\
+					"exec": "python federate_dataimputation.py","hostname": "localhost"})
+
+			for n in range(len(config_runner['federates'])):
+				if config_runner['federates'][n]['name']=='broker':
+					config_runner['federates'][n]['exec']=\
+						f'helics_broker -f {len(config_runner["federates"])-1} --loglevel=warning'
+
 		# write config_runner
 		json.dump(config_runner,open('/home/run/test_system_runner.json','w'),indent=3)
 
@@ -175,6 +198,23 @@ class Build(object):
 						json.dump(thisInputMapping,open(thisPath,'w'))
 
 
+	def preprocessor(self):
+		if self.config['userConfig']['use_oedisi_preprocessor']:
+			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
+			if 'nodeload' in preprocessorFederates or 'loadshape' in preprocessorFederates or \
+				'loadprofile' in preprocessorFederates or 'load_profile' in preprocessorFederates:
+				basePath='/home/datapreprocessor/datapreprocessor/app/nodeload'
+				filePath=f'{basePath}/generate_solar_node_load_profile_from_solarhome_data.py'
+				loadProfilePath='/home/oedisi/gadal-ieee123/profiles/load_profiles'
+				opendssLocation=self.config['userConfig']['simulation_config']['opendss_location']+'/master.dss' ####TODO master.dss
+
+				os.system(f'rm {basePath}/*.csv')
+				directive=f'python {filePath} -d {opendssLocation} -n -1 -p {loadProfilePath} --fill 35040'
+				flag=os.system(f'{directive}')
+				assert flag==0,f'nodeload directive failed with flag={flag}'
+
+
+
 if __name__=="__main__":
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-c','--config',help='config to be passed to runner',required=False,
@@ -183,5 +223,6 @@ if __name__=="__main__":
 
 	build=Build(userConfigPath=args.config)
 	build.write_config()
+	build.preprocessor()
 
 

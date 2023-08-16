@@ -1,0 +1,16 @@
+{
+    "directory": "dataimputation",
+    "execute_function": "python federate_dataimputation.py",
+    "static_inputs": [
+    ],
+    "dynamic_inputs": [       
+        {"type": "PowersReal", "port_id": "powers_real"},
+        {"type": "PowersImaginary", "port_id": "powers_imag"},        
+        {"type": "PowersReal", "port_id": "publication"},
+        {"type": "PowersImaginary", "port_id": "publication"}
+    ],
+    "dynamic_outputs": [
+        {"type": "PowersReal", "port_id": "powers_real"},
+        {"type": "PowersImaginary", "port_id": "powers_imag"}
+    ]
+}

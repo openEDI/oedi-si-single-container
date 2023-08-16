@@ -1,0 +1,14 @@
+{
+   "subscriptions": [
+      {
+         "required": false,
+         "key": "feeder/powers_real",
+         "type": "string"
+      },
+      {
+         "required": false,
+         "key": "feeder/powers_imag",
+         "type": "string"
+      }
+   ]
+}

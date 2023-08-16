@@ -1,0 +1,30 @@
+{
+   "federate_config": {
+      "name":"federate_dataimputation",
+      "coreType": "zmq",
+      "only_transmit_on_change": true,
+      "period": 1,
+      "time_delta":1,
+      "uninterruptible": false,      
+      "publications": [
+         {
+            "global": true,
+            "type": "string",
+            "key": "dataimputation/powers_real"
+         },
+         {
+            "global": true,
+            "type": "string",
+            "key": "dataimputation/powers_imag"
+         }
+      ],
+      "subscriptions": [
+      ]
+   },
+   "simulation_config": {
+      "cosim_uuid":"cb4573af4f6648e6be4a40b2b90f10d0",
+      "start_time": 0,
+      "end_time": 8,
+      "step_time": 1
+   }
+}

@@ -4,6 +4,13 @@
    "oedisi_runtime_federates": [
       "state_estimator_pnnl"
    ],
+   "use_oedisi_preprocessor": true,
+   "oedisi_preprocessor_federates": [
+      "load_profile",
+      "data_imputation",
+      "anomaly_detection",
+      "solar_disaggregation"
+   ],
    "run_broker": true,
    "user_provided_federates": [
       	{"name":"user_dsse","language":"python",
