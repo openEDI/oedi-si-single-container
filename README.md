@@ -14,6 +14,12 @@ Before running the CLI make sure that the required Docker image is available. If
 oedisisc build --tag singlecontainerapp:0.2.0
 ```
 
+if completely new build is required i.e. no previously cached container layers, use,
+
+```
+oedisisc build -t singlecontainerapp:0.2.0 --nocache true
+```
+
 ```
 oedisisc init -p sampleProject
 ```

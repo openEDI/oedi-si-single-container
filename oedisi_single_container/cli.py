@@ -8,7 +8,7 @@ import click
 
 baseDir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-if 'win' in sys.platform:
+if 'win32' in sys.platform or 'cygwin' in sys.platform:
 	isWindows=True
 	copyCmd='robocopy'
 else:
@@ -46,7 +46,8 @@ def run(project_dir_path,config,run_as_admin,tag):
 		directive+=f'docker run --rm -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
 			f'-v {config}:/home/runtime/runner/user_config.json '+\
 			f'-v {os.path.join(project_dir_path,"user_federates")}:/home/runtime/user_federates '+\
-			f'-v {os.path.join(project_dir_path,"output")}:/home/output singlecontainerapp:{tag}'
+			f'-v {os.path.join(baseDir,"user_interface")}:/home/runtime/user_interface '+\
+			f'-v {os.path.join(project_dir_path,"output")}:/home/output {tag}'
 		os.system(directive)
 
 def windowsVolumeMount(baseDir,project_dir_path,configPath,tag):
@@ -88,13 +89,19 @@ def init(project_dir_path):
 		assert err==0,f'Copying config resulted in error:{err}'
 		err=os.system(f'{copyCmd} -r {os.path.join(baseDir,"user_federates")} {project_dir_path}')
 		assert err==0,f'Copying user_federates resulted in error:{err}'
+		err=os.system(f'{copyCmd} -r {os.path.join(baseDir,"user_interface")} {project_dir_path}')
+		assert err==0,f'Copying user_interface resulted in error:{err}'
 
 
 @main.command(name="build")
 @click.option("-t","--tag", required=True, help="Tag to be applied during docker build")
 @click.option("-p","--python_cmd", required=False, default='python3' ,help="Python command to use i.e. python or python3")
-def build(tag,python_cmd):
-	err=os.system(f'{python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}')
+@click.option("--nocache", required=False, type=bool, default=False, help="apply --no-cache option")
+def build(tag,python_cmd,nocache):
+	if nocache:
+		err=os.system(f'{python_cmd} {os.path.join(baseDir,"build.py")} --nocache true -t {tag}')
+	else:
+		err=os.system(f'{python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}')
 	assert err==0,f'Build resulted in error:{err} for directive={python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}'
 
 
