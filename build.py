@@ -2,6 +2,7 @@ import os
 import sys
 import pdb
 import argparse
+import shutil
 
 
 if __name__=="__main__":
@@ -17,10 +18,8 @@ if __name__=="__main__":
 
 	if 'win' in sys.platform:
 		isWindows=True
-		copyCmd='robocopy'
 	else:
 		isWindows=False
-		copyCmd='cp'
 
 	tmpDir=os.path.join(baseDir,'tmp')
 	if not os.path.exists(tmpDir):
@@ -29,10 +28,10 @@ if __name__=="__main__":
 		f=open(os.path.join(tmpDir,'.gitignore'))
 		tempData=f.read()
 		f.close()
-		if isWindows:
-			os.system(f'rmdir /s {tmpDir} && mkdir {tmpDir}')
-		else:
-			os.system(f'rm -r {tmpDir} && mkdir {tmpDir}')
+
+		shutil.rmtree(tmpDir)
+		os.system(f'mkdir {tmpDir}')
+
 		f=open(os.path.join(tmpDir,'.gitignore'),'w')
 		f.write(tempData)
 		f.close()
@@ -50,15 +49,8 @@ if __name__=="__main__":
 		f.close()
 
 	contents=set(os.listdir(thisFolder)).difference(['Dockerfile'])
-	os.chdir(thisFolder)
-	if isWindows:
-		directive=f"{copyCmd} . {tmpDir} {' '.join(contents)}"
-		flag=os.system(directive)
-	else:
-		directive=f"{copyCmd} {' '.join(contents)} {tmpDir}"
-		flag=os.system(directive)
-		assert flag==0,f"directive: {directive} returned non-zero flag {flag}"
-	os.chdir(buildDir)
+	for thisItem in contents:
+		shutil.copy(os.path.join(thisFolder,thisItem),tmpDir)
 
 	dockerItems=list(set(os.listdir(buildDir)).difference(['oedisi','datapreprocessor']))
 	dockerItems.append('datapreprocessor')
@@ -75,17 +67,10 @@ if __name__=="__main__":
 
 		contents=set(os.listdir(os.path.join(buildDir,entry))).difference(['Dockerfile','copy_statements.txt'])
 		if contents:
-			os.chdir(thisFolder)
-			if isWindows:
-				directive=f"{copyCmd} . {tmpDir} {' '.join(contents)}"
-			else:
-				directive=f"{copyCmd} -r {' '.join(contents)} {tmpDir}"
+			for thisItem in contents:
+				print(os.path.join(thisFolder,thisItem),os.path.join(tmpDir,thisItem))
+				shutil.copytree(os.path.join(thisFolder,thisItem),os.path.join(tmpDir,thisItem),dirs_exist_ok=True)
 
-			flag=os.system(directive)
-			assert flag==0,f"directive: {directive} returned non-zero flag {flag}"
-			os.chdir(buildDir)
-
-	os.chdir(baseDir)
 	f=open(os.path.join(tmpDir,'Dockerfile'),'w')
 	if isWindows:
 		data+='\nRUN apt install -y dos2unix'
