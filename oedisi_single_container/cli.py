@@ -25,7 +25,7 @@ def main():
 @click.option("-p","--project_dir_path", required=True, help="Path to project directory")
 @click.option("-c","--config", required=True, help="Path to config file")
 @click.option("-r","--run_as_admin", required=False, default=False, help="Should docker be run as root")
-@click.option("-t","--tag", required=False, default='singlecontainerapp:0.2.0', help="Should docker be run as root")
+@click.option("-t","--tag", required=False, default='singlecontainerapp:0.2.1', help="Should docker be run as root")
 def run(project_dir_path,config,run_as_admin,tag):
 	project_dir_path=os.path.abspath(project_dir_path)
 	config=os.path.abspath(config)

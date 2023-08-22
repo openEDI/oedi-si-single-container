@@ -11,13 +11,13 @@ pip install -e .
 Before running the CLI make sure that the required Docker image is available. If not, the image can be built using,
 
 ```
-oedisisc build --tag singlecontainerapp:0.2.0
+oedisisc build --tag singlecontainerapp:0.2.1
 ```
 
 if completely new build is required i.e. no previously cached container layers, use,
 
 ```
-oedisisc build -t singlecontainerapp:0.2.0 --nocache true
+oedisisc build -t singlecontainerapp:0.2.1 --nocache true
 ```
 
 ```
@@ -25,7 +25,7 @@ oedisisc init -p sampleProject
 ```
 
 ```
-oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.0
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1
 ```
 
 ## Output
@@ -55,7 +55,7 @@ The build system allows combining the dockerfiles for each application and build
 cd to the root directory of this repository and then run the following command,
 
 ```
-python3 build.py -t singlecontainerapp:0.2.0
+python3 build.py -t singlecontainerapp:0.2.1
 ```
 
 ## Runtime System
@@ -119,10 +119,10 @@ Putting things together,
 cd to the root directory of this repository and then run the following command. Replace *-v $(pwd)/runner/user_config.json* with path to the configuration file you want to use and $(pwd)/output with the path to the output files.
 
 ```
-docker run --rm -it -v $(pwd):/home/runtime -v $(pwd)/runner/user_config.json:/home/runtime/runner/user_config.json -v $(pwd)/output:/home/output singlecontainerapp:0.2.0
+docker run --rm -it -v $(pwd):/home/runtime -v $(pwd)/runner/user_config.json:/home/runtime/runner/user_config.json -v $(pwd)/output:/home/output singlecontainerapp:0.2.1
 ```
 or on windows,
 
 ```
-docker run --rm -it -v %cd%:/home/runtime -v %cd%/runner/user_config.json:/home/runtime/runner/user_config.json -v %cd%/output:/home/output singlecontainerapp:0.2.0
+docker run --rm -it -v %cd%:/home/runtime -v %cd%/runner/user_config.json:/home/runtime/runner/user_config.json -v %cd%/output:/home/output singlecontainerapp:0.2.1
 ```
