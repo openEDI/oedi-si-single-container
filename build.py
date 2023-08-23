@@ -10,7 +10,10 @@ if __name__=="__main__":
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
 	parser.add_argument('--nocache',help='apply --no-cache option',type=bool, required=False, default=False)
+	parser.add_argument("--podman", required=False, default=False, help="Use podman instead of docker")
 	args=parser.parse_args()
+
+	engine='podman' if args.podman else 'docker'
 
 	baseDir=os.path.dirname(os.path.abspath(__file__))
 	buildDir=os.path.join(baseDir,'build')
@@ -81,6 +84,6 @@ if __name__=="__main__":
 	f.close()
 
 	# build
-	os.system(f'cd {tmpDir} && docker build {noCache} -t {args.tag} .')
+	os.system(f'cd {tmpDir} && {engine} build {noCache} -t {args.tag} .')
 
 

@@ -26,7 +26,8 @@ def main():
 @click.option("-c","--config", required=True, help="Path to config file")
 @click.option("-r","--run_as_admin", required=False, default=False, help="Should docker be run as root")
 @click.option("-t","--tag", required=False, default='singlecontainerapp:0.2.1', help="Should docker be run as root")
-def run(project_dir_path,config,run_as_admin,tag):
+@click.option("--podman", required=False, default=False, help="Use podman instead of docker")
+def run(project_dir_path,config,run_as_admin,tag,podman):
 	project_dir_path=os.path.abspath(project_dir_path)
 	config=os.path.abspath(config)
 
@@ -48,6 +49,8 @@ def run(project_dir_path,config,run_as_admin,tag):
 			f'-v {os.path.join(project_dir_path,"user_federates")}:/home/runtime/user_federates '+\
 			f'-v {os.path.join(baseDir,"user_interface")}:/home/runtime/user_interface '+\
 			f'-v {os.path.join(project_dir_path,"output")}:/home/output {tag}'
+		if podman:
+			directive=directive.replace('docker','podman')
 		os.system(directive)
 
 def windowsVolumeMount(baseDir,project_dir_path,configPath,tag):
@@ -97,12 +100,16 @@ def init(project_dir_path):
 @click.option("-t","--tag", required=True, help="Tag to be applied during docker build")
 @click.option("-p","--python_cmd", required=False, default='python3' ,help="Python command to use i.e. python or python3")
 @click.option("--nocache", required=False, type=bool, default=False, help="apply --no-cache option")
-def build(tag,python_cmd,nocache):
+@click.option("--podman", required=False, default=False, help="Use podman instead of docker")
+def build(tag,python_cmd,nocache,podman):
 	if nocache:
-		err=os.system(f'{python_cmd} {os.path.join(baseDir,"build.py")} --nocache true -t {tag}')
+		directive=f'{python_cmd} {os.path.join(baseDir,"build.py")} --nocache true -t {tag}'
 	else:
-		err=os.system(f'{python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}')
-	assert err==0,f'Build resulted in error:{err} for directive={python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}'
+		directive=f'{python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}'
+	if podman:
+		directive+=' --podman true'
+	err=os.system(directive)
+	assert err==0,f'Build resulted in error:{err} for directive={directive}'
 
 
 if __name__ == '__main__':
