@@ -28,6 +28,27 @@ oedisisc init -p sampleProject
 oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1
 ```
 
+### Using Podman instead of Docker
+
+```
+oedisisc build --tag singlecontainerapp:0.2.1 --podman true
+```
+
+if completely new build is required i.e. no previously cached container layers, use,
+
+```
+oedisisc build -t singlecontainerapp:0.2.1 --nocache true --podman true
+```
+
+```
+oedisisc init -p sampleProject
+```
+
+```
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1 --podman true
+```
+
+
 ## Output
 
 Check /path/to/project/output
