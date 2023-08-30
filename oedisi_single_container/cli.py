@@ -103,9 +103,9 @@ def init(project_dir_path):
 @click.option("--podman", required=False, default=False, help="Use podman instead of docker")
 def build(tag,python_cmd,nocache,podman):
 	if nocache:
-		directive=f'{python_cmd} {os.path.join(baseDir,"build.py")} --nocache true -t {tag}'
+		directive=f'{python_cmd} "{os.path.join(baseDir,"build.py")}" --nocache true -t {tag}'
 	else:
-		directive=f'{python_cmd} {os.path.join(baseDir,"build.py")} -t {tag}'
+		directive=f'{python_cmd} "{os.path.join(baseDir,"build.py")}" -t {tag}'
 	if podman:
 		directive+=' --podman true'
 	err=os.system(directive)
