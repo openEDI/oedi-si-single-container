@@ -11,6 +11,16 @@ baseDir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if 'win32' in sys.platform or 'cygwin' in sys.platform:
 	isWindows=True
 	copyCmd='robocopy'
+	def convert_windows_to_linux_path(windows_path):
+		# Replace backslashes with forward slashes
+		linux_path = windows_path.replace('\\', '/')
+		
+		# Convert drive letter to Linux-style path
+		if linux_path[1] == ':':
+			drive_letter = linux_path[0].lower()
+			linux_path = f"/mnt/{drive_letter}" + linux_path[2:]
+		
+		return linux_path
 else:
 	isWindows=False
 	copyCmd='cp'
@@ -44,8 +54,8 @@ def run(project_dir_path,config,run_as_admin,tag,podman):
 			f'-v oedisisc_runtime:/home/runtime {tag}'
 		
 		os.system(directive)		
-		# copy output
-		os.system(f'{docker_type} cp {name}:/home/output "{os.path.join(project_dir_path)}"')
+		# copy output		
+		os.system(f'wsl -d podman-machine-default -u user enterns podman cp  {name}:/home/output "{convert_windows_to_linux_path(project_dir_path)}"')	
 		os.system(f'{docker_type} rm {name}')
 	else:
 		directive+=f'{docker_type} run --rm -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
@@ -72,18 +82,23 @@ def windowsVolumeMount(baseDir,project_dir_path,configPath,tag):
 
 	# mount
 	err=os.system(f'{docker_type} container create --name oedisisc_dummy -v oedisisc_runtime:/home/runtime {tag}')
-
+	
 	# copy	
 	os.system(f'robocopy "{os.path.join(baseDir,"runner")}" "{os.path.join(project_dir_path,"runner")}" *.*')
-	os.system(f'robocopy "{os.path.dirname(configPath)}" "{os.path.join(project_dir_path,"runner")}" '+\
-		configPath.split("\\")[-1])
-	err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"runner")}" oedisisc_dummy:/home/runtime')
-	err=os.system(f'{docker_type} cp "{os.path.join(baseDir,"user_interface")}" oedisisc_dummy:/home/runtime')
-	err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"user_federates")}" oedisisc_dummy:/home/runtime')
+	os.system(f'robocopy "{os.path.dirname(configPath)}" "{os.path.join(project_dir_path,"runner")}" '+	configPath.split("\\")[-1])	
+	
+	if docker_type == "podman": #podman cp command doesn't work in Windows. This is a temporary workaround		
+		err=os.system(f'wsl -d podman-machine-default -u user enterns podman cp "{convert_windows_to_linux_path(os.path.join(project_dir_path,"runner"))}" oedisisc_dummy:/home/runtime')
+		err=os.system(f'wsl -d podman-machine-default -u user enterns podman cp "{convert_windows_to_linux_path(os.path.join(baseDir,"user_interface"))}" oedisisc_dummy:/home/runtime')
+		err=os.system(f'wsl -d podman-machine-default -u user enterns podman cp "{convert_windows_to_linux_path(os.path.join(baseDir,"user_federates"))}" oedisisc_dummy:/home/runtime')
+	else:
+		err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"runner")}" oedisisc_dummy:/home/runtime')
+		err=os.system(f'{docker_type} cp "{os.path.join(baseDir,"user_interface")}" oedisisc_dummy:/home/runtime')
+		err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"user_federates")}" oedisisc_dummy:/home/runtime')
 
 	# delete
 	err=os.system(f'{docker_type} rm oedisisc_dummy')
-
+	
 @main.command(name="init")
 @click.option("-p","--project_dir_path", required=True, help="Path to template folder")
 def init(project_dir_path):
