@@ -30,53 +30,59 @@ def main():
 def run(project_dir_path,config,run_as_admin,tag,podman):
 	project_dir_path=os.path.abspath(project_dir_path)
 	config=os.path.abspath(config)
-
+	if podman:
+		docker_type = "podman"
+	else:
+		docker_type = "docker" 
 	directive=''
 	if run_as_admin:
 		directive+='sudo '
 	if isWindows:
 		windowsVolumeMount(baseDir,project_dir_path,config,tag)
 		name=uuid.uuid4().hex
-		directive=f'docker run --name {name} '+\
+		directive=f'{docker_type} run --name {name} '+\
 			f'-v oedisisc_runtime:/home/runtime {tag}'
-		os.system(directive)
+		
+		os.system(directive)		
 		# copy output
-		os.system(f'docker cp {name}:/home/output {os.path.join(project_dir_path)}')
-		os.system(f'docker rm {name}')
+		os.system(f'{docker_type} cp {name}:/home/output "{os.path.join(project_dir_path)}"')
+		os.system(f'{docker_type} rm {name}')
 	else:
-		directive+=f'docker run --rm -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
-			f'-v {config}:/home/runtime/runner/user_config.json '+\
-			f'-v {os.path.join(project_dir_path,"user_federates")}:/home/runtime/user_federates '+\
-			f'-v {os.path.join(baseDir,"user_interface")}:/home/runtime/user_interface '+\
-			f'-v {os.path.join(project_dir_path,"output")}:/home/output {tag}'
+		directive+=f'{docker_type} run --rm -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
+			f'-v "{config}":/home/runtime/runner/user_config.json '+\
+			f'-v "{os.path.join(project_dir_path,"user_federates")}":/home/runtime/user_federates '+\
+			f'-v "{os.path.join(baseDir,"user_interface")}":/home/runtime/user_interface '+\
+			f'-v "{os.path.join(project_dir_path,"output")}":/home/output {tag}'
 		if podman:
-			directive=directive.replace('docker','podman')
+			directive=directive.replace('docker','podman')		
 		os.system(directive)
 
 def windowsVolumeMount(baseDir,project_dir_path,configPath,tag):
+
+	docker_type = "podman" #podman
 	# check for missing volumes
 	missingVolumes=[]
 	for entry in ['oedisisc_runtime']:
-		err=os.system(f'docker volume inspect {entry}')
+		err=os.system(f'{docker_type} volume inspect {entry}')
 		if err!=0:
 			missingVolumes.append(entry)
 
 	for entry in missingVolumes:
-		err=os.system(f'docker volume create {entry}')
+		err=os.system(f'{docker_type} volume create {entry}')
 
 	# mount
-	err=os.system(f'docker container create --name oedisisc_dummy -v oedisisc_runtime:/home/runtime {tag}')
+	err=os.system(f'{docker_type} container create --name oedisisc_dummy -v oedisisc_runtime:/home/runtime {tag}')
 
-	# copy
-	os.system(f'robocopy {os.path.join(baseDir,"runner")} {os.path.join(project_dir_path,"runner")} *.*')
-	os.system(f'robocopy {os.path.dirname(configPath)} {os.path.join(project_dir_path,"runner")} '+\
+	# copy	
+	os.system(f'robocopy "{os.path.join(baseDir,"runner")}" "{os.path.join(project_dir_path,"runner")}" *.*')
+	os.system(f'robocopy "{os.path.dirname(configPath)}" "{os.path.join(project_dir_path,"runner")}" '+\
 		configPath.split("\\")[-1])
-	err=os.system(f'docker cp {os.path.join(project_dir_path,"runner")} oedisisc_dummy:/home/runtime')
-	err=os.system(f'docker cp {os.path.join(baseDir,"user_interface")} oedisisc_dummy:/home/runtime')
-	err=os.system(f'docker cp {os.path.join(project_dir_path,"user_federates")} oedisisc_dummy:/home/runtime')
+	err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"runner")}" oedisisc_dummy:/home/runtime')
+	err=os.system(f'{docker_type} cp "{os.path.join(baseDir,"user_interface")}" oedisisc_dummy:/home/runtime')
+	err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"user_federates")}" oedisisc_dummy:/home/runtime')
 
 	# delete
-	err=os.system('docker rm oedisisc_dummy')
+	err=os.system(f'{docker_type} rm oedisisc_dummy')
 
 @main.command(name="init")
 @click.option("-p","--project_dir_path", required=True, help="Path to template folder")
