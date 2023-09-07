@@ -6,7 +6,7 @@ import shutil
 
 
 if __name__=="__main__":
-
+	fix_white_space=lambda x:'"'+x+'"' if len(x.split(' '))>1 else x
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
 	parser.add_argument('--nocache',help='apply --no-cache option',type=bool, required=False, default=False)
@@ -28,14 +28,14 @@ if __name__=="__main__":
 	if not os.path.exists(tmpDir):
 		os.system(f'mkdir {tmpDir}')
 	if '.gitignore' in os.listdir(tmpDir):# ensure that this is the correct directory
-		f=open(os.path.join(tmpDir,'.gitignore'))
+		f=open(os.path.join(baseDir,'tmp','.gitignore'))
 		tempData=f.read()
 		f.close()
 
 		shutil.rmtree(tmpDir)
-		os.system(f'mkdir {tmpDir}')
+		os.system(f'mkdir {fix_white_space(tmpDir)}')
 
-		f=open(os.path.join(tmpDir,'.gitignore'),'w')
+		f=open(os.path.join(baseDir,'tmp','.gitignore'),'w')
 		f.write(tempData)
 		f.close()
 
@@ -68,11 +68,13 @@ if __name__=="__main__":
 			copyStatements+=f.read()+'\n'
 			f.close()
 
-		contents=set(os.listdir(os.path.join(buildDir,entry))).difference(['Dockerfile','copy_statements.txt'])
+		contents=set(os.listdir(os.path.join(buildDir,entry))).difference(\
+			['Dockerfile','copy_statements.txt'])
 		if contents:
 			for thisItem in contents:
 				print(os.path.join(thisFolder,thisItem),os.path.join(tmpDir,thisItem))
-				shutil.copytree(os.path.join(thisFolder,thisItem),os.path.join(tmpDir,thisItem),dirs_exist_ok=True)
+				shutil.copytree(os.path.join(thisFolder,thisItem),\
+					os.path.join(tmpDir,thisItem),dirs_exist_ok=True)
 
 	f=open(os.path.join(tmpDir,'Dockerfile'),'w')
 	if isWindows:
@@ -84,6 +86,6 @@ if __name__=="__main__":
 	f.close()
 
 	# build
-	os.system(f'cd {tmpDir} && {engine} build {noCache} -t {args.tag} .')
+	os.system(f'cd {fix_white_space(tmpDir)} && {engine} build {noCache} -t {args.tag} .')
 
 

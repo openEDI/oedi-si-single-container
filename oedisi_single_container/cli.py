@@ -40,64 +40,62 @@ def main():
 def run(project_dir_path,config,run_as_admin,tag,podman):
 	project_dir_path=os.path.abspath(project_dir_path)
 	config=os.path.abspath(config)
-	if podman:
-		docker_type = "podman"
-	else:
-		docker_type = "docker" 
+	containerEngine='podman' if podman else 'docker'
+
 	directive=''
 	if run_as_admin:
 		directive+='sudo '
 	if isWindows:
-		windowsVolumeMount(baseDir,project_dir_path,config,tag)
+		windowsVolumeMount(baseDir,project_dir_path,config,tag,containerEngine)
 		name=uuid.uuid4().hex
-		directive=f'{docker_type} run --name {name} '+\
+		directive=f'{containerEngine} run --name {name} '+\
 			f'-v oedisisc_runtime:/home/runtime {tag}'
 		
-		os.system(directive)		
-		# copy output		
-		os.system(f'wsl -d podman-machine-default -u user enterns podman cp  {name}:/home/output "{convert_windows_to_linux_path(project_dir_path)}"')	
-		os.system(f'{docker_type} rm {name}')
+		os.system(directive)
+		# copy output
+		os.system(f'wsl -d podman-machine-default -u user enterns podman cp  {name}:/home/output '+\
+			f'"{convert_windows_to_linux_path(project_dir_path)}"')
+		os.system(f'{containerEngine} rm {name}')
 	else:
-		directive+=f'{docker_type} run --rm -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
+		directive+=f'{containerEngine} run --rm -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
 			f'-v "{config}":/home/runtime/runner/user_config.json '+\
 			f'-v "{os.path.join(project_dir_path,"user_federates")}":/home/runtime/user_federates '+\
 			f'-v "{os.path.join(baseDir,"user_interface")}":/home/runtime/user_interface '+\
 			f'-v "{os.path.join(project_dir_path,"output")}":/home/output {tag}'
 		if podman:
-			directive=directive.replace('docker','podman')		
+			directive=directive.replace('docker','podman')
 		os.system(directive)
 
-def windowsVolumeMount(baseDir,project_dir_path,configPath,tag):
+def windowsVolumeMount(baseDir,project_dir_path,configPath,tag,containerEngine):
 
-	docker_type = "podman" #podman
 	# check for missing volumes
 	missingVolumes=[]
 	for entry in ['oedisisc_runtime']:
-		err=os.system(f'{docker_type} volume inspect {entry}')
+		err=os.system(f'{containerEngine} volume inspect {entry}')
 		if err!=0:
 			missingVolumes.append(entry)
 
 	for entry in missingVolumes:
-		err=os.system(f'{docker_type} volume create {entry}')
+		err=os.system(f'{containerEngine} volume create {entry}')
 
 	# mount
-	err=os.system(f'{docker_type} container create --name oedisisc_dummy -v oedisisc_runtime:/home/runtime {tag}')
+	err=os.system(f'{containerEngine} container create --name oedisisc_dummy -v oedisisc_runtime:/home/runtime {tag}')
 	
 	# copy	
 	os.system(f'robocopy "{os.path.join(baseDir,"runner")}" "{os.path.join(project_dir_path,"runner")}" *.*')
 	os.system(f'robocopy "{os.path.dirname(configPath)}" "{os.path.join(project_dir_path,"runner")}" '+	configPath.split("\\")[-1])	
 	
-	if docker_type == "podman": #podman cp command doesn't work in Windows. This is a temporary workaround		
+	if containerEngine == "podman": #podman cp command doesn't work in Windows. This is a temporary workaround		
 		err=os.system(f'wsl -d podman-machine-default -u user enterns podman cp "{convert_windows_to_linux_path(os.path.join(project_dir_path,"runner"))}" oedisisc_dummy:/home/runtime')
 		err=os.system(f'wsl -d podman-machine-default -u user enterns podman cp "{convert_windows_to_linux_path(os.path.join(baseDir,"user_interface"))}" oedisisc_dummy:/home/runtime')
 		err=os.system(f'wsl -d podman-machine-default -u user enterns podman cp "{convert_windows_to_linux_path(os.path.join(baseDir,"user_federates"))}" oedisisc_dummy:/home/runtime')
 	else:
-		err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"runner")}" oedisisc_dummy:/home/runtime')
-		err=os.system(f'{docker_type} cp "{os.path.join(baseDir,"user_interface")}" oedisisc_dummy:/home/runtime')
-		err=os.system(f'{docker_type} cp "{os.path.join(project_dir_path,"user_federates")}" oedisisc_dummy:/home/runtime')
+		err=os.system(f'{containerEngine} cp "{os.path.join(project_dir_path,"runner")}" oedisisc_dummy:/home/runtime')
+		err=os.system(f'{containerEngine} cp "{os.path.join(baseDir,"user_interface")}" oedisisc_dummy:/home/runtime')
+		err=os.system(f'{containerEngine} cp "{os.path.join(project_dir_path,"user_federates")}" oedisisc_dummy:/home/runtime')
 
 	# delete
-	err=os.system(f'{docker_type} rm oedisisc_dummy')
+	err=os.system(f'{containerEngine} rm oedisisc_dummy')
 	
 @main.command(name="init")
 @click.option("-p","--project_dir_path", required=True, help="Path to template folder")
