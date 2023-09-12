@@ -1,6 +1,7 @@
 import os
 import sys
 import uuid
+import re
 import pdb
 
 import click
@@ -45,9 +46,11 @@ def run(project_dir_path,config,run_as_admin,tag,podman):
 	directive=''
 	if run_as_admin:
 		directive+='sudo '
+
+	name='singlecontainerapp_'+uuid.uuid4().hex
+
 	if isWindows:
 		windowsVolumeMount(baseDir,project_dir_path,config,tag,containerEngine)
-		name=uuid.uuid4().hex
 		directive=f'{containerEngine} run --name {name} '+\
 			f'-v oedisisc_runtime:/home/runtime {tag}'
 		
@@ -57,7 +60,7 @@ def run(project_dir_path,config,run_as_admin,tag,podman):
 			f'"{convert_windows_to_linux_path(project_dir_path)}"')
 		os.system(f'{containerEngine} rm {name}')
 	else:
-		directive+=f'{containerEngine} run --rm -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
+		directive+=f'{containerEngine} run --rm --name {name} -v {os.path.join(baseDir,"runner")}:/home/runtime/runner '+\
 			f'-v "{config}":/home/runtime/runner/user_config.json '+\
 			f'-v "{os.path.join(project_dir_path,"user_federates")}":/home/runtime/user_federates '+\
 			f'-v "{os.path.join(baseDir,"user_interface")}":/home/runtime/user_interface '+\
@@ -129,6 +132,29 @@ def build(tag,python_cmd,nocache,podman):
 		directive+=' --podman true'
 	err=os.system(directive)
 	assert err==0,f'Build resulted in error:{err} for directive={directive}'
+
+@main.command(name="stop")
+@click.option("--podman", required=False, default=False, help="Use podman instead of docker")
+def stop(podman):
+	"""Stops all running instances of singlecontainerapp_* containers"""
+	containerEngine='podman' if podman else 'docker'
+
+	thisFile=f'temp_{uuid.uuid4().hex}.txt'
+	os.system(f'{containerEngine} ps --filter name=singlecontainerapp > {thisFile}')
+	fpath=os.path.join(os.getcwd(),thisFile)
+	f=open(fpath); data=f.read(); f.close()
+	data=re.sub(r'[ ]{3,}',',',data)
+	data=data.splitlines()
+	col=data[0].split(',')
+	ind=col.index('CONTAINER ID')
+	os.remove(f'{thisFile}')
+
+	ids=[]
+	for thisLine in data[1::]:
+		ids.append(thisLine.split(',')[ind])
+
+	for entry in ids:
+		os.system(f'{containerEngine} stop -t 0 {entry}')
 
 
 if __name__ == '__main__':
