@@ -23,7 +23,7 @@
       "profile_location": "/home/oedisi/gadal-ieee123/profiles",
       "sensor_location": "/home/oedisi/gadal-ieee123/sensors.json",
       "start_date": "2017-01-01 00:00:00",
-      "number_of_timesteps": 2,
+      "number_of_timesteps": 4,
       "run_freq_sec": 900
    }
 }

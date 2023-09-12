@@ -11,13 +11,13 @@ pip install -e .
 Before running the CLI make sure that the required Docker image is available. If not, the image can be built using,
 
 ```
-oedisisc build --tag singlecontainerapp:0.2.1
+oedisisc build --tag singlecontainerapp:0.2.1 -p python
 ```
 
 if completely new build is required i.e. no previously cached container layers, use,
 
 ```
-oedisisc build -t singlecontainerapp:0.2.1 --nocache true
+oedisisc build -t singlecontainerapp:0.2.1 --nocache true -p python
 ```
 
 ```
@@ -31,13 +31,13 @@ oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag sin
 ### Using Podman instead of Docker
 
 ```
-oedisisc build --tag singlecontainerapp:0.2.1 --podman true
+oedisisc build --tag singlecontainerapp:0.2.1 -p python --podman true
 ```
 
 if completely new build is required i.e. no previously cached container layers, use,
 
 ```
-oedisisc build -t singlecontainerapp:0.2.1 --nocache true --podman true
+oedisisc build -t singlecontainerapp:0.2.1 --nocache true -p python --podman true
 ```
 
 ```
