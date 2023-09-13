@@ -28,6 +28,32 @@ oedisisc init -p sampleProject
 oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1
 ```
 
+### Set/Get CLI default options
+
+The default CLI settings can be set once using set_default option as shown below.
+
+```
+oedisisc set_default --tag singlecontainerapp:0.2.1 --python_cmd python --podman false
+```
+
+Since the default tag was set, the run command reduces to,
+
+```
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json
+```
+
+instead of,
+
+```
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1
+```
+
+The view the default CLI settings use get_default option as shown below.
+
+```
+oedisisc get_default
+```
+
 ### Using Podman instead of Docker
 
 ```

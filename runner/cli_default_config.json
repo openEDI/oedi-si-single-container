@@ -1,0 +1,5 @@
+{
+   "podman": false,
+   "python_cmd": "python",
+   "tag":"singlecontainerapp:0.2.1"
+}
