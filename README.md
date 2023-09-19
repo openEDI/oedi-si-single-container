@@ -11,13 +11,13 @@ pip install -e .
 Before running the CLI make sure that the required Docker image is available. If not, the image can be built using,
 
 ```
-oedisisc build --tag singlecontainerapp:0.2.1 -p python
+oedisisc build --tag singlecontainerapp:0.3.0 -p python
 ```
 
 if completely new build is required i.e. no previously cached container layers, use,
 
 ```
-oedisisc build -t singlecontainerapp:0.2.1 --nocache true -p python
+oedisisc build -t singlecontainerapp:0.3.0 --nocache true -p python
 ```
 
 ```
@@ -25,7 +25,7 @@ oedisisc init -p sampleProject
 ```
 
 ```
-oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.3.0
 ```
 
 ### Set/Get CLI default options
@@ -33,7 +33,7 @@ oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag sin
 The default CLI settings can be set once using set_default option as shown below.
 
 ```
-oedisisc set_default --tag singlecontainerapp:0.2.1 --python_cmd python --podman false
+oedisisc set_default --tag singlecontainerapp:0.3.0 --python_cmd python --podman false
 ```
 
 Since the default tag was set, the run command reduces to,
@@ -45,7 +45,7 @@ oedisisc run -p sampleProject -c sampleProject/config/user_config.json
 instead of,
 
 ```
-oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.3.0
 ```
 
 The view the default CLI settings use get_default option as shown below.
@@ -57,13 +57,13 @@ oedisisc get_default
 ### Using Podman instead of Docker
 
 ```
-oedisisc build --tag singlecontainerapp:0.2.1 -p python --podman true
+oedisisc build --tag singlecontainerapp:0.3.0 -p python --podman true
 ```
 
 if completely new build is required i.e. no previously cached container layers, use,
 
 ```
-oedisisc build -t singlecontainerapp:0.2.1 --nocache true -p python --podman true
+oedisisc build -t singlecontainerapp:0.3.0 --nocache true -p python --podman true
 ```
 
 ```
@@ -71,7 +71,7 @@ oedisisc init -p sampleProject
 ```
 
 ```
-oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.2.1 --podman true
+oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.3.0 --podman true
 ```
 
 
@@ -102,7 +102,7 @@ The build system allows combining the dockerfiles for each application and build
 cd to the root directory of this repository and then run the following command,
 
 ```
-python3 build.py -t singlecontainerapp:0.2.1
+python3 build.py -t singlecontainerapp:0.3.0
 ```
 
 ## Runtime System
@@ -166,10 +166,10 @@ Putting things together,
 cd to the root directory of this repository and then run the following command. Replace *-v $(pwd)/runner/user_config.json* with path to the configuration file you want to use and $(pwd)/output with the path to the output files.
 
 ```
-docker run --rm -it -v $(pwd):/home/runtime -v $(pwd)/runner/user_config.json:/home/runtime/runner/user_config.json -v $(pwd)/output:/home/output singlecontainerapp:0.2.1
+docker run --rm -it -v $(pwd):/home/runtime -v $(pwd)/runner/user_config.json:/home/runtime/runner/user_config.json -v $(pwd)/output:/home/output singlecontainerapp:0.3.0
 ```
 or on windows,
 
 ```
-docker run --rm -it -v %cd%:/home/runtime -v %cd%/runner/user_config.json:/home/runtime/runner/user_config.json -v %cd%/output:/home/output singlecontainerapp:0.2.1
+docker run --rm -it -v %cd%:/home/runtime -v %cd%/runner/user_config.json:/home/runtime/runner/user_config.json -v %cd%/output:/home/output singlecontainerapp:0.3.0
 ```
