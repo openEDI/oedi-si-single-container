@@ -1,0 +1,13 @@
+{
+    "directory": "dopf",
+    "execute_function": "python federate_dopf.py",
+    "static_inputs": [
+    ],
+    "dynamic_inputs": [
+        {"type": "PowersReal", "port_id": "powers_real"},
+        {"type": "PowersImaginary", "port_id": "powers_imaginary"},
+        {"type": "Topology", "port_id": "topology"}
+    ],
+    "dynamic_outputs": [
+    ]
+}

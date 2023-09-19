@@ -1,5 +1,5 @@
 {
    "podman": false,
-   "python_cmd": "python",
-   "tag":"singlecontainerapp:0.2.1"
+   "python_cmd": "python3",
+   "tag": "singlecontainerapp:0.2.1"
 }

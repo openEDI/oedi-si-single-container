@@ -6,6 +6,7 @@ import shutil
 
 
 if __name__=="__main__":
+	preferredBuildOrder=['pnnl_dsse','datapreprocessor','dopf_ornl']
 	fix_white_space=lambda x:'"'+x+'"' if len(x.split(' '))>1 else x
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
@@ -57,6 +58,9 @@ if __name__=="__main__":
 
 	dockerItems=list(set(os.listdir(buildDir)).difference(['oedisi','datapreprocessor']))
 	dockerItems.append('datapreprocessor')
+	####
+	if not set(dockerItems).difference(preferredBuildOrder):
+		dockerItems=preferredBuildOrder
 	for entry in dockerItems:
 		thisFolder=os.path.join(buildDir,entry)
 		f=open(os.path.join(buildDir,entry,'Dockerfile'))

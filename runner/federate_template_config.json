@@ -1,0 +1,58 @@
+{
+   "wiringDiagramData": {
+      "links": [
+         {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "user_dsse",
+            "target_port": "topology"
+         },
+         {
+            "source": "sensor_voltage_magnitude",
+            "source_port": "publication",
+            "target": "user_dsse",
+            "target_port": "voltages_magnitude"
+         },
+         {
+            "source": "sensor_power_real",
+            "source_port": "publication",
+            "target": "user_dsse",
+            "target_port": "powers_real"
+         },
+         {
+            "source": "sensor_power_imaginary",
+            "source_port": "publication",
+            "target": "user_dsse",
+            "target_port": "powers_imaginary"
+         },
+         {
+            "source": "user_dsse",
+            "source_port": "voltage_mag",
+            "target": "recorder_voltage_magnitude_user_dsse",
+            "target_port": "subscription"
+         },
+         {
+            "source": "user_dsse",
+            "source_port": "voltage_angle",
+            "target": "recorder_voltage_angle_user_dsse",
+            "target_port": "subscription"
+         }
+      ],
+      "components": {
+         "name": "",
+         "type": "",
+         "parameters":{}
+      }
+   },
+   "configRunnerData": {
+      "federates": {
+         "directory": "",
+         "name": "",
+         "exec": "",
+         "hostname": ""
+      }
+   },
+   "data":{
+      "src":""
+   }
+}

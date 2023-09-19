@@ -42,7 +42,8 @@ def main():
 @click.option("-r","--run_as_admin", required=False, default=False, help="Should docker be run as root")
 @click.option("-t","--tag", required=False, default=defaultConfig['tag'], help="Should docker be run as root")
 @click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
-def run(project_dir_path,config,run_as_admin,tag,podman):
+@click.option("-i","--interactive", required=False, default=False, help="Interactive mode")
+def run(project_dir_path,config,run_as_admin,tag,podman,interactive):
 	"""Runs the co-simulation"""
 	project_dir_path=os.path.abspath(project_dir_path)
 	config=os.path.abspath(config)
@@ -57,9 +58,14 @@ def run(project_dir_path,config,run_as_admin,tag,podman):
 	if isWindows:
 		windowsVolumeMount(baseDir,project_dir_path,config,tag,containerEngine)
 		directive=f'{containerEngine} run --name {name} '+\
-			f'-v oedisisc_runtime:/home/runtime {tag}'
-		
+			f'-v oedisisc_runtime:/home/runtime '
+
+		if interactive:
+			directive+='-it --entrypoint /bin/bash '
+
+		directive+=f'{tag}'
 		os.system(directive)
+
 		# copy output
 		os.system(f'wsl -d podman-machine-default -u user enterns podman cp  {name}:/home/output '+\
 			f'"{convert_windows_to_linux_path(project_dir_path)}"')
@@ -69,9 +75,12 @@ def run(project_dir_path,config,run_as_admin,tag,podman):
 			f'-v "{config}":/home/runtime/runner/user_config.json '+\
 			f'-v "{os.path.join(project_dir_path,"user_federates")}":/home/runtime/user_federates '+\
 			f'-v "{os.path.join(baseDir,"user_interface")}":/home/runtime/user_interface '+\
-			f'-v "{os.path.join(project_dir_path,"output")}":/home/output {tag}'
-		if podman:
-			directive=directive.replace('docker','podman')
+			f'-v "{os.path.join(project_dir_path,"output")}":/home/output '
+
+		if interactive:
+			directive+='-it --entrypoint /bin/bash '
+
+		directive+=f'{tag}'
 		os.system(directive)
 
 def windowsVolumeMount(baseDir,project_dir_path,configPath,tag,containerEngine):
@@ -104,7 +113,8 @@ def windowsVolumeMount(baseDir,project_dir_path,configPath,tag,containerEngine):
 
 	# delete
 	err=os.system(f'{containerEngine} rm oedisisc_dummy')
-	
+
+
 @main.command(name="init")
 @click.option("-p","--project_dir_path", required=True, help="Path to template folder")
 def init(project_dir_path):
@@ -141,6 +151,7 @@ def build(tag,python_cmd,nocache,podman):
 	err=os.system(directive)
 	assert err==0,f'Build resulted in error:{err} for directive={directive}'
 
+
 @main.command(name="stop")
 @click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
 def stop(podman):
@@ -164,6 +175,7 @@ def stop(podman):
 	for entry in ids:
 		os.system(f'{containerEngine} stop -t 0 {entry}')
 
+
 @main.command(name="set_default")
 @click.option("-p","--python_cmd", required=False, default=defaultConfig['python_cmd'],\
 	help="Python command to use i.e. python or python3")
@@ -176,6 +188,7 @@ def set_default(python_cmd,podman,tag):
 	defaultConfig['podman']=podman
 	defaultConfig['tag']=tag
 	json.dump(defaultConfig,open(defaultConfigPath,'w'),indent=3)
+
 
 @main.command(name="get_default")
 def get_default():

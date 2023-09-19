@@ -1,0 +1,2 @@
+COPY dopf_ornl_src/ /home/dopf_ornl
+COPY dopf_ornl_federate/ /home/dopf_ornl

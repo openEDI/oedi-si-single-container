@@ -113,6 +113,12 @@
       "exec": "python measuring_federate.py",
       "hostname": "localhost"
      },
+   "dopf_ornl":{
+      "directory": "/home/run/dopf_ornl",
+      "name": "dopf_ornl",
+      "exec": "/home/dopf_ornl/dopf_federate.py",
+      "hostname": "localhost"
+    },
    "broker": {
       "directory": ".",
       "name": "broker",

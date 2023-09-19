@@ -10,6 +10,8 @@ class Build(object):
 	def __init__(self,userConfigPath=None):
 		self._baseDir=os.path.dirname(os.path.abspath(__file__))
 		self.config={}
+		self.config['federate_template_config']=json.load(open(\
+			os.path.join(self._baseDir,'federate_template_config.json')))
 		self.config['availableFederates']=json.load(open(os.path.join(self._baseDir,'available_federates.json')))
 
 		if not userConfigPath:
@@ -22,6 +24,26 @@ class Build(object):
 		self.config['oedisi_runtime_wiring_diagram']=json.load(open(os.path.join(self._baseDir,'oedisi_runtime_wiring_diagram.json')))
 		self.userFederateOptions={'allowedApplicationTypes':['dsse','dopf'],'supportedLanguages':['python']}
 
+	def _get_template_federate_config(self,name,type,directory,exec,hostname='localhost',parameters=None,src=None):
+		conf=copy.deepcopy(self.config['federate_template_config'])
+		conf['wiringDiagramData']['components']['name']=name
+		conf['wiringDiagramData']['components']['type']=type
+		conf['configRunnerData']['federates']['name']=name
+		conf['configRunnerData']['federates']['directory']=directory
+		conf['configRunnerData']['federates']['exec']=exec
+		conf['configRunnerData']['federates']['hostname']=hostname
+
+		if parameters:
+			conf['wiringDiagramData']['components']['parameters']=parameters
+
+		if src:
+			conf['data']['src']=src
+
+		return conf
+
+	def _update_wiring_diagram_data(self,wiringDiagramData,conf):
+		wiringDiagramData['components'].append(conf['wiringDiagramData']['components'])
+		wiringDiagramData['links'].extend(conf['wiringDiagramData']['links'])
 
 	def _convertToOedisiLinks(self,data):
 		res=[]
@@ -108,6 +130,12 @@ class Build(object):
 					flag=os.system(f'cp -r {os.path.join(preprocessorFederatesDir,thisFederate)} /home/run')
 					assert flag==0, f'copying {thisFederate} failed with error flag={flag}'
 
+		# template based federate additions to wiring diagram (dopf_ornl)
+		#### TODO: Need to make changes to config data structure to include dopf federates
+		thisConf=self._get_template_federate_config('dopf_ornl','StateEstimatorComponent',\
+			'/home/run/dopf_ornl/','python /home/run/dopf_ornl/dopf_federate.py',src='/home/dopf_ornl/')
+		self._update_wiring_diagram_data(wiringDiagramData,thisConf)
+
 		# write wiring diagram and generate config_runner
 		wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
 		json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
@@ -116,7 +144,21 @@ class Build(object):
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
 
+		# template based federate additions (dopf_ornl)
+		if thisConf['data']['src']:# replace template data after wiring diagram puts default data
+			os.system(f'rm -r /home/run/{thisConf["configRunnerData"]["federates"]["name"]}/* && '+\
+				f'cp -r {thisConf["data"]["src"]}/* /home/run/{thisConf["configRunnerData"]["federates"]["name"]}')
+
 		config_runner=json.load(open('/home/run/test_system_runner.json'))
+
+		# config_runner mods for dopf_ornl
+		ind=-1
+		for n in range(len(config_runner['federates'])):
+			if config_runner['federates'][n]['name']==thisConf['configRunnerData']['federates']['name']:
+				ind=n
+		if ind>=0:
+			config_runner['federates'].pop(ind)
+			config_runner['federates'].append(thisConf['configRunnerData']['federates'])
 
 		# broker mods
 		if 'run_broker' in userConfig and not userConfig['run_broker']:
