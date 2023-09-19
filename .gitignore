@@ -3,5 +3,6 @@
 *.feather
 *.csv
 !build/datapreprocessor/datapreprocessor/datapreprocessor/data/solarhome/*.csv
+!build/dopf_ornl/dopf_ornl_src/*.csv
 runner/wiring_diagram.json
 *egg-info
