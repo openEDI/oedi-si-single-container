@@ -4,7 +4,9 @@ import uuid
 import re
 import json
 import pdb
+from io import StringIO
 
+import pandas as pd
 import click
 
 
@@ -196,6 +198,23 @@ def get_default():
 	defaultConfig=json.load(open(defaultConfigPath))
 	print(json.dumps(defaultConfig,indent=3))
 
+
+@main.command(name="list_tags")
+@click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
+def list_tags(podman):
+	"""Lists available image tags"""
+	containerEngine='podman' if podman else 'docker'
+	name='singlecontainerapp'
+	os.system(f'{containerEngine} images > temp.csv')
+	f=open('temp.csv'); data=f.read(); f.close()
+	os.remove('temp.csv')
+
+	data=re.sub(r'[ ]{3,}',',',data)
+
+	df = pd.read_csv(StringIO(data))
+	df[df.REPOSITORY==name]
+	availableTags=list(set(df[df.REPOSITORY==name].TAG))
+	print([f'{name}:{entry}' for entry in availableTags])
 
 
 if __name__ == '__main__':
