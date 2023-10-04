@@ -16,16 +16,16 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-    - name: Install build script
+    - name: Install oedisisc
       shell: bash -l {0}
       run: |
         pip install -e .
     - name: Test script
       shell: bash
       run: |
-        oedisisc build --tag singlecontainerapp:0.3.0 -p python
-        oedisisc init -p sampleProject
-        oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.3.0
+        python -m oedisisc build --tag singlecontainerapp:0.3.0 -p python
+        python -m oedisisc init -p sampleProject
+        python -m oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.3.0
     - name: Archive logs
       uses: actions/upload-artifact@v2
       if: always()
