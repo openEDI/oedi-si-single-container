@@ -95,5 +95,5 @@ def build_for_real(tag, nocache=False, podman=False):
     build_command = (
         f"cd {fix_white_space(tmp_dir)} && {engine} build {nocache_str} -t {tag} ."
     )
-    print("{build_command}")
+    print(build_command)
     os.system(build_command)
