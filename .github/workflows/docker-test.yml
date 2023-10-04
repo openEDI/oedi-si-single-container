@@ -24,6 +24,8 @@ jobs:
     - name: Test script
       shell: bash
       run: |
+        pip list
+        python -c "import oedisi_single_container"
         oedisisc build --tag singlecontainerapp:0.3.0 -p python
         oedisisc init -p sampleProject
         oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.3.0
