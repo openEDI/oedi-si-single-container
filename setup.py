@@ -11,6 +11,7 @@ for thisFolder in ['build','docs','logs','output','runner','tmp','user_federates
 		data_files.append((f'{os.path.join(relativePath,"oedisi_single_container",root)}',\
 		[os.path.join(os.path.abspath(root),fname) for fname in fnames]))
 
+data_files.append((f'{os.path.join(relativePath,"oedisi_single_container")}',['build.py']))
 
 setuptools.setup(name='oedisi_single_container',
 	author = 'Karthikeyan Balasubramaniam',

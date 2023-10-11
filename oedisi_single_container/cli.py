@@ -10,7 +10,10 @@ import pandas as pd
 import click
 
 
-baseDir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if 'runner' in os.listdir(os.path.dirname(os.path.abspath(__file__))):
+	baseDir=os.path.dirname(os.path.abspath(__file__))
+else:
+	baseDir=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 defaultConfigPath=os.path.join(baseDir,'runner','cli_default_config.json')
 defaultConfig=json.load(open(defaultConfigPath))
 
