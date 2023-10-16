@@ -6,7 +6,7 @@ The Data preprocessing application contains the following applications:
    The trained data imputation model can be used within the data imputation [federate](https://github.com/openEDI/oedi-si-single-container/tree/main/build/datapreprocessor/datapreprocessor/datapreprocessor/federates/dataimputation).
 
 ### How does data imputation work?
-We use Denoising AutoEncoders for performing data imputation. We use this model because it applies to any data type, can ingest a contextual window, and is scalable. ![Fig. 1 shows the block diagram of how the data impuation works](C:\Users\splathottam\Box Sync\GitHub\oedi-si-single-container\docs\figures\anomaly_detection_block_diagram.jpg)
+We use Denoising AutoEncoders for performing data imputation. We use this model because it applies to any data type, can ingest a contextual window, and is scalable. ![Fig. 1 shows the block diagram of how the data impuation works](figures\anomaly_detection_block_diagram.jpg)
 
 
 2. **Solar Disaggregation**: Takes net load at distribution system solar node as input and outputs the estimated solar power produced. The application source code can be found [here](https://github.com/openEDI/oedi-si-single-container/tree/main/build/datapreprocessor/datapreprocessor/datapreprocessor/app/solardisaggregation).
