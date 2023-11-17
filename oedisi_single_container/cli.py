@@ -45,7 +45,7 @@ def main():
 @click.option("-p","--project_dir_path", required=True, help="Path to project directory")
 @click.option("-c","--config", required=True, help="Path to config file")
 @click.option("-r","--run_as_admin", required=False, default=False, help="Should docker be run as root")
-@click.option("-t","--tag", required=False, default=defaultConfig['tag'], help="Should docker be run as root")
+@click.option("-t","--tag", required=False, default=defaultConfig['tag'], help="Image tag to be used")
 @click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
 @click.option("-i","--interactive", required=False, default=False, help="Interactive mode")
 def run(project_dir_path,config,run_as_admin,tag,podman,interactive):
