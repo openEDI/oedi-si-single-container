@@ -3,8 +3,8 @@
 "nodeload_data_details":{
 "selected_timeseries_files":["solarhome/solarhome_customers-300_days-365.csv"],
 "selected_month":2,
-"distribution_system":"123Bus",
-"distribution_system_file":"123Bus/IEEE123Master.dss",
+"distribution_system":"smartds_large",
+"distribution_system_file":"smartds_large/opendss/Master.dss",
 "load_scaling_type":"simple",
 "upsample_original_time_series":true,
 "upsample_time_period":"15Min"},

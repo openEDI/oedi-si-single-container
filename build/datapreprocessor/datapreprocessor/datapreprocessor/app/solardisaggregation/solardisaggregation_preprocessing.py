@@ -16,8 +16,8 @@ from tqdm import tqdm
 from pandas.tseries.offsets import DateOffset
 from numpy.random import default_rng
 
-from datapreprocessor.app.nodeload.nodeload_utilities import plot_distribution,get_upsampled_df,get_rated_node_loads,find_unique_loads
-from datapreprocessor.app.nodeload.nodeload_preprocessing import encode_cyclical_features
+from oedianl.app.nodeload.nodeload_utilities import plot_distribution,get_upsampled_df,get_rated_node_loads,find_unique_loads
+from oedianl.app.nodeload.nodeload_preprocessing import encode_cyclical_features
 
 def convert_solardata_to_timeseries(df,n_days,n_customers = 10,show_details=False,rename_dict = {}):
 	"""Function to convert raw solar home data from Australia solar home data to time series data."""

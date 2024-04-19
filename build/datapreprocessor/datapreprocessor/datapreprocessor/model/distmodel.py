@@ -13,7 +13,7 @@ import numpy as np
 import networkx as nx
 import pandas as pd
 
-from datapreprocessor.utils.exceptionutil import ExceptionUtil
+from datapreprocessor.datapreprocessor.utils.exceptionutil import ExceptionUtil
 
 
 LogUtil=ExceptionUtil()

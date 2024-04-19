@@ -19,15 +19,15 @@ from numpy.random import default_rng
 from pandas.tseries.offsets import DateOffset
 from tqdm import tqdm
 
-from datapreprocessor.app.dopf.model.distmodel import DistModel
-from datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_series_dataframe
-from datapreprocessor.app.nodeload.nodeload_preprocessing import encode_cyclical_features
-from datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset
+#from datapreprocessor.datapreprocessor.app.dopf.model.distmodel import DistModel
+from datapreprocessor.datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_series_dataframe
+from datapreprocessor.datapreprocessor.app.nodeload.nodeload_preprocessing import encode_cyclical_features
+from datapreprocessor.datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset
 
 def get_corrupted_df(df,corrupt_value_replacement=-1.0,corrupted_fraction = 0.01,replacement_methods=[]):
 	df["data_quality"] = "nominal"
 	df["corruption_encoding"] = 0
-	df["load_value_corrupted"] = df['load_value'].sample(frac=1-corrupted_fraction)	  #Corrupt a fraction of the dataframe rows using NAN
+	df[f"{measurement_column}_corrupted"] = df['load_value'].sample(frac=1-corrupted_fraction)	  #Corrupt a fraction of the dataframe rows using NAN
 	
 	total_corrupted_values = df['load_value_corrupted'].isnull().sum()
 	print(f"Number of corrupted values time stamps:{total_corrupted_values}")#.any()}")
@@ -41,14 +41,14 @@ def get_corrupted_df(df,corrupt_value_replacement=-1.0,corrupted_fraction = 0.01
 	
 	df = get_replace_nans(df,replacement_methods=replacement_methods)
 		
-	df["load_value_corrupted"] = df["load_value_corrupted"].fillna(corrupt_value_replacement) #Fill NAN values with a scalar replacement
+	df[f"{measurement_column}_corrupted"] = df[f"{measurement_column}_corrupted"].fillna(corrupt_value_replacement) #Fill NAN values with a scalar replacement
 		
 	#assert len(df[df['load_value_corrupted']==corrupt_value_replacement]) == total_corrupted_values, "Total replaced values should be equal to total corrupted values"
 	assert len(df[df['data_quality']=="corrupted"]) == total_corrupted_values, "Total corrupt identifiers should be equal to total corrupted values"	
 	
 	return df,corrupted_indexes
 
-def get_corrupted_df_multi(df,corrupt_value_replacement=-1.0,corrupted_fraction = 0.05,consequtive_event_probabilities={},replacement_methods=[]):
+def get_corrupted_df_multi(df,corrupt_value_replacement=-1.0,corrupted_fraction = 0.05,consequtive_event_probabilities={},replacement_methods=[],measurement_column="load_value"):
 	"""Corrupt at either single or consequtive time stamps"""
 	#print(consequtive_event_probabilities)
 	rng = default_rng()
@@ -68,7 +68,7 @@ def get_corrupted_df_multi(df,corrupt_value_replacement=-1.0,corrupted_fraction 
 	
 	df["data_quality"] = "nominal" #assign corrupted identifier to bad data
 	df["corruption_encoding"] = 0
-	df["load_value_corrupted"] = df['load_value'] #initially no values are missing
+	df[f"{measurement_column}_corrupted"] = df[measurement_column] #initially no values are missing
 	
 	for i in tqdm(range(len(df))):
 		if df.loc[i, "data_quality"] == "nominal":
@@ -95,79 +95,79 @@ def get_corrupted_df_multi(df,corrupt_value_replacement=-1.0,corrupted_fraction 
 	print(f"Total missing value events:{total_events}")
 	corrupted_indexes = df[df['data_quality']=="corrupted"].index.tolist()
 	
-	df.loc[corrupted_indexes,"load_value_corrupted"] = np.nan #Corrupt a fraction of the dataframe rows using NAN
+	df.loc[corrupted_indexes,f"{measurement_column}_corrupted"] = np.nan #Corrupt a fraction of the dataframe rows using NAN
 	df.loc[corrupted_indexes,"corruption_encoding"] = 1 #assign 1 as categorical encoding for corrupted data
-	total_corrupted_values = df['load_value_corrupted'].isnull().sum()
+	total_corrupted_values = df[f"{measurement_column}_corrupted"].isnull().sum()
 	print(f"Number of corrupted values time stamps:{total_corrupted_values}")#.any()}")
 	
 	assert total_corrupted_values == len(corrupted_indexes), "Total corrupted indexes should be equal"
 	
-	df = get_replace_nans(df,replacement_methods=replacement_methods)		 
-	df["load_value_corrupted"] = df["load_value_corrupted"].fillna(corrupt_value_replacement) #Fill NAN values with a scalar replacement
+	df = get_replace_nans(df,replacement_methods=replacement_methods,measurement_column=measurement_column)		 
+	df[f"{measurement_column}_corrupted"] = df[f"{measurement_column}_corrupted"].fillna(corrupt_value_replacement) #Fill NAN values with a scalar replacement
 		
 	assert len(df[df['data_quality']=="corrupted"]) == total_corrupted_values, "Total corrupt identifiers should be equal to total corrupted values"	
 	
 	return df,corrupted_indexes
 
-def get_replace_nans(df,replacement_methods=["ffill","bfill","mean","median","LI"]):
+def get_replace_nans(df,replacement_methods=["ffill","bfill","mean","median","LI"],measurement_column="load_value"):
 	"""Corrupted data is replaced"""
 	#replacement_methods=["ffill","bfill","mean","median","LI"]
 	for replacement_method in replacement_methods:
 		print(f"FIlling NAN values using {replacement_method}...")
 		if replacement_method in ["ffill","bfill"]:
-			df[f"load_value_corrupted_{replacement_method}"] = df["load_value_corrupted"].fillna(method = replacement_method) #Fill NAN values using forward fill
+			df[f"{measurement_column}_corrupted_{replacement_method}"] = df[f"{measurement_column}_corrupted"].fillna(method = replacement_method) #Fill NAN values using forward fill
 		elif replacement_method == "mean":
-			df[f"load_value_corrupted_{replacement_method}"] = df["load_value_corrupted"].fillna(value=df["load_value_corrupted"].mean())
+			df[f"{measurement_column}_corrupted_{replacement_method}"] = df[f"{measurement_column}_corrupted"].fillna(value=df[f"{measurement_column}_corrupted"].mean())
 		elif replacement_method == "median":
-			df[f"load_value_corrupted_{replacement_method}"] = df["load_value_corrupted"].fillna(value=df["load_value_corrupted"].median())
+			df[f"{measurement_column}_corrupted_{replacement_method}"] = df[f"{measurement_column}_corrupted"].fillna(value=df[f"{measurement_column}_corrupted"].median())
 		elif replacement_method == "LI":			
-			df[f"load_value_corrupted_{replacement_method}"] = df['load_value_corrupted'].interpolate(method='linear') #Fill nan with linear interpolation
+			df[f"{measurement_column}_corrupted_{replacement_method}"] = df[f"{measurement_column}_corrupted"].interpolate(method='linear') #Fill nan with linear interpolation
 		else:
 			raise ValueError(f"Error in {replacement_method}")
 			
-		if df[f"load_value_corrupted_{replacement_method}"].isnull().values.any(): #df.loc[df[f"load_value_corrupted_{replacement_method}"].isnull().values,:].index.any():
+		if df[f"{measurement_column}_corrupted_{replacement_method}"].isnull().values.any(): #df.loc[df[f"{measurement_column}_corrupted_{replacement_method}"].isnull().values,:].index.any():
 			print(f"Found NAN when using {replacement_method}.... replacing with mean:{df['load_value_corrupted'].mean()}")
-			print(df.loc[df[f"load_value_corrupted_{replacement_method}"].isnull().values,:])
-			df[f"load_value_corrupted_{replacement_method}"] = df["load_value_corrupted"].fillna(value=df["load_value_corrupted"].mean())			 
+			print(df.loc[df[f"{measurement_column}_corrupted_{replacement_method}"].isnull().values,:])
+			df[f"{measurement_column}_corrupted_{replacement_method}"] = df[f"{measurement_column}_corrupted"].fillna(value=df[f"{measurement_column}_corrupted"].mean())			 
 			
-		if df[f"load_value_corrupted_{replacement_method}"].isnull().values.any():
+		if df[f"{measurement_column}_corrupted_{replacement_method}"].isnull().values.any():
 			raise ValueError(f"NAN values found in df after {replacement_method}!")
 		
 	return df
 
-def add_anomaly_values(df,anomaly_value_types=[-1]):
+def add_anomaly_values(df,anomaly_value_types=[-1],measurement_column="load_value"):
 	"""Add anomaly values to dataframe"""
 	rng = default_rng()
-	df["load_value_anomaly"] = df["load_value_corrupted"]
+	df[f"{measurement_column}_anomaly"] = df[f"{measurement_column}_corrupted"]
 	
 	for row in df.loc[df["corruption_encoding"]==1].iterrows():
 		#print(row[0])
-		df.loc[row[0],"load_value_anomaly"] = rng.choice(anomaly_value_types)
+		df.loc[row[0],f"{measurement_column}_anomaly"] = rng.choice(anomaly_value_types)
 		
 	return df
 
-def get_comparison_df(df_source,predictions):
+def get_comparison_df(df_source,predictions,measurement_column="load_value"):
 	df_comparison = pd.DataFrame()
 	df_comparison["datetime"] = df_source["datetime"].values
 	df_comparison["data_quality"] = df_source["data_quality"].values
-	df_comparison["load_value_actual"] = df_source["load_value"].values
+	df_comparison[f"{measurement_column}_actual"] = df_source[f"{measurement_column}"].values
 	
-	df_comparison["load_value_bfill"] =df_source["load_value_corrupted_bfill"].values	 
-	df_comparison["load_value_ffill"] =df_source["load_value_corrupted_ffill"].values
-	df_comparison["load_value_mean"] =df_source["load_value_corrupted_mean"].values
-	df_comparison["load_value_LI"] =df_source["load_value_corrupted_LI"].values
+	df_comparison[f"{measurement_column}_bfill"] =df_source[f"{measurement_column}_corrupted_bfill"].values	 
+	df_comparison[f"{measurement_column}_ffill"] =df_source[f"{measurement_column}_corrupted_ffill"].values
+	df_comparison[f"{measurement_column}_mean"] =df_source[f"{measurement_column}_corrupted_mean"].values
+	df_comparison[f"{measurement_column}_LI"] =df_source[f"{measurement_column}_corrupted_LI"].values
 	
-	df_comparison["load_value_DAE_prediction"] = predictions.flatten()
+	df_comparison[f"{measurement_column}_DAE_prediction"] = predictions.flatten()
 	
-	df_comparison["prediction_bfill_AE"] = abs(df_comparison["load_value_actual"]-df_comparison["load_value_bfill"])
-	df_comparison["prediction_ffill_AE"] = abs(df_comparison["load_value_actual"]-df_comparison["load_value_ffill"])
-	df_comparison["prediction_DAE_AE"] = abs(df_comparison["load_value_actual"]-df_comparison["load_value_DAE_prediction"])
+	df_comparison["prediction_bfill_AE"] = abs(df_comparison[f"{measurement_column}_actual"]-df_comparison[f"{measurement_column}_bfill"])
+	df_comparison["prediction_ffill_AE"] = abs(df_comparison[f"{measurement_column}_actual"]-df_comparison[f"{measurement_column}_ffill"])
+	df_comparison["prediction_DAE_AE"] = abs(df_comparison[f"{measurement_column}_actual"]-df_comparison[f"{measurement_column}_DAE_prediction"])
 	
-	df_comparison["prediction_bfill_SE"] = np.square(df_comparison["load_value_actual"].values-df_comparison["load_value_bfill"].values)	
-	df_comparison["prediction_ffill_SE"] = np.square(df_comparison["load_value_actual"].values- df_comparison["load_value_ffill"].values)
-	df_comparison["prediction_LI_SE"] = np.square(df_comparison["load_value_actual"].values- df_comparison["load_value_LI"].values)
-	df_comparison["prediction_DAE_SE"] = np.square(df_comparison["load_value_actual"].values-df_comparison["load_value_DAE_prediction"].values)
-	df_comparison["prediction_mean_SE"] = np.square(df_comparison["load_value_actual"].values-df_comparison["load_value_mean"].values)	  
+	df_comparison["prediction_bfill_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values-df_comparison[f"{measurement_column}_bfill"].values)	
+	df_comparison["prediction_ffill_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values- df_comparison[f"{measurement_column}_ffill"].values)
+	df_comparison["prediction_LI_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values- df_comparison[f"{measurement_column}_LI"].values)
+	df_comparison["prediction_DAE_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values-df_comparison[f"{measurement_column}_DAE_prediction"].values)
+	df_comparison["prediction_mean_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values-df_comparison[f"{measurement_column}_mean"].values)	  
 	
 	return df_comparison
 
@@ -264,7 +264,7 @@ def get_df_averaged_load_selected(df_averaged_load,load_type_selected,cyclical_f
 	
 	return df_averaged_load
 
-def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_nodes,corrupted_fraction=0.01,multi_corruption=False,consequtive_corruption_probabilities={},replacement_methods=[]):
+def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_nodes,corrupted_fraction=0.01,multi_corruption=False,consequtive_corruption_probabilities={},replacement_methods=[],measurement_column="load_value"):
 	selected_nodes.sort()
 	n_timesteps = len(df_node_load)	
 	print(f"Selected {len(selected_nodes)} load nodes containing {n_timesteps} time steps were selected:{selected_nodes[0:50]} (showing only first 50)")
@@ -281,7 +281,7 @@ def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_node
 		node_load_ids.extend([node_id]*n_timesteps)
 			
 	df_train["datetime"] = node_load_time_stamps
-	df_train["load_value"] = node_load_values
+	df_train[f"{measurement_column}"] = node_load_values
 	df_train["node_id"] = node_load_ids
 		
 	df_train = encode_cyclical_features(df_train,cyclical_features,show_df=False,show_plot=False)	
@@ -298,11 +298,11 @@ def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_node
 def get_knn_array(df,load_block_length,n_windows = 3000000):
 	"""Get imputation from Scikit learn KNN imputation"""
 
-	df["load_value_corrupted_nan"] = df["load_value_corrupted"]
-	df.loc[df["corruption_encoding"]==1,"load_value_corrupted_nan"]=np.nan
+	df[f"{measurement_column}_corrupted_nan"] = df[f"{measurement_column}_corrupted"]
+	df.loc[df["corruption_encoding"]==1,f"{measurement_column}_corrupted_nan"]=np.nan
 	df[df["corruption_encoding"]==1].head()
 	
-	input_features_knn=	 ["load_value_corrupted_nan"] #KNN will only use one feature
+	input_features_knn=	 [f"{measurement_column}_corrupted_nan"] #KNN will only use one feature
 	
 	dataset_moving_window_knn,_ = get_input_target_dataset(df,load_block_length,input_features_knn,target_feature=None,batch_size=None,use_moving_window=True)
 
@@ -312,3 +312,32 @@ def get_knn_array(df,load_block_length,n_windows = 3000000):
 	print(f"Array shape after reshape:{array_moving_window_knn.shape}")
 	
 	return array_moving_window_knn
+
+def get_df_for_training_from_timesteps(df,timesteps,measurement_column,cyclical_features,corrupted_fraction=0.01,multi_corruption=False,consequtive_corruption_probabilities={},replacement_methods=[],avoid_columns=["datetime"]):
+	print(f"Selecting {len(timesteps)} for creating a dataframe to use for training...")
+	df_train = pd.DataFrame()
+	df = df[df['datetime'].isin(timesteps)]
+	n_timesteps = len(df)
+	columns = [column for column in df.columns if column not in avoid_columns]
+	measurement_values = []
+	measurement_timestamps = []
+	measurement_ids = []
+	for column in tqdm(columns):
+		measurement_values.extend(df[column].values)
+		measurement_timestamps.extend(list(df["datetime"].values))
+		measurement_ids.extend([column]*n_timesteps) #Use column names as measurement ids
+	
+	df_train["datetime"] = measurement_timestamps
+	df_train[measurement_column] = measurement_values
+	df_train["measurement_id"] = measurement_ids
+	
+	df_train = encode_cyclical_features(df_train,cyclical_features,show_df=False,show_plot=False)
+	if corrupted_fraction > 0.0:
+		if not multi_corruption:
+			df_train,corrupted_indexes = get_corrupted_df(df_train,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,replacement_methods=replacement_methods,measurement_column=measurement_column)
+		else:
+			df_train,corrupted_indexes = get_corrupted_df_multi(df_train,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,consequtive_event_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods,measurement_column=measurement_column)
+	else:
+		df_train["data_quality"] = "nominal" #All data points are nominal
+	
+	return df_train

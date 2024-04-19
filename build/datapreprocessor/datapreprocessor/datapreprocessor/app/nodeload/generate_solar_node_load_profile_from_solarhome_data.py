@@ -10,17 +10,16 @@ import calendar
 import pdb
 
 import pandas as pd
-import numpy as np
 
-baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-workDir=os.path.join(baseDir,"datapreprocessor")
+baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  #Add path of home directory e.g.'/home/splathottam/GitHub/oedi'
+workDir=os.path.join(baseDir,"oedianl")
 
 print(f"Adding home directory:{baseDir} to path")
 sys.path.insert(0,baseDir) #Add module path to prevent import errors
 
-from datapreprocessor.app.nodeload.timeseries_data_utilities import get_config_dict,get_n_days_in_df
-from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder
-from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import generate_solar_node_profiles
+from oedianl.app.nodeload.timeseries_data_utilities import get_config_dict,get_n_days_in_df
+from oedianl.app.nodeload.nodeload_utilities import check_and_create_folder
+from oedianl.app.solardisaggregation.solardisaggregation_preprocessing import generate_solar_node_profiles
 
 parser=argparse.ArgumentParser()
 parser.add_argument('-f','--file',help='Raw solar home data to be used for generating solar node load',default = "solarhome_customers-300_days-365.csv", required=False)
@@ -32,12 +31,7 @@ parser.add_argument('-max','--maxsolar',type=float,help='Maximum solar penetrati
 parser.add_argument('-u','--upsample',type=bool,help='Whether to upsample',default = True, required=False)
 parser.add_argument('-t','--timeperiod',type=str,help='Upsample time period',default = "15Min", required=False)
 parser.add_argument('-p','--profilepath',type=str,help='path to save the generated data as profiles',default = "", required=False)
-parser.add_argument('--fill',type=int,help='Fill the loadshape by repeating the data to have the given number of points. '+\
-	'Works only when profilepath argument is set',default = -1, required=False)
-parser.add_argument('--normalize',type=bool,help='When True the returned values are from [0,1]',default = True, required=False)
-
 args=parser.parse_args()
-
 
 folder_name_timeseries = os.path.join(workDir,"data","solarhome")
 folder_name_solarnode = os.path.join(workDir,"data","nodeload")
@@ -67,10 +61,6 @@ df_solar_node,_ = generate_solar_node_profiles(df_solar_timeseries,opendss_casef
 month_names = '-'.join([calendar.month_abbr[num] for num in selected_months])
 n_days = get_n_days_in_df(df_solar_node)
 
-if args.normalize:
-	for entry in set(df_solar_node.columns).difference(['datetime']):
-		df_solar_node[entry]=df_solar_node[entry]/df_solar_node[entry].max()
-
 if not args.profilepath:
 	print(f"Saving solar node profiles in solar_node_{model_folder}_{month_names}_nodes-{n_solar_nodes}_days-{n_days}_maxsolar-{max_solar_penetration}.pkl")
 	df_solar_node.to_pickle(os.path.join(folder_name_solarnode,\
@@ -78,16 +68,7 @@ if not args.profilepath:
 else:
 	cols=[entry for entry in df_solar_node.columns if 'gross_load' in entry]
 	for entry in cols:
-		if args.fill>0:
-			val=df_solar_node[entry].values
-			if val.shape[0]>=args.fill:
-				val=val[0:args.fill]
-			else:
-				val=np.tile(val,int(np.ceil(args.fill/val.shape[0])))
-				val=val[0:args.fill]
-			val.tofile(os.path.join(args.profilepath,'loadshape_'+entry.replace('_gross_load','')+'.csv'),sep='\n')
-		else:
-			df_solar_node[entry].to_csv(os.path.join(args.profilepath,'loadshape_'+entry.replace('_gross_load','')+'.csv'),index=False)
+		df_solar_node[entry].to_csv(os.path.join(args.profilepath,'loadshape_'+entry.replace('_gross_load','')+'.csv'),index=False)
 
 
 

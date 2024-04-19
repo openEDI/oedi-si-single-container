@@ -26,8 +26,8 @@ try:
 except ImportError:
 	warnings.warn('seaborn failed to import', ImportWarning)
 
-from datapreprocessor.model.distmodel import DistModel
-from datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_series_dataframe,add_datetime,get_n_days_in_df
+from oedianl.app.dopf.model.distmodel import DistModel
+from oedianl.app.nodeload.timeseries_data_utilities import get_time_series_dataframe,add_datetime,get_n_days_in_df
 
 def find_df_timeperiod(df,datetime_column="datetime"):
 	"""Upsample origina time series"""
@@ -489,6 +489,53 @@ def generate_load_node_profiles(df_averaged_day_load,case_file,n_nodes=-1,n_days
 	df_node_load.insert(0,'datetime',time_stamps) #Insert at first columns
 	
 	return df_node_load,load_node_dict
+
+def generate_node_voltage_profiles(df_voltage,case_file,n_nodes=-1,n_days=1,start_year = 2016,start_month=1,start_day=1,scaling_type="simple"):
+	"""Generate profiles for each node in openDSS distribution feeder using the averaged day load"""
+		
+	print(f"Creating node voltage profiles for year:{start_year},month:{start_month}")
+	Pnominal,Qnominal = get_rated_node_loads(case_file,n_nodes) #Get nominal spot loads at each node
+	df_node_load = pd.DataFrame()
+	time_stamps = []
+	voltage_profiles = {node:[] for node in Pnominal.keys()}
+	n_timesteps_per_day = len(df_voltage)
+	print(f"Number of time steps per day:{n_timesteps_per_day}")
+	time_interval_in_minutes = f"{int((24*60)/n_timesteps_per_day)} min" #"30min" #Calculating time interval in minutes
+	print(f"Time interval in minutes:{time_interval_in_minutes}")
+	time_interval_in_minutes = f"{int((df_voltage['datetime'].iloc[-1]-df_voltage['datetime'].iloc[-2]).total_seconds()/60.0)} min"
+	
+	print(f"Time interval in minutes:{time_interval_in_minutes}")
+	node_voltage_dict = {node:df_voltage["vmag_pmu_28_1"].values for node in Pnominal.keys()} #Assign base load type profiles to each node
+	
+	for i in tqdm(range(n_days)): #Each sample is a new day. The base load profiles are fixed for each node for all the samples
+		month = str(start_month).zfill(2)
+		day = str(start_day).zfill(2)
+		start_date= f"{start_year}-{month}-{day}" # "2016-02-01"
+		timestamp_range = pd.date_range(start=start_date,periods=n_timesteps_per_day,freq=time_interval_in_minutes)# end=" 2016-02-01" #Create time stamps
+		month = list(set(timestamp_range.month.to_list()))[0]
+		time_stamps.extend(timestamp_range.to_list())
+				
+		start_day = start_day + 1 #Increment day
+		
+		if start_day > calendar.monthrange(start_year, start_month)[1]:
+			print(f"Reseting since day count {start_day} is greater than:{calendar.monthrange(start_year, start_month)[1]}")
+			start_day = 1
+	
+	df_node_voltage = pd.DataFrame.from_dict(node_voltage_dict) #Faster
+	df_node_voltage.insert(0,'datetime',time_stamps) #Insert at first columns
+	
+	return df_node_voltage,node_voltage_dict
+
+def generate_voltage_array(df_voltage,available_pmu,show_details=False):
+	"""Select n load types and return an array of base load profiles"""
+	
+	rng = default_rng()
+	n_load_types_to_be_selected = rng.integers(min_n_load_types,len(available_load_types)+1)
+	selected_load_types = list(rng.choice(available_load_types,size = n_load_types_to_be_selected,replace=False))
+	if show_details:
+		print(f"Selecting following {n_load_types_to_be_selected} load types:{selected_load_types}")
+	
+	return {'load_array':df_averaged_day_load[[f"{load_type}" for load_type in selected_load_types]].values,"load_types":selected_load_types}
 
 def match_avg_energy_original(nProfile=7,nPts=96,E_kwh=50):
 	L=np.random.rand(nPts,nProfile)

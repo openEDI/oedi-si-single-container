@@ -19,13 +19,13 @@ workDir=os.path.join(baseDir,"oedianl")
 print(f"Adding home directory:{baseDir} to path")
 sys.path.insert(0,baseDir) #Add module path to prevent import errors
 
-from datapreprocessor.app.nodeload.smartmeter_data_preprocessing import valid_load_types_v2,get_time_series_dataframe,valid_load_types
-from datapreprocessor.app.nodeload.timeseries_data_utilities import get_config_dict
-from datapreprocessor.app.nodeload.nodeload_preprocessing import encode_cyclical_features
-from datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset,check_moving_window,get_train_test_eval_nodes,df_to_input_target_dataset
-from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder,get_upsampled_df
-from datapreprocessor.app.dataimputation.dae_models import get_dnn_model,get_normalizer,plot_training_history,model_to_7ziparchive
-from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import convert_solardata_to_timeseries,generate_solar_node_profiles,get_df_train_solar_disaggregation
+from oedianl.app.nodeload.smartmeter_data_preprocessing import valid_load_types_v2,get_time_series_dataframe,valid_load_types
+from oedianl.app.nodeload.timeseries_data_utilities import get_config_dict
+from oedianl.app.nodeload.nodeload_preprocessing import encode_cyclical_features
+from oedianl.app.nodeload.datapipeline_utilities import get_input_target_dataset,check_moving_window,get_train_test_eval_nodes,df_to_input_target_dataset
+from oedianl.app.nodeload.nodeload_utilities import check_and_create_folder,get_upsampled_df
+from oedianl.app.dataimputation.dae_models import get_dnn_model,get_normalizer,plot_training_history,model_to_7ziparchive
+from oedianl.app.solardisaggregation.solardisaggregation_preprocessing import convert_solardata_to_timeseries,generate_solar_node_profiles,get_df_train_solar_disaggregation
 
 rng = default_rng()
 

@@ -160,3 +160,26 @@ def get_train_test_eval_nodes(node_dict,train_fraction=0.8,test_fraction=0.2):
 	print(f"Train nodes:{len(train_nodes)},Test nodes:{len(test_nodes)},Eval nodes:{len(eval_nodes)}")
 	
 	return train_nodes,test_nodes,eval_nodes
+
+def get_train_test_eval_timesteps(timestamps,train_fraction=0.8,test_fraction=0.2):
+	"""Specify train and test timestamps"""
+	n_available_samples = len(timestamps)
+	train_test_fraction = train_fraction + test_fraction #1.0
+	
+	assert train_test_fraction <= 1.0, f"Train + test:{train_test_fraction} should be <= 1.0!"
+	n_train_test_samples = int(n_available_samples*train_test_fraction) #80# # int(len(df_load_fraction)*train_test_fraction)
+	
+	n_train_samples = int(n_train_test_samples*train_fraction)
+	n_test_samples = n_train_test_samples -	 n_train_samples
+	n_eval_samples = n_available_samples - n_train_test_samples #len(df_load_fraction) - n_train_test_samples
+	
+	print(f"Total train samples:{n_train_samples}")
+	print(f"Total test samples:{n_test_samples}")
+	print(f"Total eval samples:{n_eval_samples}")
+	available_timestamps = list(timestamps)
+	train_timestamps = available_timestamps[0:n_train_samples]
+	test_timestamps = available_timestamps[n_train_samples:n_train_samples+n_test_samples]
+	eval_timestamps = available_timestamps[n_train_samples+n_test_samples:n_train_samples+n_test_samples+n_eval_samples]
+	print(f"Train samples:{len(train_timestamps)},Test nodes:{len(test_timestamps)},Eval nodes:{len(eval_timestamps)}")
+	
+	return train_timestamps,test_timestamps,eval_timestamps

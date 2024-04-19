@@ -157,6 +157,24 @@ class DenoiseLSTM(Model):
 		encoded = self.encoder(x)
 		decoded = self.decoder(encoded)
 		return decoded
+	
+class LSTMAutoEncoder(Model):
+	def __init__(self,normalizer,window_size,n_input_features,n_output_features):
+		super().__init__()
+		self.encoder = tf.keras.Sequential([
+		  tf.keras.layers.Input(shape=(window_size, n_input_features)),
+		  normalizer, 
+		  tf.keras.layers.LSTM(100, activation='relu')]) #"linear"
+
+		self.decoder = tf.keras.Sequential([
+		  tf.keras.layers.RepeatVector(window_size), #RepeatVector layer repeats the incoming inputs a specific number of time
+		  tf.keras.layers.LSTM(100, activation='relu', return_sequences=True),
+		  tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(n_output_features))]) #This wrapper allows to apply a layer to every temporal slice of an input.'''
+
+	def call(self, x):
+		encoded = self.encoder(x)
+		decoded = self.decoder(encoded)
+		return decoded
 
 class DenoiseLSTMStateful(Model):
 	def __init__(self,normalizer,load_block_length,n_input_features,batch_size):
