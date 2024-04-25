@@ -1,0 +1,25 @@
+{
+
+"nodeload_data_details":{
+"selected_timeseries_files":["2016_11_60062_time_series.csv"],
+"selected_month":2,
+"distribution_system":"smartds_no_load_shape",
+"distribution_system_file":"smartds_no_load_shape/Master.dss",
+"load_scaling_type":"simple",
+"upsample_original_time_series":true,
+"upsample_time_period":"15Min"},
+
+"train_data_details":{
+"n_days": 4,
+"n_nodes":100,
+"load_block_length":4},
+
+"model_arch_details":{
+"model_type":"lstm"
+},
+
+"model_training_details":{"n_epochs":2,
+"batch_size": 32,
+"model_identifier":"v0"}
+
+}
