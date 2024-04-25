@@ -10,7 +10,7 @@ from typing import List, Set, Dict, Tuple, Optional, Union
 import numpy as np
 import pandas as pd
 
-from datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_series_dataframe
+from datapreprocessor.datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_series_dataframe
 
 def get_df_from_timeseries_file(time_series_files,load_type = "",load_block_length = 4,selected_month=1,n_timesteps_per_day=48,show_details=True,cyclical_features=[],upsample=False,upsample_time_period="15Min"):
 	"""Create a dataframe from one or more time series CSV files"""

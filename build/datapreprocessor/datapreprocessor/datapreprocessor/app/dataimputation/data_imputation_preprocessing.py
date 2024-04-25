@@ -295,7 +295,7 @@ def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_node
 	
 	return df_train
 
-def get_knn_array(df,load_block_length,n_windows = 3000000):
+def get_knn_array(df,window_size,measurement_column,n_windows = 3000000):
 	"""Get imputation from Scikit learn KNN imputation"""
 
 	df[f"{measurement_column}_corrupted_nan"] = df[f"{measurement_column}_corrupted"]
@@ -304,7 +304,7 @@ def get_knn_array(df,load_block_length,n_windows = 3000000):
 	
 	input_features_knn=	 [f"{measurement_column}_corrupted_nan"] #KNN will only use one feature
 	
-	dataset_moving_window_knn,_ = get_input_target_dataset(df,load_block_length,input_features_knn,target_feature=None,batch_size=None,use_moving_window=True)
+	dataset_moving_window_knn,_ = get_input_target_dataset(df,window_size,input_features_knn,target_feature=None,batch_size=None,use_moving_window=True)
 
 	array_moving_window_knn = np.array(list(dataset_moving_window_knn.take(n_windows).as_numpy_iterator()))
 	print(f"Array shape from knn dataset:{array_moving_window_knn.shape}")
