@@ -11,7 +11,7 @@ from typing import List, Set, Dict, Tuple, Optional, Union
 import numpy as np
 import pandas as pd
 
-from oedianl.app.nodeload.timeseries_data_utilities import get_time_series_dataframe,add_milliseconds
+from datapreprocessor.datapreprocessor.app.nodeload.timeseries_data_utilities import add_milliseconds
 
 def get_pmu_data(pmu_file):
     
@@ -71,7 +71,7 @@ def generate_node_voltage_profiles(df_voltage,n_days=1,start_year = 2016,start_m
 	time_interval_in_minutes = f"{int((df_voltage['datetime'].iloc[-1]-df_voltage['datetime'].iloc[-2]).total_seconds()/60.0)} min"	
 	print(f"Time interval in minutes:{time_interval_in_minutes}")
 	
-	pmu_ids = get_unique_measurement_ids_in_df(df,measurement_types = ["vmag_pmu_","vang_pmu_"])
+	pmu_ids = get_unique_measurement_ids_in_df(df_voltage,measurement_types = ["vmag_pmu_","vang_pmu_"])
 	print(f"Found following {len(pmu_ids)} pmu IDs:{pmu_ids}")
 	node_voltage_dict = {f"node_{i+1}":df_voltage[f"vmag_pmu_{pmu_id}"].values for i,pmu_id in enumerate(pmu_ids)} #Assign a pmu id to each node        
 

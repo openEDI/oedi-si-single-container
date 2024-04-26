@@ -24,7 +24,7 @@ from datapreprocessor.datapreprocessor.app.nodeload.timeseries_data_utilities im
 from datapreprocessor.datapreprocessor.app.nodeload.nodeload_preprocessing import encode_cyclical_features
 from datapreprocessor.datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset
 
-def get_corrupted_df(df,corrupt_value_replacement=-1.0,corrupted_fraction = 0.01,replacement_methods=[]):
+def get_corrupted_df(df,measurement_column,corrupt_value_replacement=-1.0,corrupted_fraction = 0.01,replacement_methods=[]):
 	df["data_quality"] = "nominal"
 	df["corruption_encoding"] = 0
 	df[f"{measurement_column}_corrupted"] = df['load_value'].sample(frac=1-corrupted_fraction)	  #Corrupt a fraction of the dataframe rows using NAN
@@ -48,7 +48,7 @@ def get_corrupted_df(df,corrupt_value_replacement=-1.0,corrupted_fraction = 0.01
 	
 	return df,corrupted_indexes
 
-def get_corrupted_df_multi(df,corrupt_value_replacement=-1.0,corrupted_fraction = 0.05,consequtive_event_probabilities={},replacement_methods=[],measurement_column="load_value"):
+def get_corrupted_df_multi(df,measurement_column,corrupt_value_replacement=-1.0,corrupted_fraction = 0.05,consequtive_event_probabilities={},replacement_methods=[]):
 	"""Corrupt at either single or consequtive time stamps"""
 	#print(consequtive_event_probabilities)
 	rng = default_rng()
@@ -109,7 +109,7 @@ def get_corrupted_df_multi(df,corrupt_value_replacement=-1.0,corrupted_fraction 
 	
 	return df,corrupted_indexes
 
-def get_replace_nans(df,replacement_methods=["ffill","bfill","mean","median","LI"],measurement_column="load_value"):
+def get_replace_nans(df,measurement_column,replacement_methods=["ffill","bfill","mean","median","LI"]):
 	"""Corrupted data is replaced"""
 	#replacement_methods=["ffill","bfill","mean","median","LI"]
 	for replacement_method in replacement_methods:
@@ -135,7 +135,7 @@ def get_replace_nans(df,replacement_methods=["ffill","bfill","mean","median","LI
 		
 	return df
 
-def add_anomaly_values(df,anomaly_value_types=[-1],measurement_column="load_value"):
+def add_anomaly_values(df,measurement_column,anomaly_value_types=[-1]):
 	"""Add anomaly values to dataframe"""
 	rng = default_rng()
 	df[f"{measurement_column}_anomaly"] = df[f"{measurement_column}_corrupted"]
@@ -146,7 +146,7 @@ def add_anomaly_values(df,anomaly_value_types=[-1],measurement_column="load_valu
 		
 	return df
 
-def get_comparison_df(df_source,predictions,measurement_column="load_value"):
+def get_comparison_df(df_source,measurement_column,predictions):
 	df_comparison = pd.DataFrame()
 	df_comparison["datetime"] = df_source["datetime"].values
 	df_comparison["data_quality"] = df_source["data_quality"].values
@@ -264,7 +264,7 @@ def get_df_averaged_load_selected(df_averaged_load,load_type_selected,cyclical_f
 	
 	return df_averaged_load
 
-def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_nodes,corrupted_fraction=0.01,multi_corruption=False,consequtive_corruption_probabilities={},replacement_methods=[],measurement_column="load_value"):
+def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_nodes,measurement_column,corrupted_fraction=0.01,multi_corruption=False,consequtive_corruption_probabilities={},replacement_methods=[]):
 	selected_nodes.sort()
 	n_timesteps = len(df_node_load)	
 	print(f"Selected {len(selected_nodes)} load nodes containing {n_timesteps} time steps were selected:{selected_nodes[0:50]} (showing only first 50)")
@@ -287,9 +287,9 @@ def get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_node
 	df_train = encode_cyclical_features(df_train,cyclical_features,show_df=False,show_plot=False)	
 	if corrupted_fraction > 0.0:
 		if not multi_corruption:
-			df_train,corrupted_indexes = get_corrupted_df(df_train,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,replacement_methods=replacement_methods)
+			df_train,corrupted_indexes = get_corrupted_df(df_train,measurement_column,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,replacement_methods=replacement_methods)
 		else:
-			df_train,corrupted_indexes = get_corrupted_df_multi(df_train,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,consequtive_event_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods)
+			df_train,corrupted_indexes = get_corrupted_df_multi(df_train,measurement_column,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,consequtive_event_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods)
 	else:
 		df_train["data_quality"] = "nominal" #All data points are nominal
 	
@@ -334,9 +334,9 @@ def get_df_for_training_from_timesteps(df,timesteps,measurement_column,cyclical_
 	df_train = encode_cyclical_features(df_train,cyclical_features,show_df=False,show_plot=False)
 	if corrupted_fraction > 0.0:
 		if not multi_corruption:
-			df_train,corrupted_indexes = get_corrupted_df(df_train,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,replacement_methods=replacement_methods,measurement_column=measurement_column)
+			df_train,corrupted_indexes = get_corrupted_df(df_train,measurement_column,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,replacement_methods=replacement_methods)
 		else:
-			df_train,corrupted_indexes = get_corrupted_df_multi(df_train,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,consequtive_event_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods,measurement_column=measurement_column)
+			df_train,corrupted_indexes = get_corrupted_df_multi(df_train,measurement_column,corrupt_value_replacement=0.0,corrupted_fraction = corrupted_fraction,consequtive_event_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods)
 	else:
 		df_train["data_quality"] = "nominal" #All data points are nominal
 	

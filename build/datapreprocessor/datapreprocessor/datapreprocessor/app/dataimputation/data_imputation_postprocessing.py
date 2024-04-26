@@ -272,12 +272,12 @@ def get_ffill_imputation_error_from_df(df):
 	
 	return mse_fill
 
-def compare_performance_moving_window(df,predictions,load_block_length, n_windows = 3000000,alternate_predictions={}):
+def compare_performance_moving_window(df,predictions,window_size,measurement_column,n_windows = 3000000,alternate_predictions={}):
 	"""Compare performance for moving window"""
 	
-	input_features=['load_value', 'corruption_encoding',"load_value_corrupted_ffill"]
+	input_features=[f"{measurement_column}", "corruption_encoding",f"{measurement_column}_corrupted_ffill"]
 		
-	dataset_moving_window,_ = get_input_target_dataset(df,load_block_length,input_features,target_feature=None,batch_size=None,use_moving_window=True)
+	dataset_moving_window,_ = get_input_target_dataset(df,window_size,input_features,target_feature=None,batch_size=None,use_moving_window=True)
 	
 	print(f"Taking {n_windows} element from dataset with cardinality:{dataset_moving_window.cardinality().numpy()} and converting to Numpy array...")
 	array_moving_window = np.array(list(dataset_moving_window.take(n_windows).as_numpy_iterator()))
@@ -286,23 +286,23 @@ def compare_performance_moving_window(df,predictions,load_block_length, n_window
 	print(f"Array shape after reshape:{array_moving_window[:,0].shape}")
 	
 	df_comparison = pd.DataFrame()
-	df_comparison["load_value_actual"] =  array_moving_window[:,0]
+	df_comparison[f"{measurement_column}_actual"] =  array_moving_window[:,0]
 	df_comparison["corruption_encoding"] =	array_moving_window[:,1]
-	df_comparison["load_value_ffill"] =	 array_moving_window[:,2]
-	df_comparison["load_value_DAE"] =  predictions[0:n_windows].reshape(-1,1)[:,-1]
+	df_comparison[f"{measurement_column}_ffill"] =	 array_moving_window[:,2]
+	df_comparison[f"{measurement_column}_DAE"] =  predictions[0:n_windows].reshape(-1,1)[:,-1]
 	for alternate in alternate_predictions.keys(): #Add alterante predictions
 		print(f"Adding alternate prediction:{alternate}")
-		df_comparison[f"load_value_{alternate}"] =	alternate_predictions[alternate][0:n_windows].reshape(-1,1)[:,-1] 
+		df_comparison[f"{measurement_column}_{alternate}"] = alternate_predictions[alternate][0:n_windows].reshape(-1,1)[:,-1] 
 	
-	df_comparison["prediction_ffill_AE"] = abs(df_comparison["load_value_actual"]-df_comparison["load_value_ffill"])
-	df_comparison["prediction_DAE_AE"] = abs(df_comparison["load_value_actual"]-df_comparison["load_value_DAE"])
+	df_comparison["prediction_ffill_AE"] = abs(df_comparison[f"{measurement_column}_actual"]-df_comparison[f"{measurement_column}_ffill"])
+	df_comparison["prediction_DAE_AE"] = abs(df_comparison[f"{measurement_column}_actual"]-df_comparison[f"{measurement_column}_DAE"])
 	for alternate in alternate_predictions.keys(): #Add alterante predictions
-		df_comparison[f"prediction_{alternate}_AE"] = abs(df_comparison["load_value_actual"]-df_comparison[f"load_value_{alternate}"])
+		df_comparison[f"prediction_{alternate}_AE"] = abs(df_comparison[f"{measurement_column}_actual"]-df_comparison[f"{measurement_column}_{alternate}"])
 	
-	df_comparison["prediction_ffill_SE"] = np.square(df_comparison["load_value_actual"].values- df_comparison["load_value_ffill"].values)
-	df_comparison["prediction_DAE_SE"] = np.square(df_comparison["load_value_actual"].values- df_comparison["load_value_DAE"].values)
+	df_comparison["prediction_ffill_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values- df_comparison[f"{measurement_column}_ffill"].values)
+	df_comparison["prediction_DAE_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values- df_comparison[f"{measurement_column}_DAE"].values)
 	for alternate in alternate_predictions.keys(): #Add alterante predictions
-		df_comparison[f"prediction_{alternate}_SE"] = np.square(df_comparison["load_value_actual"].values- df_comparison[f"load_value_{alternate}"].values)
+		df_comparison[f"prediction_{alternate}_SE"] = np.square(df_comparison[f"{measurement_column}_actual"].values- df_comparison[f"{measurement_column}_{alternate}"].values)
 	
 	print(f"Calculation imputation accuracy meterics for {len(df_comparison[df_comparison['corruption_encoding']==1.0])} missing values...")
 	ffill_mae = df_comparison[df_comparison["corruption_encoding"]==1.0]["prediction_ffill_AE"].mean()
