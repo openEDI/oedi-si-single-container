@@ -3,7 +3,34 @@ import sys
 import pdb
 import argparse
 import shutil
+import json
+import subprocess
 
+#specification_dict = {"pnnl_dsse":{"url":"https://github.com/tdcosim/SolarPV-DER-simulation-tool","tag":"0.6.0"},
+#					  "datapreprocessor":{"url":"https://github.com/tdcosim/SolarPV-DER-simulation-tool","tag":"0.6.0"}
+#}
+json_file = r"C://Users//splathottam//Box Sync//GitHub//oedi-si-single-container//specification.json"
+
+def read_specification_and_clone_repository(json_file:str,target_directory:str,application:str):
+	# Read the JSON file
+	with open(json_file, 'r') as file:
+		data = json.load(file)
+
+	# Extract URL and tag
+	url = data[application]['url']
+	tag = data[application]['tag']
+
+	# Extract the repository name from the URL
+	repo_name = url.split('/')[-1]	
+	repository = os.path.join(target_directory,repo_name)
+	os.chdir(target_directory) # Change directory to the cloned repository
+	# Clone the repository with the specific tag into the target directory
+	subprocess.run(['git', 'clone', '--branch', tag, url])	
+
+	# Print the current working directory to verify
+	print("Current Directory:", os.getcwd())
+	
+	return repository
 
 if __name__=="__main__":
 	preferredBuildOrder=['pnnl_dsse','datapreprocessor','dopf_ornl']
@@ -45,7 +72,7 @@ if __name__=="__main__":
 	f=open(os.path.join(thisFolder,'Dockerfile'))
 	data+=f.read()+'\n'
 	f.close()
-
+	
 	copyStatements=''
 	if 'copy_statements.txt' in os.listdir(thisFolder):
 		f=open(os.path.join(thisFolder,'copy_statements.txt'))
@@ -56,13 +83,32 @@ if __name__=="__main__":
 	for thisItem in contents:
 		shutil.copy(os.path.join(thisFolder,thisItem),tmpDir)
 
-	dockerItems=list(set(os.listdir(buildDir)).difference(['oedisi','datapreprocessor']))
-	dockerItems.append('datapreprocessor')
+	dockerItems=list(set(os.listdir(buildDir)).difference(['oedisi','datapreprocessor','dopf_ornl']))
+	#dockerItems.append('datapreprocessor')
+	print("buildDir:",buildDir,dockerItems)
 	####
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
+	dockerItems = ['pnnl_dsse']
 	for entry in dockerItems:
 		thisFolder=os.path.join(buildDir,entry)
+		print(f"Cloning to:{entry}")
+		repositoryFolder = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry)
+
+		print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")
+		f=open(os.path.join(repositoryFolder,'Dockerfile'))
+		data+=f.read()+'\n' #Read Dockerfile and append
+		f.close()
+		if 'copy_statements.txt' in os.listdir(repositoryFolder):
+			f=open(os.path.join(thisFolder,'copy_statements.txt'))
+			copyStatements+=f.read()+'\n'
+			f.close()
+
+	
+	"""
+	for entry in dockerItems:
+		thisFolder=os.path.join(buildDir,entry)
+		
 		f=open(os.path.join(buildDir,entry,'Dockerfile'))
 		data+=f.read()+'\n'
 		f.close()
@@ -79,17 +125,17 @@ if __name__=="__main__":
 				print(os.path.join(thisFolder,thisItem),os.path.join(tmpDir,thisItem))
 				shutil.copytree(os.path.join(thisFolder,thisItem),\
 					os.path.join(tmpDir,thisItem),dirs_exist_ok=True)
-
-	f=open(os.path.join(tmpDir,'Dockerfile'),'w')
+	"""
+	print("Creating single container Dockerfile...")
+	f=open(os.path.join(tmpDir,'Dockerfile'),'w') #Open a Dockerfile
 	if isWindows:
 		data+='\nRUN apt install -y dos2unix'
 		f.write(data+'\n'+copyStatements+'\nENTRYPOINT dos2unix /home/runtime/runner/run.sh && '+\
 			'/home/runtime/runner/run.sh')
 	else:
-		f.write(data+'\n'+copyStatements+'\nENTRYPOINT /home/runtime/runner/run.sh')
+		f.write(data+'\n'+copyStatements+'\nENTRYPOINT /home/runtime/runner/run.sh') #Append contents from individual application Dockerfiles to new Dockerfile
 	f.close()
 
 	# build
+	print("Start build process...")
 	os.system(f'cd {fix_white_space(tmpDir)} && {engine} build {noCache} -t {args.tag} .')
-
-

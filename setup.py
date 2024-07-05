@@ -4,7 +4,10 @@ import site
 
 
 data_files=[]
-relativePath='lib'+site.getsitepackages()[0].split('lib')[1]
+#relativePath='lib'+site.getsitepackages()[0].split('lib')[1] #this doesn't work with Conda environment
+site_packages = site.getsitepackages()
+relativePath = 'lib'+next((path for path in site_packages if "lib" in path), None).split('lib')[1] #avoid errors when getsitepackages gives multiple path
+
 
 for thisFolder in ['build','docs','logs','output','runner','tmp','user_federates','user_interface']:
 	for root,dirnames,fnames in os.walk(thisFolder):
