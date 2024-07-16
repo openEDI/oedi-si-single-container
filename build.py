@@ -23,9 +23,13 @@ def read_specification_and_clone_repository(json_file:str,target_directory:str,a
 	# Extract the repository name from the URL
 	repo_name = url.split('/')[-1]	
 	repository = os.path.join(target_directory,repo_name)
+	if not os.path.exists(target_directory):
+		print(f"Creating {target_directory} since it was not found...")
+		os.mkdir(target_directory)
+
 	os.chdir(target_directory) # Change directory to the cloned repository
 	# Clone the repository with the specific tag into the target directory
-	subprocess.run(['git', 'clone', '--branch', tag, url])	
+	subprocess.run(['git', 'clone','--depth 1','--branch', tag, url])
 
 	# Print the current working directory to verify
 	print("Current Directory:", os.getcwd())
@@ -85,14 +89,13 @@ if __name__=="__main__":
 
 	dockerItems=list(set(os.listdir(buildDir)).difference(['oedisi','datapreprocessor','dopf_ornl']))
 	#dockerItems.append('datapreprocessor')
-	print("buildDir:",buildDir,dockerItems)
-	####
+	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ['pnnl_dsse']
+	dockerItems = ["pnnl_dopf","dopf_ornl"] #Add applications tob e build here
 	for entry in dockerItems:
 		thisFolder=os.path.join(buildDir,entry)
-		print(f"Cloning to:{entry}")
+		print(f"Cloning to:{thisFolder}")
 		repositoryFolder = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry)
 
 		print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")
@@ -103,29 +106,7 @@ if __name__=="__main__":
 			f=open(os.path.join(thisFolder,'copy_statements.txt'))
 			copyStatements+=f.read()+'\n'
 			f.close()
-
 	
-	"""
-	for entry in dockerItems:
-		thisFolder=os.path.join(buildDir,entry)
-		
-		f=open(os.path.join(buildDir,entry,'Dockerfile'))
-		data+=f.read()+'\n'
-		f.close()
-
-		if 'copy_statements.txt' in os.listdir(thisFolder):
-			f=open(os.path.join(thisFolder,'copy_statements.txt'))
-			copyStatements+=f.read()+'\n'
-			f.close()
-
-		contents=set(os.listdir(os.path.join(buildDir,entry))).difference(\
-			['Dockerfile','copy_statements.txt'])
-		if contents:
-			for thisItem in contents:
-				print(os.path.join(thisFolder,thisItem),os.path.join(tmpDir,thisItem))
-				shutil.copytree(os.path.join(thisFolder,thisItem),\
-					os.path.join(tmpDir,thisItem),dirs_exist_ok=True)
-	"""
 	print("Creating single container Dockerfile...")
 	f=open(os.path.join(tmpDir,'Dockerfile'),'w') #Open a Dockerfile
 	if isWindows:
