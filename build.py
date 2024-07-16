@@ -6,10 +6,7 @@ import shutil
 import json
 import subprocess
 
-#specification_dict = {"pnnl_dsse":{"url":"https://github.com/tdcosim/SolarPV-DER-simulation-tool","tag":"0.6.0"},
-#					  "datapreprocessor":{"url":"https://github.com/tdcosim/SolarPV-DER-simulation-tool","tag":"0.6.0"}
-#}
-json_file = r"C://Users//splathottam//Box Sync//GitHub//oedi-si-single-container//specification.json"
+json_file = r"C://Users//splathottam//Box Sync//GitHub//oedi-si-single-container//specification.json" #need a way to specify path to specification file
 
 def read_specification_and_clone_repository(json_file:str,target_directory:str,application:str):
 	# Read the JSON file
@@ -29,7 +26,7 @@ def read_specification_and_clone_repository(json_file:str,target_directory:str,a
 
 	os.chdir(target_directory) # Change directory to the cloned repository
 	# Clone the repository with the specific tag into the target directory
-	subprocess.run(['git', 'clone','--depth 1','--branch', tag, url])
+	subprocess.run(['git', 'clone', '--depth', '1', '--branch', tag, url])
 
 	# Print the current working directory to verify
 	print("Current Directory:", os.getcwd())
@@ -92,7 +89,7 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["pnnl_dopf","dopf_ornl"] #Add applications tob e build here
+	dockerItems = ["pnnl_dsse","pnnl_dopf","dopf_ornl"] #Add applications tob e build here
 	for entry in dockerItems:
 		thisFolder=os.path.join(buildDir,entry)
 		print(f"Cloning to:{thisFolder}")
