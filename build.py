@@ -61,6 +61,28 @@ def modify_dockerfile_content(dockerfile_path, application_directory):
 
 	return '\n'.join(modified_lines)
 
+def remove_redundant_from_statements(dockerfile_path):
+	print("Checking and removing redundant FROM statements...")
+	# Read the Dockerfile
+	with open(dockerfile_path, 'r') as file:
+		lines = file.readlines()
+
+	cleaned_lines = []
+	from_found = False
+	for line in lines:
+		# Check if the line is a FROM statement
+		if line.strip().startswith('FROM'):
+			if from_found:
+				# Skip subsequent FROM statements
+				print(f"Removing line:{line}")
+				continue
+			from_found = True
+		cleaned_lines.append(line)
+
+	# Write the cleaned lines back to the Dockerfile
+	with open(dockerfile_path, 'w') as file:
+		file.writelines(cleaned_lines)
+
 if __name__=="__main__":
 	preferredBuildOrder=['pnnl_dsse','datapreprocessor','dopf_ornl']
 	fix_white_space=lambda x:'"'+x+'"' if len(x.split(' '))>1 else x
@@ -120,7 +142,8 @@ if __name__=="__main__":
 	dockerItems = ["pnnl_dopf","dopf_ornl"] #Add applications tob e build here
 	modify_application_dockerfile = True
 	for entry in dockerItems:
-		thisFolder=os.path.join(buildDir,entry)
+		#thisFolder=os.path.join(buildDir,entry) #Clone application repository into application folder
+		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
 		print(f"Cloning to:{thisFolder}")
 		repositoryFolder,repositoryName = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry)
 
@@ -147,6 +170,8 @@ if __name__=="__main__":
 	else:
 		f.write(data+'\n'+copyStatements+'\nENTRYPOINT /home/runtime/runner/run.sh') #Append contents from individual application Dockerfiles to new Dockerfile
 	f.close()
+
+	remove_redundant_from_statements(os.path.join(tmpDir,'Dockerfile'))	#remove additional from statements
 
 	# build
 	print(f"Start build process using Dockerfile in {tmpDir}...")
