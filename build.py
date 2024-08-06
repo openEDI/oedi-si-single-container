@@ -143,16 +143,19 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["pnnl_dopf","dopf_ornl"] #Add applications to be build here
+	dockerItems = ["pnnl_dopf","dopf_ornl","datapreprocessor"] #Add applications to be build here
 	modify_application_dockerfile = True
 	for entry in dockerItems:
-		#thisFolder=os.path.join(buildDir,entry) #Clone application repository into application folder
 		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
-		print(f"Cloning to:{thisFolder}")
-		repositoryFolder,repositoryName = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry,show_details=args.showdetails)
-
-		print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
-		
+		print(f"Copying/cloning {entry} to:{thisFolder}")
+		if entry == "datapreprocessor":			
+			shutil.copytree(os.path.join(buildDir,"datapreprocessor"), os.path.join(thisFolder,"datapreprocessor")) # Copy the folder
+			repositoryFolder = os.path.join(thisFolder,"datapreprocessor")
+			repositoryName = "datapreprocessor"
+		else:			
+			repositoryFolder,repositoryName = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry,show_details=args.showdetails)
+			print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
+			
 		if modify_application_dockerfile:
 			modified_dockerfile_data = modify_dockerfile_content(os.path.join(repositoryFolder,'Dockerfile'), repositoryName)
 			data+=modified_dockerfile_data+'\n' #Read Dockerfile and append			
