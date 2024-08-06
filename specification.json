@@ -1,0 +1,4 @@
+{"pnnl_dsse":{"url":"https://github.com/GRIDAPPSD/gridappsd-state-estimator","tag":"OEDISI.1.1.0"},
+"pnnl_dopf":{"url":"https://github.com/pnnl/oedisi_dopf","tag":"v0.1.1"},
+"dopf_ornl":{"url":"https://github.com/bol22/oedisi-dopf-ornl","tag":"v0.0.0"}
+}

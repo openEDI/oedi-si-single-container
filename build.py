@@ -6,9 +6,7 @@ import shutil
 import json
 import subprocess
 
-json_file = r"C://Users//splathottam//Box Sync//GitHub//oedi-si-single-container//specification.json" #need a way to specify path to specification file
-
-def read_specification_and_clone_repository(json_file:str,target_directory:str,application:str):
+def read_specification_and_clone_repository(json_file:str,target_directory:str,application:str,show_details:bool=True):
 	# Read the JSON file
 	with open(json_file, 'r') as file:
 		data = json.load(file)
@@ -32,7 +30,10 @@ def read_specification_and_clone_repository(json_file:str,target_directory:str,a
 		shutil.rmtree(repository_path)# Delete the cloned repository if it exists
 	
 	# Clone the repository with the specific tag into the target directory
-	subprocess.run(['git', 'clone', '--depth', '1', '--branch', tag, url])
+	if show_details:
+		subprocess.run(['git', 'clone', '--depth', '1', '--branch', tag, url])
+	else:
+		subprocess.run(['git', 'clone', '--depth', '1', '--branch', tag, url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) #edirect the standard output and standard error to subprocess.DEVNULL
 
 	# Print the current working directory to verify
 	print("Current Directory:", os.getcwd())
@@ -90,6 +91,7 @@ if __name__=="__main__":
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
 	parser.add_argument('--nocache',help='apply --no-cache option',type=bool, required=False, default=False)
 	parser.add_argument("--podman", required=False, default=False, help="Use podman instead of docker")
+	parser.add_argument("--showdetails", required=False, default=False, help="Show more details")
 	args=parser.parse_args()
 
 	engine='podman' if args.podman else 'docker'
@@ -98,6 +100,8 @@ if __name__=="__main__":
 	buildDir=os.path.join(baseDir,'build')
 	noCache='--no-cache' if args.nocache else ''
 
+	json_file = os.path.join(baseDir,"specification.json") # #Specification file is in the base directory
+	
 	if 'win' in sys.platform:
 		isWindows=True
 	else:
@@ -139,13 +143,13 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["pnnl_dopf","dopf_ornl"] #Add applications tob e build here
+	dockerItems = ["pnnl_dopf","dopf_ornl"] #Add applications to be build here
 	modify_application_dockerfile = True
 	for entry in dockerItems:
 		#thisFolder=os.path.join(buildDir,entry) #Clone application repository into application folder
 		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
 		print(f"Cloning to:{thisFolder}")
-		repositoryFolder,repositoryName = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry)
+		repositoryFolder,repositoryName = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry,show_details=args.showdetails)
 
 		print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
 		
