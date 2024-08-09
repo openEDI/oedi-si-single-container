@@ -139,8 +139,9 @@ class Build(object):
 		# write wiring diagram and generate config_runner
 		wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
 		json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
-		directive=f'cd /home/oedisi/oedi-example && python3 /home/oedisi/oedi-example/test_full_systems.py '+\
-			f'--system {wiring_diagram_path} --target-directory /home/run'
+		#directive=f'cd /home/oedisi/oedi-example && python3 /home/oedisi/oedi-example/test_full_systems.py '+\
+		#	f'--system {wiring_diagram_path} --target-directory /home/run'
+		directive=f'oedisi build --system /home/oedi-example/scenarios/docker_system.json'
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
 
@@ -149,7 +150,7 @@ class Build(object):
 			os.system(f'rm -r /home/run/{thisConf["configRunnerData"]["federates"]["name"]}/* && '+\
 				f'cp -r {thisConf["data"]["src"]}/* /home/run/{thisConf["configRunnerData"]["federates"]["name"]}')
 
-		config_runner=json.load(open('/home/run/test_system_runner.json'))
+		config_runner=json.load(open('/home/run/system_runner.json'))
 
 		# config_runner mods for dopf_ornl
 		ind=-1
@@ -224,7 +225,7 @@ class Build(object):
 						f'helics_broker -f {len(config_runner["federates"])-1} --loglevel=warning'
 
 		# write config_runner
-		json.dump(config_runner,open('/home/run/test_system_runner.json','w'),indent=3)
+		json.dump(config_runner,open('/home/run/system_runner.json','w'),indent=3)
 
 		# patch for PNNL state estimator
 		if 'state_estimator_pnnl' in userConfig['federates']:
