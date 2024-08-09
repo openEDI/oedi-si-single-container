@@ -139,7 +139,7 @@ class Build(object):
 		# write wiring diagram and generate config_runner
 		wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
 		json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
-		directive=f'cd /home/oedisi/sgidal-example && python3 /home/oedisi/sgidal-example/test_full_systems.py '+\
+		directive=f'cd /home/oedisi/oedi-example && python3 /home/oedisi/oedi-example/test_full_systems.py '+\
 			f'--system {wiring_diagram_path} --target-directory /home/run'
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
