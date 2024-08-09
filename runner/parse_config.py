@@ -120,7 +120,7 @@ class Build(object):
 		# make mods for preprocessor
 		if self.config['userConfig']['use_oedisi_preprocessor']:
 			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
-			preprocessorFederatesDir='/home/datapreprocessor/datapreprocessor/federates'
+			preprocessorFederatesDir='/datapreprocessor/datapreprocessor/federates'
 			availablePreprocessorFederates=os.listdir(preprocessorFederatesDir)
 			if not os.path.exists('/home/run'):
 				os.system('mkdir /home/run')
@@ -245,7 +245,7 @@ class Build(object):
 			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
 			if 'nodeload' in preprocessorFederates or 'loadshape' in preprocessorFederates or \
 				'loadprofile' in preprocessorFederates or 'load_profile' in preprocessorFederates:
-				basePath='/home/datapreprocessor/datapreprocessor/app/nodeload'
+				basePath='/datapreprocessor/datapreprocessor/app/nodeload'
 				filePath=f'{basePath}/generate_solar_node_load_profile_from_solarhome_data.py'
 				loadProfilePath='/home/oedisi/gadal-ieee123/profiles/load_profiles'
 				opendssLocation=self.config['userConfig']['simulation_config']['opendss_location']+'/master.dss' ####TODO master.dss

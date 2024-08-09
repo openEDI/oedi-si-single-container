@@ -178,8 +178,11 @@ if __name__=="__main__":
 	for entry in dockerItems:
 		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
 		print(f"Copying/cloning {entry} to:{thisFolder}")
-		if entry == "datapreprocessor":			
-			shutil.copytree(os.path.join(buildDir,"datapreprocessor"), os.path.join(thisFolder,"datapreprocessor")) # Copy the folder
+		if entry == "datapreprocessor":	
+			targetpath = os.path.join(thisFolder,"datapreprocessor")
+			if os.path.exists(targetpath):
+				shutil.rmtree(targetpath)
+			shutil.copytree(os.path.join(buildDir,"datapreprocessor"), targetpath) # Copy the folder
 			repositoryFolder = os.path.join(thisFolder,"datapreprocessor")
 			repositoryName = "datapreprocessor"
 		else:			
