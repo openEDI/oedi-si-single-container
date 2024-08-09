@@ -6,20 +6,17 @@ import shutil
 import json
 import subprocess
 
-def read_specification_and_clone_repository(json_file:str,target_directory:str,application:str,show_details:bool=True):
-	# Read the JSON file
-	with open(json_file, 'r') as file:
-		data = json.load(file)
-
+def read_specification_and_clone_repository(specification_dict:dict,target_directory:str,application:str,show_details:bool=True,install:bool=False):
+		
 	if not os.path.exists(target_directory):
 		print(f"Creating {target_directory} since it was not found...")
 		os.mkdir(target_directory)
 
-	os.chdir(target_directory) # Change directory to application folder
+	os.chdir(target_directory) # Change directory to folder containing cloned repositories
 
 	# Extract URL and tag
-	url = data[application]['url']
-	tag = data[application]['tag']
+	url = specification_dict[application]['url']
+	tag = specification_dict[application]['tag']
 
 	# Extract the repository name from the URL
 	repository_name = url.split('/')[-1]
@@ -37,26 +34,38 @@ def read_specification_and_clone_repository(json_file:str,target_directory:str,a
 
 	# Print the current working directory to verify
 	print("Current Directory:", os.getcwd())
+
+	if install:
+		os.chdir(repository_name) # Change directory to cloned repository
+		subprocess.run(['pip', 'install', '-e', '.'])
 	
 	return repository_path,repository_name
 
 import re
 
-def modify_dockerfile_content(dockerfile_path, application_directory):
-	file_pattern = re.compile(r'COPY\s+([^\s]+)\s+([^\s]+)')
+def modify_application_dockerfile_content(dockerfile_path, application_directory,work_directory):
+	file_pattern_copy = re.compile(r'COPY\s+([^\s]+)\s+([^\s]+)')
+	file_pattern_workdir = r'^WORKDIR\s+(/.*)'
 	modified_lines = []
-
+	print("Modifying Dockerfile...")
 	with open(dockerfile_path, 'r') as file:
 		dockerfile_content = file.read()
 
 	for line in dockerfile_content.splitlines():
-		match = file_pattern.match(line)
-		if match:
-			src, dest = match.groups()
+		match_copy = file_pattern_copy.match(line)
+		match_workdir = re.match(file_pattern_workdir, line.strip())
+		if match_copy:
+			src, dest = match_copy.groups()
 			print(f"Pre-pending {application_directory} to source path {src}")
 			new_src = f'{application_directory}/{src}'
 			modified_line = f'COPY {new_src} {dest}'
-			modified_lines.append(modified_line)
+			modified_lines.append(modified_line)		
+				
+		elif match_workdir:			
+			existing_workdir = match_workdir.group(1) # Extract the existing directory from the regex match
+			print(f"Changing work directory to {work_directory}")
+			modified_lines.append(f'WORKDIR {work_directory}') # Replace the line with the new WORKDIR directive
+		
 		else:
 			modified_lines.append(line)
 
@@ -84,8 +93,24 @@ def remove_redundant_from_statements(dockerfile_path):
 	with open(dockerfile_path, 'w') as file:
 		file.writelines(cleaned_lines)
 
+def update_oedisi_dockerfile(dockerfile_content, specification_config):
+	# Loop through each repository in the dictionary
+	for repo_name, details in specification_config.items():
+		# Extract the repository URL and tag
+		repo_url = details['url']
+		repo_tag = details['tag']
+		
+		# Find the relevant git clone command in the Dockerfile content
+		old_command = f"git clone --depth 1 --branch {repo_tag} {repo_url}.git"
+		new_command = f"git clone --depth 1 --branch {repo_tag} {repo_url}.git"
+		
+		# Update the Dockerfile content
+		dockerfile_content = dockerfile_content.replace(old_command, new_command)
+		
+	return dockerfile_content
+
 if __name__=="__main__":
-	preferredBuildOrder=['pnnl_dsse','datapreprocessor','dopf_ornl']
+	preferredBuildOrder=['datapreprocessor','pnnl_dsse','dopf_ornl']
 	fix_white_space=lambda x:'"'+x+'"' if len(x.split(' '))>1 else x
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
@@ -100,14 +125,16 @@ if __name__=="__main__":
 	buildDir=os.path.join(baseDir,'build')
 	noCache='--no-cache' if args.nocache else ''
 
-	json_file = os.path.join(baseDir,"specification.json") # #Specification file is in the base directory
+	specification_file = os.path.join(baseDir,"specification.json") # #Specification file is in the base directory
+	with open(specification_file, 'r') as file: # Read the JSON file
+		specification_dict = json.load(file)
 	
 	if 'win' in sys.platform:
 		isWindows=True
 	else:
 		isWindows=False
 
-	tmpDir=os.path.join(baseDir,'tmp')
+	tmpDir=os.path.join(baseDir,'tmp2')
 	if not os.path.exists(tmpDir):
 		os.system(f'mkdir {tmpDir}')
 	if '.gitignore' in os.listdir(tmpDir):# ensure that this is the correct directory
@@ -125,8 +152,10 @@ if __name__=="__main__":
 	data=''
 	thisFolder=os.path.join(buildDir,'oedisi')
 	f=open(os.path.join(thisFolder,'Dockerfile'))
-	data+=f.read()+'\n'
-	f.close()
+	oedisi_dockerfile = f.read()
+	oedisi_dockerfile = update_oedisi_dockerfile(oedisi_dockerfile, specification_dict["oedisi"])	
+	data+=oedisi_dockerfile +'\n'
+	f.close()	
 	
 	copyStatements=''
 	if 'copy_statements.txt' in os.listdir(thisFolder):
@@ -143,7 +172,8 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["pnnl_dopf","dopf_ornl","datapreprocessor"] #Add applications to be build here
+	dockerItems = ["datapreprocessor","pnnl_dopf","dopf_ornl"] #Add applications to be build here
+	work_dir = "/home"
 	modify_application_dockerfile = True
 	for entry in dockerItems:
 		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
@@ -153,11 +183,11 @@ if __name__=="__main__":
 			repositoryFolder = os.path.join(thisFolder,"datapreprocessor")
 			repositoryName = "datapreprocessor"
 		else:			
-			repositoryFolder,repositoryName = read_specification_and_clone_repository(json_file,target_directory=thisFolder,application=entry,show_details=args.showdetails)
+			repositoryFolder,repositoryName = read_specification_and_clone_repository(specification_dict["application"],target_directory=thisFolder,application=entry,show_details=args.showdetails)
 			print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
 			
 		if modify_application_dockerfile:
-			modified_dockerfile_data = modify_dockerfile_content(os.path.join(repositoryFolder,'Dockerfile'), repositoryName)
+			modified_dockerfile_data = modify_application_dockerfile_content(os.path.join(repositoryFolder,'Dockerfile'), repositoryName,work_dir)
 			data+=modified_dockerfile_data+'\n' #Read Dockerfile and append			
 		else:
 			f=open(os.path.join(repositoryFolder,'Dockerfile'))
