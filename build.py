@@ -54,18 +54,23 @@ def modify_application_dockerfile_content(dockerfile_path, application_directory
 	for line in dockerfile_content.splitlines():
 		match_copy = file_pattern_copy.match(line)
 		match_workdir = re.match(file_pattern_workdir, line.strip())
-		if match_copy:
-			src, dest = match_copy.groups()
-			print(f"Pre-pending {application_directory} to source path {src}")
-			new_src = f'{application_directory}/{src}'
-			modified_line = f'COPY {new_src} {dest}'
-			modified_lines.append(modified_line)		
-				
-		elif match_workdir:			
-			existing_workdir = match_workdir.group(1) # Extract the existing directory from the regex match
-			print(f"Changing work directory to {work_directory}")
-			modified_lines.append(f'WORKDIR {work_directory}') # Replace the line with the new WORKDIR directive
-		
+		if not application_directory == "datapreprocessor":
+			if match_copy:
+				src, dest = match_copy.groups()
+				print(f"Pre-pending {application_directory} to source path {src}")
+				new_src = f'{application_directory}/{src}'
+				new_dest = f'{application_directory}/{dest}'
+				modified_line = f'COPY {new_src} {dest}'
+				modified_lines.append(modified_line)		
+					
+			elif match_workdir:
+				existing_workdir = match_workdir.group(1) # Extract the existing directory from the regex match
+				new_work_directory = f'{work_directory}/{application_directory}'
+				print(f"Changing work directory to {new_work_directory}")
+				modified_lines.append(f'WORKDIR {new_work_directory}') # Replace the line with the new WORKDIR directive
+			
+			else:
+				modified_lines.append(line)
 		else:
 			modified_lines.append(line)
 
@@ -189,9 +194,9 @@ if __name__=="__main__":
 			repositoryFolder,repositoryName = read_specification_and_clone_repository(specification_dict["application"],target_directory=thisFolder,application=entry,show_details=args.showdetails)
 			print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
 			
-		if modify_application_dockerfile:
+		if modify_application_dockerfile:			
 			modified_dockerfile_data = modify_application_dockerfile_content(os.path.join(repositoryFolder,'Dockerfile'), repositoryName,work_dir)
-			data+=modified_dockerfile_data+'\n' #Read Dockerfile and append			
+			data+= '\n' + f'#{repositoryName}' +'\n' + modified_dockerfile_data +'\n' #Read Dockerfile and append			
 		else:
 			f=open(os.path.join(repositoryFolder,'Dockerfile'))
 			data+=f.read()+'\n' #Read Dockerfile and append
