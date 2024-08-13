@@ -139,8 +139,17 @@ class Build(object):
 		# write wiring diagram and generate config_runner
 		wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
 		json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
-		#directive=f'cd /home/oedisi/oedi-example && python3 /home/oedisi/oedi-example/test_full_systems.py '+\
-		#	f'--system {wiring_diagram_path} --target-directory /home/run'
+		
+		#Update paths in components.json
+		with open("/home/oedisi/oedisi-example/components.json", "r") as file:
+			data = json.load(file)
+		
+		updated_data = {key: "/home/oedisi/oedisi-example/" + value for key, value in data.items()} # Modify the paths by adding the base directory
+		
+		with open("/home/oedisi/oedisi-example/components.json", "w") as file: # Save the updated JSON back to the file
+			json.dump(updated_data, file, indent=4)
+		print("Updated JSON file saved successfully.")
+
 		directive=f'oedisi build --target-directory /home/run --component-dict /home/oedisi/oedisi-example/components.json --system /home/oedisi/oedisi-example/scenarios/docker_system.json'
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
