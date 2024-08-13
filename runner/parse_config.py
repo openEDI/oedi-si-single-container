@@ -120,7 +120,7 @@ class Build(object):
 		# make mods for preprocessor
 		if self.config['userConfig']['use_oedisi_preprocessor']:
 			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
-			preprocessorFederatesDir='/home/datapreprocessor/datapreprocessor/datapreprocessor/federates'
+			preprocessorFederatesDir='/home/datapreprocessor/datapreprocessor/federates'
 			availablePreprocessorFederates=os.listdir(preprocessorFederatesDir)
 			if not os.path.exists('/home/run'):
 				os.system('mkdir /home/run')
@@ -141,7 +141,7 @@ class Build(object):
 		json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
 		#directive=f'cd /home/oedisi/oedi-example && python3 /home/oedisi/oedi-example/test_full_systems.py '+\
 		#	f'--system {wiring_diagram_path} --target-directory /home/run'
-		directive=f'oedisi build --target_directory /home/run --system /home/oedisi/oedisi-example/scenarios/docker_system.json'
+		directive=f'oedisi build --target-directory /home/run --component-dict /home/oedisi/oedisi-example/components.json --system /home/oedisi/oedisi-example/scenarios/docker_system.json'
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
 
@@ -248,7 +248,7 @@ class Build(object):
 				'loadprofile' in preprocessorFederates or 'load_profile' in preprocessorFederates:
 				basePath='/home/datapreprocessor/datapreprocessor/app/nodeload'
 				filePath=f'{basePath}/generate_solar_node_load_profile_from_solarhome_data.py'
-				loadProfilePath='/home/oedisi/gadal-ieee123/profiles/load_profiles'
+				loadProfilePath='/home/oedisi/oedisi-ieee123/profiles/load_profiles'
 				opendssLocation=self.config['userConfig']['simulation_config']['opendss_location']+'/master.dss' ####TODO master.dss
 
 				os.system(f'rm {basePath}/*.csv')
