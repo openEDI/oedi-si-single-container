@@ -237,9 +237,12 @@ class Build(object):
 		json.dump(config_runner,open('/home/run/system_runner.json','w'),indent=3)
 
 		# patch for PNNL state estimator
+		print(f"User config:{userConfig}")
 		if 'state_estimator_pnnl' in userConfig['federates']:
 			for entry in stateEstimatorWiringData['state_estimator_pnnl']['components']:
+				print(f"Entry:{entry}")
 				if entry['name']!='state_estimator_pnnl':
+					print(f"Entry:{entry['name']}")
 					if entry['type'].lower()=='recorder':
 						thisPath=os.path.join('/home/run',entry['name'],'input_mapping.json')
 						thisInputMapping=json.load(open(thisPath))

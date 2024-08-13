@@ -19,9 +19,9 @@
 	],
    "externally_connected_federates": [],
    "simulation_config": {
-      "opendss_location": "/home/oedisi/gadal-ieee123/qsts",
-      "profile_location": "/home/oedisi/gadal-ieee123/profiles",
-      "sensor_location": "/home/oedisi/gadal-ieee123/sensors.json",
+      "opendss_location": "/home/oedisi/oedisi-ieee123/qsts",
+      "profile_location": "/home/oedisi/oedisi-ieee123/profiles",
+      "sensor_location": "/home/oedisi/oedisi-ieee123/sensors.json",
       "start_date": "2017-01-01 00:00:00",
       "number_of_timesteps": 4,
       "run_freq_sec": 900

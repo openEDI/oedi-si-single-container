@@ -69,6 +69,7 @@ def run(project_dir_path,config,run_as_admin,tag,podman,interactive):
 			directive+='-it --entrypoint /bin/bash '
 
 		directive+=f'{tag}'
+		print(f"Run directive:{directive}")
 		os.system(directive)
 
 		# copy output
@@ -124,10 +125,25 @@ def windowsVolumeMount(baseDir,project_dir_path,configPath,tag,containerEngine):
 @click.option("-p","--project_dir_path", required=True, help="Path to template folder")
 def init(project_dir_path):
 	"""Initializes a new project"""
+	print(f"Project dir path:{project_dir_path}")
+	print(f"Base dir path:{baseDir}")
+	
 	if isWindows:
-		err=os.system(f'mkdir {os.path.join(project_dir_path,"config")} {os.path.join(project_dir_path,"output")}')
-		err=os.system(f'{copyCmd} {os.path.join(baseDir,"runner")} {os.path.join(project_dir_path,"config")}')
-		err=os.system(f'{copyCmd} {os.path.join(baseDir,"user_federates")} {os.path.join(project_dir_path,"user_federates")} /MIR')
+		#err=os.system(f'mkdir {os.path.join(project_dir_path,"config")} {os.path.join(project_dir_path,"output")}') #These commands don't work if there are spaces
+		#err=os.system(f'{copyCmd} {os.path.join(baseDir,"runner")} {os.path.join(project_dir_path,"config")}')
+		#err=os.system(f'{copyCmd} {os.path.join(baseDir,"user_federates")} {os.path.join(project_dir_path,"user_federates")} /MIR')
+		os.makedirs(os.path.join(project_dir_path, "config"), exist_ok=True) #These commands will work if there are spaces in the path names
+		os.makedirs(os.path.join(project_dir_path, "output"), exist_ok=True)
+		source_path = os.path.join(baseDir, "runner")
+		destination_path = os.path.join(project_dir_path, "config")		
+		copy_cmd = f'{copyCmd} "{source_path}" "{destination_path}"' # Construct the copy command with proper quoting
+		err = os.system(copy_cmd)
+		
+		source_path = os.path.join(baseDir, "user_federates")
+		destination_path = os.path.join(project_dir_path, "user_federates")		
+		copy_cmd = f'{copyCmd} "{source_path}" "{destination_path}" /MIR' # Construct the copy command with proper quoting
+		err = os.system(copy_cmd)
+		
 	else:
 		err=os.system(f'mkdir -p {os.path.join(project_dir_path,"config")} {os.path.join(project_dir_path,"output")}')
 		assert err==0,f'creating project directory resulted in error:{err}'
