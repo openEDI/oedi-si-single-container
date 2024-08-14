@@ -13,8 +13,8 @@ import numpy as np
 import networkx as nx
 import pandas as pd
 
-from datapreprocessor.datapreprocessor.utils.exceptionutil import ExceptionUtil
-
+#from datapreprocessor.datapreprocessor.utils.exceptionutil import ExceptionUtil
+from datapreprocessor.utils.exceptionutil import ExceptionUtil
 
 LogUtil=ExceptionUtil()
 baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

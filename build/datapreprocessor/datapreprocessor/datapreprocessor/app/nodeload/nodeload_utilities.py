@@ -26,8 +26,8 @@ try:
 except ImportError:
 	warnings.warn('seaborn failed to import', ImportWarning)
 
-from datapreprocessor.datapreprocessor.model.distmodel import DistModel
-from datapreprocessor.datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_series_dataframe,add_datetime,get_n_days_in_df
+from datapreprocessor.model.distmodel import DistModel
+from datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_series_dataframe,add_datetime,get_n_days_in_df
 
 def find_df_timeperiod(df,datetime_column="datetime"):
 	"""Upsample origina time series"""
