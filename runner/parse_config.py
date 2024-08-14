@@ -16,6 +16,7 @@ class Build(object):
 
 		if not userConfigPath:
 			userConfigPath=os.path.join(self._baseDir,'user_config.json')
+		print(f"Opening user configuration from:{userConfigPath}")
 		self.config['userConfig']=json.load(open(userConfigPath))
 
 		self.config['links']=self._convertToOedisiLinks(json.load(open(os.path.join(self._baseDir,'links.json'))))
