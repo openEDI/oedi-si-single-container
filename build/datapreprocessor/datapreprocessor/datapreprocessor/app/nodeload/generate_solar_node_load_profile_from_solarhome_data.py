@@ -18,7 +18,7 @@ workDir=os.path.join(baseDir,"datapreprocessor")
 print(f"Adding home directory:{baseDir} to path")
 sys.path.insert(0,baseDir) #Add module path to prevent import errors
 
-from datapreprocessor.app.nodeload.timeseries_data_utilities import get_config_dict,get_n_days_in_df
+from datapreprocessor.app.nodeload.timeseries_data_utilities import get_n_days_in_df
 from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder
 from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import generate_solar_node_profiles
 
@@ -76,6 +76,7 @@ if not args.profilepath:
 	df_solar_node.to_pickle(os.path.join(folder_name_solarnode,\
 		f"solar_node_{model_folder}_{month_names}_nodes-{n_solar_nodes}_days-{n_days}_maxsolar-{max_solar_penetration}.pkl"))
 else:
+	print(f"Saving solar node profiles in {args.profilepath}...")
 	cols=[entry for entry in df_solar_node.columns if 'gross_load' in entry]
 	for entry in cols:
 		if args.fill>0:

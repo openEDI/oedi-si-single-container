@@ -155,7 +155,7 @@ def generate_solar_node_profiles(df_timeseries,casefile,selected_months = [1],n_
 		res[f"{node}_net_load"] = res[f"{node}_gross_load"] - res[f"{node}_solar"]
 
 	df_node = pd.DataFrame(res)
-
+	print(f"Finished generating load profiles (each with {len(df_node)} time steps) for {len(solar_node_dict)} nodes...")
 	return df_node,solar_node_dict #### TODO replace solar_node_dict
 
 

@@ -4,9 +4,6 @@ import sys
 
 import tensorflow as tf
 import helics as h
-####import oedisi.types.data_types as GadalTypes
-import gadal.gadal_types.data_types as GadalTypes
-
 
 from datapreprocessor.federates.dataimputation.iohelper import IOHelper
 from datapreprocessor.app.dataimputation.data_imputation_postprocessing import update_window_and_impute
