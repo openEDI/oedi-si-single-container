@@ -14,7 +14,7 @@ workDir=os.path.join(baseDir,"oedianl")
 print(f"Adding home directory:{baseDir} to path")
 sys.path.insert(0,baseDir) #Add module path to prevent import errors
 
-from oedianl.app.nodeload.nodeload_utilities import create_average_timeseries_profiles,generate_load_node_profiles,check_and_create_folder
+from datapreprocessor.app.nodeload.nodeload_utilities import create_average_timeseries_profiles,generate_load_node_profiles,check_and_create_folder
 
 parser=argparse.ArgumentParser()
 parser.add_argument('-f','--timeseries',help='Time series files to be used for generating node load',default = "solarhome/solarhome_customers-300_days-365.csv", required=False)

@@ -21,7 +21,7 @@ from numpy.random import default_rng
 from pandas.tseries.offsets import DateOffset
 from tqdm import tqdm
 
-from datapreprocessor.datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset,check_moving_window
+from datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset,check_moving_window
 
 def evaluate_dataimputation_on_streaming_data_single_node(df_eval,selected_node,load_block_length):
 	"""Evaluate on a datastream with missing values at time stamps"""

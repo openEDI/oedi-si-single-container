@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import keras
 
-from datapreprocessor.datapreprocessor.app.model_utilities.model_save_load_utilities import load_keras_model
+from datapreprocessor.app.model_utilities.model_save_load_utilities import load_keras_model
 
 def train_model(model,train_dataset,validation_dataset,n_epochs:int,callbacks:List):
 	"""Train the model and return model+ train history"""
