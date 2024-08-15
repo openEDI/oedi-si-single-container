@@ -2,12 +2,13 @@ import os
 import json
 import sys
 
-import tensorflow as tf
+#import tensorflow as tf
 import helics as h
 
 from datapreprocessor.federates.dataimputation.iohelper import IOHelper
 from datapreprocessor.app.dataimputation.data_imputation_postprocessing import update_window_and_impute
 from datapreprocessor.app.dataimputation.model_utilities import sevenziparchive_to_model
+from datapreprocessor.app.model_utilities.model_save_load_utilities import load_keras_model
 from datapreprocessor.utils.exceptionutil import ExceptionUtil
 import datapreprocessor
 workDir=datapreprocessor.__path__[0]
@@ -53,7 +54,9 @@ class DataimputationFederate(IOHelper):
 			self.setup_publications(self.config['federate_config'])
 			self.setup_subscriptions(self.config['federate_config'])
 			print(f"Loading data imputation model from {self.prediction_model_folder}")
-			self.autoencoder_dict =  {'pdemand':tf.keras.models.load_model(self.prediction_model_folder),'qdemand':tf.keras.models.load_model(self.prediction_model_folder)}
+			#self.autoencoder_dict =  {'pdemand':tf.keras.models.load_model(self.prediction_model_folder),'qdemand':tf.keras.models.load_model(self.prediction_model_folder)}
+			self.autoencoder_dict =  {'pdemand':load_keras_model(self.prediction_model_folder),'qdemand':load_keras_model(self.prediction_model_folder)}
+			
 			self.autoencoder_dict['pdemand'].summary(expand_nested=True)
 			self.window_size = self.config['static_inputs']['window_size']
 			self.input_features = self.config['static_inputs']['input_features']

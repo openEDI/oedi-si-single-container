@@ -23,19 +23,19 @@ from tqdm import tqdm
 
 from datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset,check_moving_window
 
-def evaluate_dataimputation_on_streaming_data_single_node(df_eval,selected_node,load_block_length):
+def evaluate_dataimputation_on_streaming_data_single_node(df_eval,selected_node,window_size):
 	"""Evaluate on a datastream with missing values at time stamps"""
 	
-	#test_data_window = [df_node_load_eval[selected_node].mean()]*load_block_length
-	test_data_window = [df_eval.loc[(df_eval["node_id"]==selected_node),"load_value"].mean()]*load_block_length
-	test_data_ffill_window = [df_eval.loc[(df_eval["node_id"]==selected_node),"load_value"].mean()]*load_block_length
-	actual_data_window = [df_eval.loc[(df_eval["node_id"]==selected_node),"load_value"].mean()]*load_block_length
+	#test_data_window = [df_node_load_eval[selected_node].mean()]*window_size
+	test_data_window = [df_eval.loc[(df_eval["node_id"]==selected_node),"load_value"].mean()]*window_size
+	test_data_ffill_window = [df_eval.loc[(df_eval["node_id"]==selected_node),"load_value"].mean()]*window_size
+	actual_data_window = [df_eval.loc[(df_eval["node_id"]==selected_node),"load_value"].mean()]*window_size
 	
 	test_hour_window = [23,23,23,23]
 
 	df_eval_selected_node = df_eval.loc[(df_eval["node_id"]==selected_node),["datetime","load_value","load_value_corrupted","load_value_corrupted_ffill"]]
 	df_eval_selected_node = df_eval_selected_node.reset_index(drop=True)
-	timestamp_window = [df_eval_selected_node.loc[0,"datetime"]]*load_block_length
+	timestamp_window = [df_eval_selected_node.loc[0,"datetime"]]*window_size
 	
 	error_di_model = []
 	error_ffill_model = []
@@ -50,7 +50,7 @@ def evaluate_dataimputation_on_streaming_data_single_node(df_eval,selected_node,
 		new_data_ffill = df_row.loc["load_value_corrupted_ffill"]
 		new_data_actual = df_row.loc["load_value"]
 
-		window = create_streaming_data(new_data,new_data_ffill,new_hour,test_data_window,test_data_ffill_window,test_hour_window,load_block_length,input_features)
+		window = create_streaming_data(new_data,new_data_ffill,new_hour,test_data_window,test_data_ffill_window,test_hour_window,window_size,input_features)
 
 		actual_data_window.append(actual_data_window.pop(0)) #shifted backwards (to left)
 		actual_data_window[-1] = new_data_actual #Replace with new data point
@@ -69,66 +69,11 @@ def evaluate_dataimputation_on_streaming_data_single_node(df_eval,selected_node,
 
 	print(f"DAE error:{sum(error_di_model)/len(error_di_model):.2f},ffill error:{sum(error_ffill_model)/len(error_ffill_model):.2f}")
 
-def create_streaming_data_legacy(new_data,new_data_ffill,new_hour,data_window,data_ffill_window,hour_window,load_block_length,input_features):
+def create_streaming_data(new_data,new_data_ffill,new_hour,data_window,data_ffill_window,hour_window,window_size,input_features):
 	"""Returns a window that can be used as input to data imputation model that simulates a moving window"""
 	
 	#print(input_features)
-	assert len(data_window)== len(hour_window) == load_block_length, f"Expected data window:{data_window} to have {load_block_length} elements"
-	#data_window.append(data_window.pop(0)) #shifted backwards (to left)
-	#data_window[-1] = new_data_point #Replace with new data point
-	previous_window_data = data_window.pop(0) #Pop off first element in window and store
-	data_window.append(new_data) #Append new data point at end of window
-	
-	previous_window_data_ffill = data_ffill_window.pop(0) #Pop off first element in window and store
-	data_ffill_window.append(new_data_ffill) #Append new data point at end of window
-	
-	previous_window_hour = hour_window.pop(0) #Pop off first element in window and store
-	hour_window.append(new_hour) #Append new data point at end of window
-	#print(f"Replacing {previous_window_last_value} with {new_data}")
-	
-	window = []	   
-		
-	#encoded_cyclical_features= ['cos_hour','sin_hour']
-	for i,(data,data_ffill,hour) in enumerate(zip(data_window,data_ffill_window,hour_window)):
-		hour_norm = (2*math.pi*hour)/23.0 # We min-max normalize x values to match with the 0-2π cycle
-		features = []
-		for input_feature in input_features:
-			if data == 0.0:
-				if input_feature == "load_value_corrupted":
-					features.append(data)
-				elif input_feature == "load_value_corrupted_ffill":
-					features.append(data_ffill)
-				#elif input_feature == "load_value_corrupted_ffill":
-				#	 if i>=1:
-				#		 features.append(data_window[i-1])
-				#	 else:
-				#		 features.append(previous_window_data)
-				elif input_feature == "corruption_encoding":
-					features.append(1.0)
-				elif input_feature == "cos_hour":
-					features.append(np.cos(hour_norm))
-				elif input_feature == "sin_hour":
-					features.append(np.sin(hour_norm))
-			else:
-				if input_feature == "load_value_corrupted":
-					features.append(data)
-				elif input_feature == "load_value_corrupted_ffill":
-					features.append(data_ffill)
-				elif input_feature == "corruption_encoding":
-					features.append(0.0)
-				elif input_feature == "cos_hour":
-					features.append(np.cos(hour_norm))
-				elif input_feature == "sin_hour":
-					features.append(np.sin(hour_norm))
-		window.append(features)		  
-	
-	return np.array(window)
-
-def create_streaming_data(new_data,new_data_ffill,new_hour,data_window,data_ffill_window,hour_window,load_block_length,input_features):
-	"""Returns a window that can be used as input to data imputation model that simulates a moving window"""
-	
-	#print(input_features)
-	assert len(data_window)== len(hour_window) == load_block_length, f"Expected data window:{data_window} to have {load_block_length} elements"
+	assert len(data_window)== len(hour_window) == window_size, f"Expected data window:{data_window} to have {window_size} elements"
 	previous_window_data = data_window.pop(0) #Pop off first element in window and store
 	data_window.append(new_data) #Append new data point at end of window
 	
@@ -176,16 +121,16 @@ def create_streaming_data(new_data,new_data_ffill,new_hour,data_window,data_ffil
 	#print(window)
 	return np.array(window)
 
-def evaluate_dataimputation_on_streaming_data_multi_nodes(df_eval,autoencoder,monitored_nodes,load_block_length,input_features,timeinterval_mins=15):
+def evaluate_dataimputation_on_streaming_data_multi_nodes(df_eval,autoencoder,monitored_nodes,window_size,input_features,timeinterval_mins=15):
 	"""Loop through monitored nodes"""
 	
 	print(f"Following {len(monitored_nodes)} nodes will be observed:{monitored_nodes}")
 
-	node_data_dict = {node_id:{"data_raw_window":[round(df_eval.loc[(df_eval["node_id"]==node_id),"load_value"].mean(),1)]*load_block_length,\
-							   "data_ffill_window":[round(df_eval.loc[(df_eval["node_id"]==node_id),"load_value"].mean(),1)]*load_block_length,\
-							   "data_actual_window":[round(df_eval.loc[(df_eval["node_id"]==node_id),"load_value"].mean(),1)]*load_block_length,\
-							   "hour_window":[(df_eval.loc[0,"datetime"] - DateOffset(minutes=int(timeinterval_mins*(load_block_length-i)))).hour for i in range(load_block_length)],\
-							   "timestamp_window":[(df_eval.loc[0,"datetime"] - DateOffset(minutes=int(timeinterval_mins*(load_block_length-i)))) for i in range(load_block_length)],\
+	node_data_dict = {node_id:{"data_raw_window":[round(df_eval.loc[(df_eval["node_id"]==node_id),"load_value"].mean(),1)]*window_size,\
+							   "data_ffill_window":[round(df_eval.loc[(df_eval["node_id"]==node_id),"load_value"].mean(),1)]*window_size,\
+							   "data_actual_window":[round(df_eval.loc[(df_eval["node_id"]==node_id),"load_value"].mean(),1)]*window_size,\
+							   "hour_window":[(df_eval.loc[0,"datetime"] - DateOffset(minutes=int(timeinterval_mins*(window_size-i)))).hour for i in range(window_size)],\
+							   "timestamp_window":[(df_eval.loc[0,"datetime"] - DateOffset(minutes=int(timeinterval_mins*(window_size-i)))) for i in range(window_size)],\
 							   "mse_di_model":[],"mse_ffill_model":[]}
 	
 				 for node_id in list(set(df_eval["node_id"]))}
@@ -200,17 +145,17 @@ def evaluate_dataimputation_on_streaming_data_multi_nodes(df_eval,autoencoder,mo
 								   "data_ffill":df_eval_selected_node.loc[0,"load_value_corrupted_ffill"],"data_actual":df_eval_selected_node.loc[0,"load_value"]}
 			
 			
-			update_window_and_impute(streaming_data_dict,autoencoder,monitored_node,load_block_length,node_data_dict,i,input_features)
+			update_window_and_impute(streaming_data_dict,autoencoder,monitored_node,window_size,node_data_dict,i,input_features)
 	
 	for monitored_node in monitored_nodes:
 		print(f"Node:{monitored_node} - DAE error:{sum(node_data_dict[monitored_node]['mse_di_model'])/len(node_data_dict[monitored_node]['mse_di_model']):.2f},ffill error:{sum(node_data_dict[monitored_node]['mse_ffill_model'])/len(node_data_dict[monitored_node]['mse_ffill_model']):.2f}")
 
-def update_window_and_impute(streaming_data_dict,autoencoder,selected_node,load_block_length,node_data_dict,window_id,input_features):
+def update_window_and_impute(streaming_data_dict,autoencoder,selected_node,window_size,node_data_dict,window_id,input_features):
 	"""Evaluate on a datastream with missing values at time stamps"""
 	
 	window = create_streaming_data(streaming_data_dict["data_raw"],streaming_data_dict["data_ffill"],streaming_data_dict["hour"],
 								   node_data_dict[selected_node]["data_raw_window"],node_data_dict[selected_node]["data_ffill_window"],node_data_dict[selected_node]["hour_window"],
-								   load_block_length,input_features)
+								   window_size,input_features)
 	
 	if "data_actual_window" in node_data_dict[selected_node]:
 		node_data_dict[selected_node]["data_actual_window"].append(node_data_dict[selected_node]["data_actual_window"].pop(0)) #shifted backwards (to left)
@@ -337,15 +282,15 @@ def compare_performance_moving_window(df,predictions,window_size,measurement_col
 	
 	return df_comparison
 
-def predict_from_time_series_files(time_series_files,prediction_model_file,load_block_length,input_features,target_feature):
+def predict_from_time_series_files(time_series_files,prediction_model_file,window_size,input_features,target_feature):
 	"""Make data imputation on time series files after corrupting it"""
 	
-	df,input_target = get_dataset_from_csv(time_series_files,load_type_selected,load_block_length,selected_month,input_features,target_feature,show_details=False,df_type="eval",corrupted_fraction=0.01,use_moving_window=False)
+	df,input_target = get_dataset_from_csv(time_series_files,load_type_selected,window_size,selected_month,input_features,target_feature,show_details=False,df_type="eval",corrupted_fraction=0.01,use_moving_window=False)
 		
 	print(f"Input dataset shape:{input_target.take(1).as_numpy_iterator().next()[0].shape}")
 	print(f"Target dataset shape:{input_target.take(1).as_numpy_iterator().next()[1].shape}")
 	
-	check_moving_window(input_target,df,load_block_length,input_features)
+	check_moving_window(input_target,df,window_size,input_features)
 	input_target =input_target.batch(128)	 
 	
 	predictions = load_evaluate_predict(prediction_model_file,input_target=input_target)
