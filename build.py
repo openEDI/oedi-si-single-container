@@ -177,7 +177,7 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["datapreprocessor","pnnl_dsse","pnnl_dopf","dopf_ornl"] #Add applications to be build here
+	dockerItems = ["datapreprocessor"] #Add applications to be build here
 	work_dir = "/home"
 	modify_application_dockerfile = True
 	for entry in dockerItems:
@@ -209,7 +209,7 @@ if __name__=="__main__":
 	print("Creating single container Dockerfile...")
 	f=open(os.path.join(tmpDir,'Dockerfile'),'w') #Open a Dockerfile
 	if isWindows:
-		data+='\nRUN apt install -y dos2unix'
+		data+='\nRUN apt-get update && apt-get install -y dos2unix'
 		f.write(data+'\n'+copyStatements+'\nENTRYPOINT dos2unix /home/runtime/runner/run.sh && '+\
 			'/home/runtime/runner/run.sh')
 	else:
