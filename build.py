@@ -177,7 +177,7 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["datapreprocessor","pnnl_dopf","dopf_ornl"] #Add applications to be build here
+	dockerItems = ["datapreprocessor","pnnl_dsse","pnnl_dopf","dopf_ornl"] #Add applications to be build here
 	work_dir = "/home"
 	modify_application_dockerfile = True
 	for entry in dockerItems:
