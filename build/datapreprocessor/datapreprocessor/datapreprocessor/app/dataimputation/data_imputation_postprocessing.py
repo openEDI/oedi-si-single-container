@@ -171,7 +171,8 @@ def update_window_and_impute(streaming_data_dict,autoencoder,selected_node,windo
 		missing_index = node_data_dict[selected_node]["data_raw_window"].index(0.0) #find index of missing value in window
 		missing_timestamp = node_data_dict[selected_node]['timestamp_window'][missing_index]
 		
-		prediction = autoencoder.predict(np.expand_dims(window, axis=0),verbose=0) #Use autoencoder model to perform imputation
+		#prediction = autoencoder.predict(np.expand_dims(window, axis=0),verbose=0) #Use autoencoder model to perform imputation
+		prediction = autoencoder(np.expand_dims(window, axis=0)) #Use autoencoder model to perform imputation
 		ae_imputed_value = prediction.flatten()[missing_index]
 		ffill_imputed_value = node_data_dict[selected_node]['data_ffill_window'][missing_index]
 		

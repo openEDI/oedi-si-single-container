@@ -1,6 +1,7 @@
 {
 "modelDir":"app/dataimputation/model",
 "pretrained_model_file":"di_model-lstm_dss-123Bus_m-Feb_w-4_f-5_c-0.05_vsolarhome.7z",
+"model_format":"tfsm",
 "monitored_nodes":["s100c","s102c"],
 "initial_measurements":{"s100c":10.0,"s102c":10.0},
 "window_size":4,
