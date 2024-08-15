@@ -153,7 +153,21 @@ class Build(object):
 		with open("/home/oedisi/oedisi-example/components.json", "w") as file: # Save the updated JSON back to the file
 			json.dump(updated_data, file, indent=4)
 		
-		#Create system_runner.json /home/run
+		#Update paths in docker_system.json
+		with open("/home/oedisi/oedisi-example/scenarios/docker_system.json", "r") as file:
+			data = json.load(file)
+		for component in data["components"]:
+			if "feather_filename" in component["parameters"]:				
+				component["parameters"]["feather_filename"] = component["parameters"]["feather_filename"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
+			if "csv_filename" in component["parameters"]:				
+				component["parameters"]["csv_filename"] = component["parameters"]["csv_filename"].replace("../../", "/home/") #assign the result of replace back to the dictionary key
+			if "topology_output" in component["parameters"]:				
+				component["parameters"]["topology_output"] = component["parameters"]["topology_output"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
+		
+		with open("/home/oedisi/oedisi-example/scenarios/docker_system.json", "w") as file: # Save the updated JSON back to the file
+			json.dump(data, file, indent=4)
+		
+		#Create system_runner.json from components.json and docker_system.json
 		directive=f'oedisi build --target-directory /home/run --component-dict /home/oedisi/oedisi-example/components.json --system /home/oedisi/oedisi-example/scenarios/docker_system.json'
 		print(f"Executing directive:{directive}")
 		flag=os.system(directive)
