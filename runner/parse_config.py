@@ -154,7 +154,7 @@ class Build(object):
 		with open("/home/oedisi/oedisi-example/components.json", "r") as file:
 			data = json.load(file)		
 		updated_data = {key: "/home/oedisi/oedisi-example/" + value for key, value in data.items()} # Modify the paths by adding the base directory		
-		with open("/home/oedisi/oedisi-example/components.json", "w") as file: # Save the updated JSON back to the file
+		with open("/home/runtime/runner/components.json", "w") as file: # Save the updated JSON back to the file
 			json.dump(updated_data, file, indent=4)
 		
 		#select system_json
