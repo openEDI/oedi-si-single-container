@@ -4,7 +4,7 @@ import json
 from collections import OrderedDict, defaultdict
 
 import helics as h
-import gadal.gadal_types.data_types as GadalTypes
+import oedisi.types.data_types as OedisiTypes
 
 from exceptionutil import ExceptionUtil
 
@@ -127,8 +127,8 @@ class IOHelper(object):
 				assert thisKey in config['inputPort2TypeMapping'],\
 					f'{thisKey} not in inputPort2TypeMapping'
 				assert config['inputPort2TypeMapping'][thisKey] in \
-					GadalTypes.__dict__,f'{config["inputPort2TypeMapping"][thisKey]} not in GadalTypes'
-				subData[thisKey] = GadalTypes.__dict__[\
+					OedisiTypes.__dict__,f'{config["inputPort2TypeMapping"][thisKey]} not in OedisiTypes'
+				subData[thisKey] = OedisiTypes.__dict__[\
 					config['inputPort2TypeMapping'][thisKey]].parse_obj(json.loads(val))
 
 		return subData
@@ -141,9 +141,9 @@ class IOHelper(object):
 			LogUtil.logger.info(f"thisKey::::{pubData[thisKey]}")
 			assert isinstance(pubData[thisKey],dict),f'data for {thisKey} is not a dictionary'
 			assert thisKey in config['outputPort2TypeMapping'],f'{thisKey} not in outputPort2TypeMapping'
-			assert config['outputPort2TypeMapping'][thisKey] in GadalTypes.__dict__,\
-				f'{config["outputPort2TypeMapping"][thisKey]} not in GadalTypes'
-			thisData=GadalTypes.__dict__[\
+			assert config['outputPort2TypeMapping'][thisKey] in OedisiTypes.__dict__,\
+				f'{config["outputPort2TypeMapping"][thisKey]} not in OedisiTypes'
+			thisData=OedisiTypes.__dict__[\
 			config['outputPort2TypeMapping'][thisKey]](**pubData[thisKey]).json()
 			h.__dict__[pub[thisKey]['method']](pub[thisKey]['indexObj'],thisData)
 

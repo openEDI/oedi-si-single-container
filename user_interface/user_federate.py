@@ -6,7 +6,7 @@ import datetime
 import pdb
 
 import helics as h
-import gadal.gadal_types.data_types as GadalTypes
+import oedisi.types.data_types as OedisiTypes
 
 from iohelper import IOHelper
 from exceptionutil import ExceptionUtil
