@@ -143,8 +143,8 @@ class DataimputationFederate(IOHelper):
 					imputed_qdemand_measurements = {node:preprocessed_output_dict[node]['qdemand'][last_timestamp]['AE'] for node in nodes}
 					LogUtil.logger.info(f"Output from pdemand imputation model at {last_timestamp}:{imputed_pdemand_measurements}")
 					LogUtil.logger.info(f"Output from qdemand imputation model at {last_timestamp}:{imputed_qdemand_measurements}")
-					pubData={'powers_real':{'values':list(imputed_pdemand_measurements.values()),'ids':nodes,'time':last_timestamp},\
-						'powers_imag':{'values':list(imputed_qdemand_measurements.values()),'ids':nodes,'time':last_timestamp}}
+					pubData={'powers_real':{'values':list(imputed_pdemand_measurements.values()),'ids':nodes,'equipment_ids':["di_1","di_2"],'time':last_timestamp},\
+						'powers_imag':{'values':list(imputed_qdemand_measurements.values()),'ids':nodes,'equipment_ids':["di_1","di_2"],'time':last_timestamp}}
 					LogUtil.logger.info(f"Completed data imputation algorithm")
 
 					# publications

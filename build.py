@@ -115,7 +115,7 @@ def update_oedisi_dockerfile(dockerfile_content, specification_config):
 	return dockerfile_content
 
 if __name__=="__main__":
-	preferredBuildOrder=['datapreprocessor','pnnl_dsse','dopf_ornl']
+	preferredBuildOrder=['datapreprocessor','dopf_ornl','dopf_pnnl']
 	fix_white_space=lambda x:'"'+x+'"' if len(x.split(' '))>1 else x
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
@@ -138,19 +138,19 @@ if __name__=="__main__":
 		isWindows=True
 	else:
 		isWindows=False
-
-	tmpDir=os.path.join(baseDir,'tmp2')
+	tmpFolder= "tmp"
+	tmpDir=os.path.join(baseDir,tmpFolder)
 	if not os.path.exists(tmpDir):
 		os.system(f'mkdir {tmpDir}')
 	if '.gitignore' in os.listdir(tmpDir):# ensure that this is the correct directory
-		f=open(os.path.join(baseDir,'tmp','.gitignore'))
+		f=open(os.path.join(baseDir,tmpFolder,'.gitignore'))
 		tempData=f.read()
 		f.close()
 
 		shutil.rmtree(tmpDir)
 		os.system(f'mkdir {fix_white_space(tmpDir)}')
 
-		f=open(os.path.join(baseDir,'tmp','.gitignore'),'w')
+		f=open(os.path.join(baseDir,tmpFolder,'.gitignore'),'w')
 		f.write(tempData)
 		f.close()
 
@@ -177,7 +177,7 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["datapreprocessor"] #Add applications to be build here
+	dockerItems = ["datapreprocessor","dopf_ornl","dopf_pnnl"] #Add applications to be build here
 	work_dir = "/home"
 	modify_application_dockerfile = True
 	for entry in dockerItems:
@@ -210,6 +210,7 @@ if __name__=="__main__":
 	f=open(os.path.join(tmpDir,'Dockerfile'),'w') #Open a Dockerfile
 	if isWindows:
 		data+='\nRUN apt-get update && apt-get install -y dos2unix'
+		data+='\nRUN mkdir -p /home/outputs' #create outputs folder
 		f.write(data+'\n'+copyStatements+'\nENTRYPOINT dos2unix /home/runtime/runner/run.sh && '+\
 			'/home/runtime/runner/run.sh')
 	else:
