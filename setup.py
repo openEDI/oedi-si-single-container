@@ -22,7 +22,7 @@ setuptools.setup(name='oedisi_single_container',
 	packages=setuptools.find_packages(),
 	data_files=data_files,
 	version='0.3.0',
-	install_requires=['click==8.1.7','pandas==2.0.3'],
+	install_requires=['click==8.1.7','pandas>=2.2.2'],
 	entry_points={
 		"console_scripts":["oedisisc = oedisi_single_container.cli:main"]
 	}
