@@ -55,14 +55,44 @@
                           }
         },
         {
-            "name": "recorder_opf_voltage_magnitude",
+            "name": "recorder_opf_voltage_magnitude_ornl",
             "type": "Recorder",
-			"host": "recorder-opf-voltage-magnitude",
+			"host": "recorder-opf-voltage-magnitude-ornl",
 			"container_port": 5679,
             "parameters": {"feather_filename": "opf_voltage_mag.feather",
                            "csv_filename": "opf_voltage_mag.csv"
                           }
         },
+        {
+            "name": "recorder_opf_voltage_magnitude_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "opf_voltage_mag.feather",
+                           "csv_filename": "opf_voltage_mag.csv"
+                          }
+        },
+
+        {
+            "name": "recorder_delta_setpoint_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "delta_setpoint.feather",
+                           "csv_filename": "delta_setpoint.csv"
+                          }
+        },
+        {
+            "name": "recorder_forecast_curtail_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "forecast_curtail.feather",
+                           "csv_filename": "forecast_curtail.csv"
+                          }
+        },
+        {
+            "name": "recorder_real_curtail_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "real_curtail.feather",
+                           "csv_filename": "real_curtail.csv"
+                          }
+        },
+
         {
             "name": "state_estimator",
             "type": "StateEstimatorComponent",
@@ -79,6 +109,15 @@
 			"container_port": 5700,
             "parameters": {
                 "algorithm_parameters": {"tol": 1e-5}
+            }
+        },
+        {
+            "name": "dopf_pnnl",
+            "type": "OptimalPowerFlowPNNL",
+            "parameters": {
+                "deltat": 0.1,
+                "pf_flag": true,
+                "control_type": 1
             }
         },
         {
@@ -245,8 +284,71 @@
         {
             "source": "dopf_ornl",
             "source_port": "opf_voltages_magnitude",
-            "target": "recorder_opf_voltage_magnitude",
+            "target": "recorder_opf_voltage_magnitude_ornl",
+            "target_port": "subscription"
+        },
+
+
+        {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "dopf_pnnl",
+            "target_port": "topology"
+        },
+        {
+            "source": "feeder",
+            "source_port": "injections",
+            "target": "dopf_pnnl",
+            "target_port": "injections"
+        },
+        {
+            "source": "feeder",
+            "source_port": "voltages_magnitude",
+            "target": "dopf_pnnl",
+            "target_port": "voltages_magnitude"
+        },
+        {
+            "source": "feeder",
+            "source_port": "pv_forecast",
+            "target": "dopf_pnnl",
+            "target_port": "pv_forecast"
+        },
+        {
+            "source": "feeder",
+            "source_port": "available_power",
+            "target": "dopf_pnnl",
+            "target_port": "pv_available"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "pv_set",
+            "target": "feeder",
+            "target_port": "pv_set"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "opf_voltages_magnitude",
+            "target": "recorder_opf_voltage_magnitude_pnnl",
+            "target_port": "subscription"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "delta_setpoint",
+            "target": "recorder_delta_setpoint_pnnl",
+            "target_port": "subscription"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "forecast_curtail",
+            "target": "recorder_forecast_curtail_pnnl",
+            "target_port": "subscription"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "real_curtail",
+            "target": "recorder_real_curtail_pnnl",
             "target_port": "subscription"
         }
+        
     ]
 }

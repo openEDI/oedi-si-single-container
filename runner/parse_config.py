@@ -58,8 +58,7 @@ class Build(object):
 		userConfig=self.config['userConfig']
 		availableFederates=self.config['availableFederates']
 		simulationConfig=userConfig['simulation_config']
-		print(f"User config:{userConfig}")
-
+		
 		userConfig['federates']=[]
 		stateEstimatorWiringData=json.load(open(os.path.join(self._baseDir,'oedisi_state_estimator_wiring_diagram.json')))
 
@@ -158,26 +157,27 @@ class Build(object):
 		#with open("/home/runtime/runner/components.json", "w") as file: # Save the updated JSON back to the file
 		#	json.dump(updated_data, file, indent=4)
 		
-		#select system_json
-		#system_json_path = wiring_diagram_path #has download error
-		#system_json_path = '/home/runtime/runner/docker_system.json' # has measurement validation error
+		#select system_json		
 		system_json_path = '/home/runtime/runner/system.json' #works
 		components_json_path = '/home/runtime/runner/components.json' #works
+		removeFederates = ['pnnl']
 		#Update paths in system_json
 		with open(system_json_path, "r") as file:
-			data = json.load(file)
-		for component in data["components"]:
+			system_json = json.load(file)
+		for component in system_json["components"]:
 			if "feather_filename" in component["parameters"]:				
 				component["parameters"]["feather_filename"] = component["parameters"]["feather_filename"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
 			if "csv_filename" in component["parameters"]:				
 				component["parameters"]["csv_filename"] = component["parameters"]["csv_filename"].replace("../../", "/home/") #assign the result of replace back to the dictionary key
 			if "topology_output" in component["parameters"]:				
 				component["parameters"]["topology_output"] = component["parameters"]["topology_output"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
-				
-		#self._update_wiring_diagram_data(data,thisConf)
-				
+		
+		print(f"Following federates are present:{[item['name'] for item in system_json['components'] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]}")
+		system_json["components"] = [item for item in system_json["components"] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]
+		system_json["links"] = [item for item in system_json["links"] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]
+
 		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
-			json.dump(data, file, indent=4)
+			json.dump(system_json, file, indent=4)
 		
 		#Create system_runner.json from components.json and docker_system.json
 		directive=f'oedisi build --target-directory /home/run --component-dict {components_json_path} --system {system_json_path}'		
