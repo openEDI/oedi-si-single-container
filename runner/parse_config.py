@@ -140,16 +140,17 @@ class Build(object):
 
 		# template based federate additions to wiring diagram (dopf_ornl)
 		#### TODO: Need to make changes to config data structure to include dopf federates
-		
+		"""
 		thisConf=self._get_template_federate_config('dopf_ornl','OptimalPowerFlowORNL',
-			'/home/oedisi-dopf-ornl/','python /home/oedisi-dopf-ornl/dopf_federate/opf_federate.py',src='/home/oedisi-dopf-ornl/dopf_federate')
+			'/home/run/dopf_ornl','python /home/run/dopf_ornl/opf_federate.py',src='/home/oedisi-dopf-ornl/dopf_federate')
 		self._update_wiring_diagram_data(wiringDiagramData,thisConf)
+		"""
 		
 		# write wiring diagram and generate config_runner
-		wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
-		json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
-		print("Wiring diagram:",wiring_diagram_path)
-		print(wiringDiagramData)
+		#wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
+		#json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
+		#print("Wiring diagram:",wiring_diagram_path)
+		#print(wiringDiagramData)
 		#Update paths in components.json
 		#with open("/home/oedisi/oedisi-example/components.json", "r") as file:
 		#	data = json.load(file)		
@@ -161,6 +162,7 @@ class Build(object):
 		#system_json_path = wiring_diagram_path #has download error
 		#system_json_path = '/home/runtime/runner/docker_system.json' # has measurement validation error
 		system_json_path = '/home/runtime/runner/system.json' #works
+		components_json_path = '/home/runtime/runner/components.json' #works
 		#Update paths in system_json
 		with open(system_json_path, "r") as file:
 			data = json.load(file)
@@ -171,25 +173,28 @@ class Build(object):
 				component["parameters"]["csv_filename"] = component["parameters"]["csv_filename"].replace("../../", "/home/") #assign the result of replace back to the dictionary key
 			if "topology_output" in component["parameters"]:				
 				component["parameters"]["topology_output"] = component["parameters"]["topology_output"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
-		
+				
+		#self._update_wiring_diagram_data(data,thisConf)
+				
 		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
 			json.dump(data, file, indent=4)
 		
 		#Create system_runner.json from components.json and docker_system.json
-		#directive=f'oedisi build --target-directory /home/run --component-dict /home/oedisi/oedisi-example/components.json --system /home/oedisi/oedisi-example/scenarios/docker_system.json'		
-		directive=f'oedisi build --target-directory /home/run --component-dict /home/runtime/runner/components.json --system {system_json_path}'
-		
+		directive=f'oedisi build --target-directory /home/run --component-dict {components_json_path} --system {system_json_path}'		
 		print(f"Executing directive:{directive}")
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
 		
+		"""
 		# template based federate additions (dopf_ornl)
 		if thisConf['data']['src']:# replace template data after wiring diagram puts default data
 			os.system(f'rm -r /home/run/{thisConf["configRunnerData"]["federates"]["name"]}/* && '+\
 				f'cp -r {thisConf["data"]["src"]}/* /home/run/{thisConf["configRunnerData"]["federates"]["name"]}')
+		"""
 		
 		config_runner=json.load(open('/home/run/system_runner.json')) #Load system_runner.json into config_runner
 		
+		""" #we don't need this
 		# config_runner modifications for dopf_ornl
 		ind=-1
 		for n in range(len(config_runner['federates'])):
@@ -198,7 +203,7 @@ class Build(object):
 		if ind>=0:
 			config_runner['federates'].pop(ind)
 			config_runner['federates'].append(thisConf['configRunnerData']['federates'])
-		
+		"""
 		# broker modifications
 		if 'run_broker' in userConfig and not userConfig['run_broker']:
 			userConfig['externally_connected_federates'].append('broker')
@@ -216,7 +221,9 @@ class Build(object):
 					componentsIndToBeRemoved.append(n)
 					break
 		componentsIndToBeRemoved.sort(reverse=True)
+		print(f"Following components will be removed:{componentsIndToBeRemoved}")
 		for thisInd in componentsIndToBeRemoved:
+			print(f"Removing federates:{thisInd}")
 			config_runner['federates'].pop(thisInd)
 
 		# config_runner modifications for state estimator
@@ -224,6 +231,7 @@ class Build(object):
 			for appWithUpdate in set(appFederates).difference(['state_estimator_nrel']):
 				for n in range(len(config_runner['federates'])):
 					if config_runner['federates'][n]['name']==appWithUpdate:
+						print(f"Updating application:{appWithUpdate}")
 						config_runner['federates'][n]=availableFederates[appWithUpdate]
 						break
 
