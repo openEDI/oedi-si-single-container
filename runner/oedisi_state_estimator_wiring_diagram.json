@@ -14,16 +14,16 @@
          "name": "recorder_voltage_magnitude_nrel",
          "type": "Recorder",
          "parameters": {
-            "feather_filename": "/home/output/voltage_magnitude_nrel.feather",
-            "csv_filename": "/home/output/voltage_magnitude_nrel.csv"
+            "feather_filename": "voltage_magnitude_nrel.feather",
+            "csv_filename": "voltage_magnitude_nrel.csv"
          }
       },
       {
          "name": "recorder_voltage_angle_nrel",
          "type": "Recorder",
          "parameters": {
-            "feather_filename": "/home/output/voltage_angle_nrel.feather",
-            "csv_filename": "/home/output/voltage_angle_nrel.csv"
+            "feather_filename": "voltage_angle_nrel.feather",
+            "csv_filename": "voltage_angle_nrel.csv"
          }
       }
       ],

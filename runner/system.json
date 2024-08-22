@@ -37,9 +37,9 @@
                           }
         },
         {
-            "name": "recorder_voltage_mag",
+            "name": "recorder_voltage_magnitude",
             "type": "Recorder",
-			"host": "recorder-voltage-mag",
+			"host": "recorder-voltage-magnitude",
 			"container_port": 5681,
             "parameters": {"feather_filename": "voltage_mag.feather",
                            "csv_filename": "voltage_mag.csv"

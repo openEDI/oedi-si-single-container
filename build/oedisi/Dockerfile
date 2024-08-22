@@ -36,7 +36,7 @@ RUN apt update \
     && dpkg-reconfigure -f noninteractive tzdata \
     && mkdir /home/oedisi \
     && cd /home/oedisi \    
-    && git clone --depth 1 --branch v0.4.1 https://github.com/openEDI/oedisi-example.git \	
+    && git clone --depth 1 --branch v0.5.0 https://github.com/openEDI/oedisi-example.git \	
     && git clone --depth 1 --branch v2.0.2 https://github.com/openEDI/oedisi.git \
     && git clone https://github.com/openEDI/oedisi-ieee123.git \
     && cd /home/oedisi/oedisi \    

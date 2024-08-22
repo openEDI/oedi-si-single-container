@@ -98,7 +98,7 @@ class Build(object):
 		# check federate requirement
 		print(f"Available federates:{list(availableFederates.keys())}")
 		unavailableFed=set(userConfig['federates']).difference(availableFederates)
-		assert not unavailableFed,f"federates {unavailableFed} are unavailable"
+		#assert not unavailableFed,f"federates {unavailableFed} are unavailable"
 
 		# generate wiring diagram
 		appFederates=list(set(userConfig['federates']).difference(self.config['oedisi_runtime_federates']))
@@ -114,13 +114,13 @@ class Build(object):
 
 		wiringDiagramData['components'].extend(temp['components'])
 		wiringDiagramData['links'].extend(temp['links'])
-
-		for thisAppFederate in appFederates:
-			assert thisAppFederate in stateEstimatorWiringData,f'{thisAppFederate} not in stateEstimatorWiringData'
-			print(f"Adding {thisAppFederate} to wiring diagram...")
-			wiringDiagramData['components'].extend(stateEstimatorWiringData[thisAppFederate]['components'])
-			wiringDiagramData['links'].extend(stateEstimatorWiringData[thisAppFederate]['links'])
-
+		
+		#for thisAppFederate in appFederates: #this was modified to work with system_json
+		#	assert thisAppFederate in stateEstimatorWiringData,f'{thisAppFederate} not in stateEstimatorWiringData'
+		#	print(f"Adding {thisAppFederate} to wiring diagram...")
+		#	wiringDiagramData['components'].extend(stateEstimatorWiringData[thisAppFederate]['components'])
+		#	wiringDiagramData['links'].extend(stateEstimatorWiringData[thisAppFederate]['links'])
+		
 		if not os.path.exists('/home/run'):
 			print("Creating directory /home/run...")
 			os.system('mkdir /home/run')
@@ -139,31 +139,34 @@ class Build(object):
 
 		# template based federate additions to wiring diagram (dopf_ornl)
 		#### TODO: Need to make changes to config data structure to include dopf federates
-		"""
+		""" #this is not needed anymore
 		thisConf=self._get_template_federate_config('dopf_ornl','OptimalPowerFlowORNL',
 			'/home/run/dopf_ornl','python /home/run/dopf_ornl/opf_federate.py',src='/home/oedisi-dopf-ornl/dopf_federate')
 		self._update_wiring_diagram_data(wiringDiagramData,thisConf)
 		"""
 		
-		# write wiring diagram and generate config_runner
+		# write wiring diagram and generate config_runner #this is not needed anymore
 		#wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
 		#json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
-		#print("Wiring diagram:",wiring_diagram_path)
-		#print(wiringDiagramData)
-		#Update paths in components.json
-		#with open("/home/oedisi/oedisi-example/components.json", "r") as file:
-		#	data = json.load(file)		
-		#updated_data = {key: "/home/oedisi/oedisi-example/" + value for key, value in data.items()} # Modify the paths by adding the base directory		
-		#with open("/home/runtime/runner/components.json", "w") as file: # Save the updated JSON back to the file
-		#	json.dump(updated_data, file, indent=4)
-		
+				
 		#select system_json		
 		system_json_path = '/home/runtime/runner/system.json' #works
 		components_json_path = '/home/runtime/runner/components.json' #works
-		removeFederates = ['pnnl']
-		#Update paths in system_json
+		federateReference = {"state_estimator_nrel":"state_estimator","dopf_ornl":"ornl","dopf_pnnl":"pnnl","user_dsse":"user_dsse"}
+		appFederates.remove("user_dsse") #removing it for now
+		removeFederates = [value for key, value in federateReference.items() if key not in appFederates]
+		print(f"Following federates will be removed from system_json:{removeFederates}")
+		#Update configuration in system_json
 		with open(system_json_path, "r") as file:
 			system_json = json.load(file)
+
+		for thisAppFederate in appFederates: #Add
+			if thisAppFederate not in ['dopf_ornl','dopf_pnnl']:
+				assert thisAppFederate in ['state_estimator','user_dsse', 'state_estimator_nrel','dopf_ornl','dopf_pnnl'],f'{thisAppFederate} not in list'
+				print(f"Adding {thisAppFederate} to system_json wiring diagram...")
+				system_json['components'].extend(stateEstimatorWiringData[thisAppFederate]['components'])
+				system_json['links'].extend(stateEstimatorWiringData[thisAppFederate]['links'])
+
 		for component in system_json["components"]:
 			if "feather_filename" in component["parameters"]:				
 				component["parameters"]["feather_filename"] = component["parameters"]["feather_filename"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
@@ -172,6 +175,7 @@ class Build(object):
 			if "topology_output" in component["parameters"]:				
 				component["parameters"]["topology_output"] = component["parameters"]["topology_output"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
 		
+		#remove references to selected federates in system_json
 		print(f"Following federates are present:{[item['name'] for item in system_json['components'] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]}")
 		system_json["components"] = [item for item in system_json["components"] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]
 		system_json["links"] = [item for item in system_json["links"] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]
@@ -185,7 +189,7 @@ class Build(object):
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
 		
-		"""
+		""" #we don't need this
 		# template based federate additions (dopf_ornl)
 		if thisConf['data']['src']:# replace template data after wiring diagram puts default data
 			os.system(f'rm -r /home/run/{thisConf["configRunnerData"]["federates"]["name"]}/* && '+\
@@ -227,13 +231,13 @@ class Build(object):
 			config_runner['federates'].pop(thisInd)
 
 		# config_runner modifications for state estimator
-		if set(appFederates).difference(['state_estimator_nrel']):
-			for appWithUpdate in set(appFederates).difference(['state_estimator_nrel']):
-				for n in range(len(config_runner['federates'])):
-					if config_runner['federates'][n]['name']==appWithUpdate:
-						print(f"Updating application:{appWithUpdate}")
-						config_runner['federates'][n]=availableFederates[appWithUpdate]
-						break
+		#if set(appFederates).difference(['state_estimator_nrel']):
+		#	for appWithUpdate in set(appFederates).difference(['state_estimator_nrel']):
+		#		for n in range(len(config_runner['federates'])):
+		#			if config_runner['federates'][n]['name']==appWithUpdate:
+		#				print(f"Updating application:{appWithUpdate}")
+		#				config_runner['federates'][n]=availableFederates[appWithUpdate]
+		#				break
 
 		# modifications for user defined dsse and dopf federates
 		userInterfaceSourceDir='/home/runtime/user_interface'
@@ -289,11 +293,9 @@ class Build(object):
 						json.dump(thisInputMapping,open(thisPath,'w'))
 
 
-	def preprocessor(self): #Method to generate load profiles for nodes in distribution system
+	def generateloadprofiles(self): #Method to generate load profiles for nodes in distribution system
 		if self.config['userConfig']['use_oedisi_preprocessor']:
-			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
-			if 'nodeload' in preprocessorFederates or 'loadshape' in preprocessorFederates or \
-				'loadprofile' in preprocessorFederates or 'load_profile' in preprocessorFederates:
+			if any(federate in build.config['userConfig']['oedisi_preprocessor_federates'] for federate in ['nodeload', 'loadshape', 'loadprofile', 'load_profile']):			
 				basePath='/home/datapreprocessor/datapreprocessor/app/nodeload'
 				filePath=f'{basePath}/generate_solar_node_load_profile_from_solarhome_data.py'
 				loadProfilePath='/home/oedisi/oedisi-ieee123/profiles/load_profiles'
@@ -301,7 +303,7 @@ class Build(object):
 
 				os.system(f'rm {basePath}/*.csv')
 				directive=f'python {filePath} -d {opendssLocation} -n -1 -p {loadProfilePath} --fill 35040'
-				print(f"Executing following directive in datapreprocessor:{directive}")
+				print(f"Executing following directive in for generating load profiles:{directive}")
 				flag=os.system(f'{directive}')
 				assert flag==0,f'nodeload directive failed with flag={flag}'
 
@@ -315,6 +317,6 @@ if __name__=="__main__":
 
 	build=Build(userConfigPath=args.config)
 	build.write_config()
-	build.preprocessor()
+	build.generateloadprofiles()
 
 

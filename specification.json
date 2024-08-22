@@ -1,7 +1,7 @@
 {
 "oedisi":{
 "oedisi":{"url":"https://github.com/openEDI/oedisi","tag":"v2.0.2"},
-"oedisi-example":{"url":"https://github.com/openEDI/oedisi-example","tag":"v0.4.1"}
+"oedisi-example":{"url":"https://github.com/openEDI/oedisi-example","tag":"v0.5.0"}
 },
 "application":{
 "dsse_pnnl":{"url":"https://github.com/GRIDAPPSD/gridappsd-state-estimator","tag":"OEDISI.1.1.0"},
