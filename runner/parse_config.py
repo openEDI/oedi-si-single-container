@@ -160,7 +160,7 @@ class Build(object):
 		#select system_json		
 		system_json_path = '/home/runtime/runner/system.json' #works
 		components_json_path = '/home/runtime/runner/components.json' #works
-		removeFederates = ['pnnl']
+		removeFederates = []
 		#Update paths in system_json
 		with open(system_json_path, "r") as file:
 			system_json = json.load(file)

@@ -1,1 +1,0 @@
-COPY FeederSimulator.py /home/oedisi/oedisi-example/LocalFeeder/FeederSimulator.py
