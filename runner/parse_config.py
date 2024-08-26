@@ -98,7 +98,7 @@ class Build(object):
 		# check federate requirement
 		print(f"Available federates:{list(availableFederates.keys())}")
 		unavailableFed=set(userConfig['federates']).difference(availableFederates)
-		assert not unavailableFed,f"federates {unavailableFed} are unavailable"
+		#assert not unavailableFed,f"federates {unavailableFed} are unavailable"
 
 		# generate wiring diagram
 		appFederates=list(set(userConfig['federates']).difference(self.config['oedisi_runtime_federates']))
@@ -115,26 +115,26 @@ class Build(object):
 		wiringDiagramData['components'].extend(temp['components'])
 		wiringDiagramData['links'].extend(temp['links'])
 
-		for thisAppFederate in appFederates:
-			assert thisAppFederate in stateEstimatorWiringData,f'{thisAppFederate} not in stateEstimatorWiringData'
-			print(f"Adding {thisAppFederate} to wiring diagram...")
-			wiringDiagramData['components'].extend(stateEstimatorWiringData[thisAppFederate]['components'])
-			wiringDiagramData['links'].extend(stateEstimatorWiringData[thisAppFederate]['links'])
+		#for thisAppFederate in appFederates: #Not using this anymore
+			#assert thisAppFederate in stateEstimatorWiringData,f'{thisAppFederate} not in stateEstimatorWiringData'
+			#print(f"Adding {thisAppFederate} to wiring diagram...")
+			#wiringDiagramData['components'].extend(stateEstimatorWiringData[thisAppFederate]['components'])
+			#wiringDiagramData['links'].extend(stateEstimatorWiringData[thisAppFederate]['links'])
 
 		if not os.path.exists('/home/run'):
 			print("Creating directory /home/run...")
 			os.system('mkdir /home/run')
-		# make mods for preprocessor
+		# make modifciations for datapreprocessor
 		if self.config['userConfig']['use_oedisi_preprocessor']:			
 			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
 			preprocessorFederatesDir='/home/datapreprocessor/datapreprocessor/federates'
-			availablePreprocessorFederates=os.listdir(preprocessorFederatesDir)
+			availablePreprocessorFederates=os.listdir(preprocessorFederatesDir) #Check datapreprocessor folder for available federates
 			print(f"Following preprocessor federates are available:{availablePreprocessorFederates}")
 			for thisFederate in preprocessorFederates:
 				thisFederate=thisFederate.replace('-','').replace('_','') #### TODO: foo_bar to foobar
 				if thisFederate in availablePreprocessorFederates:
 					print(f"Creating folder for preprocessor federate:{thisFederate} in /home/run")
-					flag=os.system(f'cp -r {os.path.join(preprocessorFederatesDir,thisFederate)} /home/run')
+					flag=os.system(f'cp -r {os.path.join(preprocessorFederatesDir,thisFederate)} /home/run') #copy datapreprocessor federates to /home/run
 					assert flag==0, f'copying {thisFederate} failed with error flag={flag}'
 
 		# template based federate additions to wiring diagram (dopf_ornl)
@@ -145,25 +145,26 @@ class Build(object):
 		self._update_wiring_diagram_data(wiringDiagramData,thisConf)
 		"""
 		
-		# write wiring diagram and generate config_runner
+		# write wiring diagram and generate config_runner #not using wiring_diagram
 		#wiring_diagram_path=os.path.join(self._baseDir,'wiring_diagram.json')
 		#json.dump(wiringDiagramData,open(wiring_diagram_path,'w'),indent=3)
-		#print("Wiring diagram:",wiring_diagram_path)
-		#print(wiringDiagramData)
-		#Update paths in components.json
-		#with open("/home/oedisi/oedisi-example/components.json", "r") as file:
-		#	data = json.load(file)		
-		#updated_data = {key: "/home/oedisi/oedisi-example/" + value for key, value in data.items()} # Modify the paths by adding the base directory		
-		#with open("/home/runtime/runner/components.json", "w") as file: # Save the updated JSON back to the file
-		#	json.dump(updated_data, file, indent=4)
-		
-		#select system_json		
-		system_json_path = '/home/runtime/runner/system.json' #works
+				
+		components_links_library_path = '/home/runtime/runner/components_links_library.json' #JSON file containing components and links of application federates
+		system_json_path = '/home/runtime/runner/system_custom.json' #'/home/runtime/runner/system.json' 
 		components_json_path = '/home/runtime/runner/components.json' #works
 		removeFederates = []
 		#Update paths in system_json
 		with open(system_json_path, "r") as file:
 			system_json = json.load(file)
+		with open(components_links_library_path, "r") as file:
+			components_links_library = json.load(file)
+
+		for appFederate in appFederates: #Loop through appFederates and add components and links to system_json
+			if appFederate in ["state_estimator_nrel","dopf_nrel","dopf_ornl","dopf_pnnl"]:
+				print(f"Adding {appFederate} to system_json...")
+				system_json["components"].extend(components_links_library[appFederate]["components"])
+				system_json["links"].extend(components_links_library[appFederate]["links"])
+		
 		for component in system_json["components"]:
 			if "feather_filename" in component["parameters"]:				
 				component["parameters"]["feather_filename"] = component["parameters"]["feather_filename"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
@@ -179,7 +180,7 @@ class Build(object):
 		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
 			json.dump(system_json, file, indent=4)
 		
-		#Create system_runner.json from components.json and docker_system.json
+		#Create system_runner.json from components.json and system.json
 		directive=f'oedisi build --target-directory /home/run --component-dict {components_json_path} --system {system_json_path}'		
 		print(f"Executing directive:{directive}")
 		flag=os.system(directive)
@@ -227,13 +228,13 @@ class Build(object):
 			config_runner['federates'].pop(thisInd)
 
 		# config_runner modifications for state estimator
-		if set(appFederates).difference(['state_estimator_nrel']):
-			for appWithUpdate in set(appFederates).difference(['state_estimator_nrel']):
-				for n in range(len(config_runner['federates'])):
-					if config_runner['federates'][n]['name']==appWithUpdate:
-						print(f"Updating application:{appWithUpdate}")
-						config_runner['federates'][n]=availableFederates[appWithUpdate]
-						break
+		#if set(appFederates).difference(['state_estimator_nrel']):
+		#	for appWithUpdate in set(appFederates).difference(['state_estimator_nrel']):
+		#		for n in range(len(config_runner['federates'])):
+		#			if config_runner['federates'][n]['name']==appWithUpdate:
+		#				print(f"Updating application:{appWithUpdate}")
+		#				config_runner['federates'][n]=availableFederates[appWithUpdate]
+		#				break
 
 		# modifications for user defined dsse and dopf federates
 		userInterfaceSourceDir='/home/runtime/user_interface'
@@ -259,11 +260,14 @@ class Build(object):
 					config_runner['federates'][n]['directory']=thisFederate['name']
 					config_runner['federates'][n]['exec']='python user_federate.py'
 
-		# modifications for preprocessor
+		# modifications to config_runner for datapreprocessor federates
 		if self.config['userConfig']['use_oedisi_preprocessor']:
 			if 'data_imputation' in self.config['userConfig']['oedisi_preprocessor_federates']:
-				config_runner['federates'].append({"directory": "dataimputation","name": "dataimputation",\
-					"exec": "python federate_dataimputation.py","hostname": "localhost"})
+				print("Adding dataimputation federate...")
+				config_runner['federates'].append({"directory": "dataimputation","name": "dataimputation","exec": "python federate_dataimputation.py","hostname": "localhost"})
+			if 'anomaly_detection' in self.config['userConfig']['oedisi_preprocessor_federates']:
+				print("Adding anomalydetection federate...")
+				config_runner['federates'].append({"directory": "anomalydetection","name": "anomalydetection","exec": "python federate_anomalydetection.py","hostname": "localhost"})
 
 			for n in range(len(config_runner['federates'])):
 				if config_runner['federates'][n]['name']=='broker':
@@ -273,7 +277,8 @@ class Build(object):
 		# write config_runner
 		json.dump(config_runner,open('/home/run/system_runner.json','w'),indent=3) #Save modified syster_runner.json
 
-		# patch for PNNL state estimator		
+		"""
+		# patch for PNNL state estimator #not needed for now
 		if 'state_estimator_pnnl' in userConfig['federates']:
 			for entry in stateEstimatorWiringData['state_estimator_pnnl']['components']:
 				print(f"Entry:{entry}")
@@ -287,13 +292,12 @@ class Build(object):
 						elif 'voltage_angle' in entry['name']:
 							thisInputMapping={"subscription": "pnnl_state_estimator/Vang_SE"}
 						json.dump(thisInputMapping,open(thisPath,'w'))
+		"""
 
-
-	def preprocessor(self): #Method to generate load profiles for nodes in distribution system
+	def generateloadprofiles(self): #Method to generate load profiles for nodes in distribution system
 		if self.config['userConfig']['use_oedisi_preprocessor']:
 			preprocessorFederates=build.config['userConfig']['oedisi_preprocessor_federates']
-			if 'nodeload' in preprocessorFederates or 'loadshape' in preprocessorFederates or \
-				'loadprofile' in preprocessorFederates or 'load_profile' in preprocessorFederates:
+			if any(federate in build.config['userConfig']['oedisi_preprocessor_federates'] for federate in ['nodeload', 'loadshape', 'loadprofile', 'load_profile']):
 				basePath='/home/datapreprocessor/datapreprocessor/app/nodeload'
 				filePath=f'{basePath}/generate_solar_node_load_profile_from_solarhome_data.py'
 				loadProfilePath='/home/oedisi/oedisi-ieee123/profiles/load_profiles'
@@ -301,7 +305,7 @@ class Build(object):
 
 				os.system(f'rm {basePath}/*.csv')
 				directive=f'python {filePath} -d {opendssLocation} -n -1 -p {loadProfilePath} --fill 35040'
-				print(f"Executing following directive in datapreprocessor:{directive}")
+				print(f"Executing following directive in for generating load profiles:{directive}")
 				flag=os.system(f'{directive}')
 				assert flag==0,f'nodeload directive failed with flag={flag}'
 
@@ -315,6 +319,6 @@ if __name__=="__main__":
 
 	build=Build(userConfigPath=args.config)
 	build.write_config()
-	build.preprocessor()
+	build.generateloadprofiles()
 
 

@@ -1,0 +1,346 @@
+{
+   "state_estimator_nrel": {
+      "components": [
+         {"name": "state_estimator_nrel",
+											   "type": "StateEstimatorNREL",
+											   "host": "state-estimator-nrel",
+											   "container_port": 5683,
+											   "parameters": {
+											   "algorithm_parameters": {"tol": 1e-5}
+											  }},
+			{"name": "recorder_voltage_magnitude_nrel",
+												"type": "Recorder",
+												"host": "recorder-voltage-magnitude-nrel",
+												"container_port": 5681,
+												"parameters": {"feather_filename": "voltage_mag.feather",
+															   "csv_filename": "voltage_mag.csv"
+												}},
+			{"name": "recorder_voltage_angle_nrel",
+												"type": "Recorder",
+												"host": "recorder-voltage-angle-nrel",
+												"container_port": 5682,
+												"parameters": {"feather_filename": "voltage_angle.feather",
+															"csv_filename": "voltage_angle.csv"
+												}}
+         
+      ],
+      "links": [
+         {"source": "feeder",
+			 "source_port": "topology",
+			 "target": "state_estimator_nrel",
+			 "target_port": "topology"
+			},
+			{"source": "sensor_voltage_magnitude",
+			 "source_port": "publication",
+			 "target": "state_estimator_nrel",
+			"target_port": "voltages_magnitude"
+			},
+			{"source": "sensor_power_real",
+			"source_port": "publication",
+			"target": "state_estimator_nrel",
+			"target_port": "powers_real"
+			},
+			{"source": "sensor_power_imaginary",
+			 "source_port": "publication",
+			 "target": "state_estimator_nrel",
+			 "target_port": "powers_imaginary"
+			},
+			{"source": "state_estimator_nrel",
+			 "source_port": "voltage_angle",
+			 "target": "recorder_voltage_angle_nrel",
+			 "target_port": "subscription"
+			},
+			{"source": "state_estimator_nrel",
+			 "source_port": "voltage_mag",
+			 "target": "recorder_voltage_magnitude_nrel",
+			 "target_port": "subscription"
+			}  
+      ]
+   },
+   
+   "dopf_nrel": {
+      "components": [
+         {
+          "name": "dopf_nrel",
+          "type": "OptimalPowerFlowNREL",
+			 "host": "dopf_nrel",
+			 "container_port": 5700,
+            "parameters": {
+                "deltat": 0.1,
+                "pf_flag": true,
+                "control_type": 2
+            }
+        },
+         {
+          "name": "recorder_opf_voltage_magnitude_nrel",
+          "type": "Recorder",
+			 "host": "recorder-opf-voltage-magnitude-nrel",
+			 "container_port": 5680,
+           "parameters": {"feather_filename": "opf_voltage_mag.feather",
+                           "csv_filename": "opf_voltage_mag.csv"
+                          }
+        }   
+      ],
+      "links": [
+         {
+          "source": "feeder",
+          "source_port": "topology",
+          "target": "dopf_nrel",
+          "target_port": "topology"
+        },
+        {
+         "source": "feeder",
+         "source_port": "injections",
+         "target": "dopf_nrel",
+         "target_port": "injections"
+        },
+        {
+         "source": "feeder",
+         "source_port": "voltages_magnitude",
+         "target": "dopf_nrel",
+         "target_port": "voltages_magnitude"
+        },
+        {
+         "source": "dopf_nrel",
+         "source_port": "change_commands",
+         "target": "feeder",
+         "target_port": "change_commands"
+        },
+        {
+         "source": "dopf_nrel",
+         "source_port": "opf_voltages_magnitude",
+         "target": "recorder_opf_voltage_magnitude_nrel",
+         "target_port": "subscription"
+        }  
+      ]
+   },
+  
+   "dopf_ornl": {
+      "components": [
+         {
+         "name": "dopf_ornl",
+         "type": "OptimalPowerFlowORNL",
+			"host": "dopf_ornl",
+			"container_port": 5701,
+         "parameters": {
+         "algorithm_parameters": {"tol": 1e-5}
+            }
+        },
+        {
+         "name": "recorder_opf_voltage_magnitude_ornl",
+         "type": "Recorder",
+         "host": "recorder-opf-voltage-magnitude-ornl",
+         "container_port": 5679,
+         "parameters": {"feather_filename": "opf_voltage_mag.feather",
+                        "csv_filename": "opf_voltage_mag.csv"
+                       }
+        }
+         
+      ],
+      "links": [
+         {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "dopf_ornl",
+            "target_port": "topology"
+        },
+        {
+            "source": "feeder",
+            "source_port": "powers_real",
+            "target": "dopf_ornl",
+            "target_port": "powers_real"
+        },
+        {
+            "source": "feeder",
+            "source_port": "powers_imag",
+            "target": "dopf_ornl",
+            "target_port": "powers_imag"
+        },
+        {
+         "source": "dopf_ornl",
+         "source_port": "pv_set",
+         "target": "feeder",
+         "target_port": "pv_set"
+     },
+     {
+         "source": "dopf_ornl",
+         "source_port": "opf_voltages_magnitude",
+         "target": "recorder_opf_voltage_magnitude_ornl",
+         "target_port": "subscription"
+     }
+      ]
+   },
+
+   "dopf_pnnl": {
+      "components": [
+         {
+            "name": "dopf_pnnl",
+            "type": "OptimalPowerFlowPNNL",
+            "parameters": {
+                "deltat": 0.1,
+                "pf_flag": true,
+                "control_type": 1
+            }
+        },
+         {
+            "name": "recorder_opf_voltage_magnitude_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "opf_voltage_mag.feather",
+                           "csv_filename": "opf_voltage_mag.csv"
+                          }
+        },
+
+        {
+            "name": "recorder_delta_setpoint_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "delta_setpoint.feather",
+                           "csv_filename": "delta_setpoint.csv"
+                          }
+        },
+        {
+            "name": "recorder_forecast_curtail_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "forecast_curtail.feather",
+                           "csv_filename": "forecast_curtail.csv"
+                          }
+        },
+        {
+            "name": "recorder_real_curtail_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "real_curtail.feather",
+                           "csv_filename": "real_curtail.csv"
+                          }
+        }
+      ],
+      "links": [
+       {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "dopf_pnnl",
+            "target_port": "topology"
+        },
+        {
+            "source": "feeder",
+            "source_port": "injections",
+            "target": "dopf_pnnl",
+            "target_port": "injections"
+        },
+        {
+            "source": "feeder",
+            "source_port": "voltages_magnitude",
+            "target": "dopf_pnnl",
+            "target_port": "voltages_magnitude"
+        },
+        {
+            "source": "feeder",
+            "source_port": "pv_forecast",
+            "target": "dopf_pnnl",
+            "target_port": "pv_forecast"
+        },
+        {
+            "source": "feeder",
+            "source_port": "available_power",
+            "target": "dopf_pnnl",
+            "target_port": "pv_available"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "pv_set",
+            "target": "feeder",
+            "target_port": "pv_set"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "opf_voltages_magnitude",
+            "target": "recorder_opf_voltage_magnitude_pnnl",
+            "target_port": "subscription"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "delta_setpoint",
+            "target": "recorder_delta_setpoint_pnnl",
+            "target_port": "subscription"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "forecast_curtail",
+            "target": "recorder_forecast_curtail_pnnl",
+            "target_port": "subscription"
+        },
+        {
+            "source": "dopf_pnnl",
+            "source_port": "real_curtail",
+            "target": "recorder_real_curtail_pnnl",
+            "target_port": "subscription"
+        }  
+      ]
+   },
+   
+   "state_estimator_pnnl": {
+      "components": [
+         {
+            "name": "state_estimator_pnnl",
+            "type": "StateEstimatorComponent",
+            "parameters": {
+               "algorithm_parameters": {
+                  "tol": 1e-05
+               }
+            }
+         },
+      {
+         "name": "recorder_voltage_magnitude_pnnl",
+         "type": "Recorder",
+         "parameters": {
+            "feather_filename": "/home/output/voltage_magnitude_pnnl.feather",
+            "csv_filename": "/home/output/voltage_magnitude_pnnl.csv"
+         }
+      },
+      {
+         "name": "recorder_voltage_angle_pnnl",
+         "type": "Recorder",
+         "parameters": {
+            "feather_filename": "/home/output/voltage_angle_pnnl.feather",
+            "csv_filename": "/home/output/voltage_angle_pnnl.csv"
+         }
+      }
+      ],
+      "links": [
+         {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "state_estimator_pnnl",
+            "target_port": "topology"
+         },
+         {
+            "source": "sensor_voltage_magnitude",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "voltages_magnitude"
+         },
+         {
+            "source": "sensor_power_real",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "powers_real"
+         },
+         {
+            "source": "sensor_power_imaginary",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "powers_imaginary"
+         },
+         {
+            "source": "state_estimator_pnnl",
+            "source_port": "voltage_mag",
+            "target": "recorder_voltage_magnitude_pnnl",
+            "target_port": "subscription"
+         },
+         {
+            "source": "state_estimator_pnnl",
+            "source_port": "voltage_angle",
+            "target": "recorder_voltage_angle_pnnl",
+            "target_port": "subscription"
+         }
+      ]
+   }
+}

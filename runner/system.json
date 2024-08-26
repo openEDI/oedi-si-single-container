@@ -47,12 +47,30 @@
                           }
         },
         {
-            "name": "recorder_voltage_angle",
+            "name": "recorder_voltage_mag_state_estimator_nrel",
             "type": "Recorder",
-			"host": "recorder-voltage-angle",
+			"host": "recorder-voltage-mag-state-estimator-nrel",
+			"container_port": 5681,
+            "parameters": {"feather_filename": "voltage_mag.feather",
+                           "csv_filename": "voltage_mag.csv"
+                          }
+        },
+        {
+            "name": "recorder_voltage_angle_state_estimator_nrel",
+            "type": "Recorder",
+			"host": "recorder-voltage-angle-state-estimator-nrel",
 			"container_port": 5682,
             "parameters": {"feather_filename": "voltage_angle.feather",
                            "csv_filename": "voltage_angle.csv"
+                          }
+        },
+        {
+            "name": "recorder_opf_voltage_magnitude_nrel",
+            "type": "Recorder",
+			"host": "recorder-opf-voltage-magnitude-nrel",
+			"container_port": 5680,
+            "parameters": {"feather_filename": "opf_voltage_mag.feather",
+                           "csv_filename": "opf_voltage_mag.csv"
                           }
         },
         {
@@ -93,21 +111,31 @@
                            "csv_filename": "real_curtail.csv"
                           }
         },
-
         {
-            "name": "state_estimator",
-            "type": "StateEstimatorComponent",
-			"host": "state-estimator",
+            "name": "state_estimator_nrel",
+            "type": "StateEstimatorNREL",
+			"host": "state-estimator-nrel",
 			"container_port": 5683,
             "parameters": {
                 "algorithm_parameters": {"tol": 1e-5}
             }
         },        
         {
+            "name": "dopf_nrel",
+            "type": "OptimalPowerFlowNREL",
+			"host": "dopf_nrel",
+			"container_port": 5700,
+            "parameters": {
+                "deltat": 0.1,
+                "pf_flag": true,
+                "control_type": 2
+            }
+        },
+        {
             "name": "dopf_ornl",
             "type": "OptimalPowerFlowORNL",
 			"host": "dopf_ornl",
-			"container_port": 5700,
+			"container_port": 5701,
             "parameters": {
                 "algorithm_parameters": {"tol": 1e-5}
             }
@@ -213,25 +241,25 @@
         {
             "source": "feeder",
             "source_port": "topology",
-            "target": "state_estimator",
+            "target": "state_estimator_nrel",
             "target_port": "topology"
         },
         {
             "source": "sensor_voltage_magnitude",
             "source_port": "publication",
-            "target": "state_estimator",
+            "target": "state_estimator_nrel",
             "target_port": "voltages_magnitude"
         },
         {
             "source": "sensor_power_real",
             "source_port": "publication",
-            "target": "state_estimator",
+            "target": "state_estimator_nrel",
             "target_port": "powers_real"
         },
         {
             "source": "sensor_power_imaginary",
             "source_port": "publication",
-            "target": "state_estimator",
+            "target": "state_estimator_nrel",
             "target_port": "powers_imaginary"
         },
         {
@@ -247,17 +275,41 @@
             "target_port": "subscription"
         },
         {
-            "source": "state_estimator",
-            "source_port": "voltage_angle",
-            "target": "recorder_voltage_angle",
+            "source": "feeder",
+            "source_port": "voltages_magnitude",
+            "target": "recorder_voltage_mag",
             "target_port": "subscription"
         },
         {
-            "source": "state_estimator",
-            "source_port": "voltage_mag",
-            "target": "recorder_voltage_mag",
+            "source": "state_estimator_nrel",
+            "source_port": "voltage_angle",
+            "target": "recorder_voltage_angle_state_estimator_nrel",
             "target_port": "subscription"
-        },                
+        },
+        {
+            "source": "state_estimator_nrel",
+            "source_port": "voltage_mag",
+            "target": "recorder_voltage_mag_state_estimator_nrel",
+            "target_port": "subscription"
+        },
+        {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "dopf_nrel",
+            "target_port": "topology"
+        },
+        {
+            "source": "feeder",
+            "source_port": "injections",
+            "target": "dopf_nrel",
+            "target_port": "injections"
+        },
+        {
+            "source": "feeder",
+            "source_port": "voltages_magnitude",
+            "target": "dopf_nrel",
+            "target_port": "voltages_magnitude"
+        },
         {
             "source": "feeder",
             "source_port": "topology",
@@ -277,6 +329,18 @@
             "target_port": "powers_imag"
         },
         {
+            "source": "dopf_nrel",
+            "source_port": "change_commands",
+            "target": "feeder",
+            "target_port": "change_commands"
+        },
+        {
+            "source": "dopf_nrel",
+            "source_port": "opf_voltages_magnitude",
+            "target": "recorder_opf_voltage_magnitude_nrel",
+            "target_port": "subscription"
+        },
+        {
             "source": "dopf_ornl",
             "source_port": "pv_set",
             "target": "feeder",
@@ -288,8 +352,6 @@
             "target": "recorder_opf_voltage_magnitude_ornl",
             "target_port": "subscription"
         },
-
-
         {
             "source": "feeder",
             "source_port": "topology",

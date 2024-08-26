@@ -2,8 +2,9 @@
     "Recorder": "/home/oedisi/oedisi-example/recorder/component_definition.json",
     "LocalFeeder": "/home/oedisi/oedisi-example/LocalFeeder/component_definition.json",
     "MeasurementComponent": "/home/oedisi/oedisi-example/measuring_federate/component_definition.json",
-    "StateEstimatorComponent": "/home/oedisi/oedisi-example/wls_federate/component_definition.json",
+    "StateEstimatorNREL": "/home/oedisi/oedisi-example/wls_federate/component_definition.json",
     "OMOOComponent": "/home/oedisi/oedisi-example/omoo_federate/component_definition.json",    
+    "OptimalPowerFlowNREL": "/home/oedisi/oedisi-example/lindistflow_federate/component_definition.json",
     "OptimalPowerFlowPNNL": "/home/oedisi_dopf/lindistflow_federate/component_definition.json",
     "OptimalPowerFlowORNL": "/home/oedisi-dopf-ornl/dopf_federate/component_definition.json"
 }
