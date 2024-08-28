@@ -1,0 +1,2 @@
+WORKDIR /home/ditto
+pip install "ditto.py[extras,opendss,cyme,gridlabd]==0.2.4"

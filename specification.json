@@ -3,9 +3,14 @@
 "oedisi":{"url":"https://github.com/openEDI/oedisi","tag":"v2.0.2"},
 "oedisi-example":{"url":"https://github.com/openEDI/oedisi-example","tag":"v0.4.1"}
 },
+
 "application":{
 "dsse_pnnl":{"url":"https://github.com/GRIDAPPSD/gridappsd-state-estimator","tag":"OEDISI.1.1.0"},
 "dopf_pnnl":{"url":"https://github.com/pnnl/oedisi_dopf","tag":"v0.1.1"},
 "dopf_ornl":{"url":"https://github.com/bol22/oedisi-dopf-ornl","tag":"v0.0.0"}
+},
+
+"utility":{
+"ditto":{"url":"https://github.com/NREL/ditto","tag":"v0.2.4"}
 }
 }

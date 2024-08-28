@@ -177,21 +177,22 @@ if __name__=="__main__":
 	
 	if not set(dockerItems).difference(preferredBuildOrder):
 		dockerItems=preferredBuildOrder
-	dockerItems = ["datapreprocessor","dopf_ornl","dopf_pnnl"] #Add applications to be build here
+	dockerItems = ["datapreprocessor","dopf_ornl","dopf_pnnl","ditto"] #Add applications to be build here
 	work_dir = "/home"
 	modify_application_dockerfile = True
-	for entry in dockerItems:
+	for repositoryName in dockerItems:
 		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
-		print(f"Copying/cloning {entry} to:{thisFolder}")
-		if entry == "datapreprocessor":	
-			targetpath = os.path.join(thisFolder,"datapreprocessor")
-			if os.path.exists(targetpath):
-				shutil.rmtree(targetpath)
-			shutil.copytree(os.path.join(buildDir,"datapreprocessor"), targetpath) # Copy the folder
-			repositoryFolder = os.path.join(thisFolder,"datapreprocessor")
-			repositoryName = "datapreprocessor"
+		print(f"Copying/cloning {repositoryName} to:{thisFolder}")
+		if repositoryName in ["datapreprocessor","ditto"]: #If repository name in datapreprocess or utility
+			#targetpath = os.path.join(thisFolder,"datapreprocessor")
+			repositoryFolder = os.path.join(thisFolder,repositoryName)
+			if os.path.exists(repositoryFolder):
+				shutil.rmtree(repositoryFolder)
+			shutil.copytree(os.path.join(buildDir,repositoryName), repositoryFolder) # Copy the folder
+			
+			#repositoryName = "datapreprocessor"
 		else:			
-			repositoryFolder,repositoryName = read_specification_and_clone_repository(specification_dict["application"],target_directory=thisFolder,application=entry,show_details=args.showdetails)
+			repositoryFolder,repositoryName = read_specification_and_clone_repository(specification_dict["application"],target_directory=thisFolder,application=repositoryName,show_details=args.showdetails)
 			print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
 			
 		if modify_application_dockerfile:			
