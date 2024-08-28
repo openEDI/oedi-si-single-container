@@ -114,8 +114,8 @@ def update_oedisi_dockerfile(dockerfile_content, specification_config):
 		
 	return dockerfile_content
 
-if __name__=="__main__":
-	preferredBuildOrder=['datapreprocessor','dopf_ornl','dopf_pnnl']
+if __name__=="__main__":	
+	dockerItems = ["datapreprocessor","dopf_ornl","dopf_pnnl","ditto"] #Add applications to be included in the single container image here
 	fix_white_space=lambda x:'"'+x+'"' if len(x.split(' '))>1 else x
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
@@ -170,27 +170,18 @@ if __name__=="__main__":
 
 	contents=set(os.listdir(thisFolder)).difference(['Dockerfile'])
 	for thisItem in contents:
-		shutil.copy(os.path.join(thisFolder,thisItem),tmpDir)
-
-	dockerItems=list(set(os.listdir(buildDir)).difference(['oedisi','datapreprocessor','dopf_ornl']))
-	#dockerItems.append('datapreprocessor')
+		shutil.copy(os.path.join(thisFolder,thisItem),tmpDir)	
 	
-	if not set(dockerItems).difference(preferredBuildOrder):
-		dockerItems=preferredBuildOrder
-	dockerItems = ["datapreprocessor","dopf_ornl","dopf_pnnl","ditto"] #Add applications to be build here
 	work_dir = "/home"
 	modify_application_dockerfile = True
 	for repositoryName in dockerItems:
 		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
 		print(f"Copying/cloning {repositoryName} to:{thisFolder}")
-		if repositoryName in ["datapreprocessor","ditto"]: #If repository name in datapreprocess or utility
-			#targetpath = os.path.join(thisFolder,"datapreprocessor")
+		if repositoryName in ["datapreprocessor","ditto"]: #If repository name in datapreprocess or utility			
 			repositoryFolder = os.path.join(thisFolder,repositoryName)
 			if os.path.exists(repositoryFolder):
 				shutil.rmtree(repositoryFolder)
-			shutil.copytree(os.path.join(buildDir,repositoryName), repositoryFolder) # Copy the folder
-			
-			#repositoryName = "datapreprocessor"
+			shutil.copytree(os.path.join(buildDir,repositoryName), repositoryFolder) # Copy the folder			
 		else:			
 			repositoryFolder,repositoryName = read_specification_and_clone_repository(specification_dict["application"],target_directory=thisFolder,application=repositoryName,show_details=args.showdetails)
 			print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
