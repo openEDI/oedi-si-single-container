@@ -58,6 +58,72 @@
       ]
    },
    
+   "state_estimator_pnnl": {
+      "components": [
+         
+        {
+            "name": "recorder_voltage_mag_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "voltage_mag.feather",
+                           "csv_filename": "voltage_mag.csv"
+                          }
+        },
+        {
+            "name": "recorder_voltage_angle_pnnl",
+            "type": "Recorder",
+            "parameters": {"feather_filename": "voltage_angle.feather",
+                           "csv_filename": "voltage_angle.csv"
+                          }
+        },
+        {
+            "name": "state_estimator_pnnl",
+            "type": "StateEstimatorPNNL",
+            "parameters": {
+                "algorithm_parameters": {"tol": 1e-5}
+            }
+        }
+         
+      ],
+      "links": [
+         {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "state_estimator_pnnl",
+            "target_port": "topology"
+        },
+        {
+            "source": "sensor_voltage_magnitude",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "sensor_voltage_magnitude"
+        },
+        {
+            "source": "sensor_power_real",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "sensor_power_real"
+        },
+        {
+            "source": "sensor_power_imaginary",
+            "source_port": "publication",
+            "target": "state_estimator_pnnl",
+            "target_port": "sensor_power_imaginary"
+        },
+        {
+         "source": "state_estimator_pnnl",
+         "source_port": "Vang_SE",
+         "target": "recorder_voltage_angle_pnnl",
+         "target_port": "subscription"
+     },
+     {
+         "source": "state_estimator_pnnl",
+         "source_port": "Vmag_SE",
+         "target": "recorder_voltage_mag_pnnl",
+         "target_port": "subscription"
+     }
+      ]
+   },
+
    "dopf_nrel": {
       "components": [
          {
@@ -276,7 +342,7 @@
       ]
    },
    
-   "state_estimator_pnnl": {
+   "state_estimator_pnnl2": {
       "components": [
          {
             "name": "state_estimator_pnnl",

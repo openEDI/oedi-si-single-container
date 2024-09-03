@@ -160,7 +160,7 @@ class Build(object):
 			components_links_library = json.load(file)
 
 		for appFederate in appFederates: #Loop through appFederates and add components and links to system_json
-			if appFederate in ["state_estimator_nrel","dopf_nrel","dopf_ornl","dopf_pnnl"]:
+			if appFederate in ["state_estimator_nrel","state_estimator_pnnl","dopf_nrel","dopf_ornl","dopf_pnnl"]:
 				print(f"Adding {appFederate} to system_json...")
 				system_json["components"].extend(components_links_library[appFederate]["components"])
 				system_json["links"].extend(components_links_library[appFederate]["links"])
@@ -262,12 +262,15 @@ class Build(object):
 
 		# modifications to config_runner for datapreprocessor federates
 		if self.config['userConfig']['use_oedisi_preprocessor']:
-			if 'data_imputation' in self.config['userConfig']['oedisi_preprocessor_federates']:
-				print("Adding dataimputation federate...")
-				config_runner['federates'].append({"directory": "dataimputation","name": "dataimputation","exec": "python federate_dataimputation.py","hostname": "localhost"})
-			if 'anomaly_detection' in self.config['userConfig']['oedisi_preprocessor_federates']:
-				print("Adding anomalydetection federate...")
-				config_runner['federates'].append({"directory": "anomalydetection","name": "anomalydetection","exec": "python federate_anomalydetection.py","hostname": "localhost"})
+			for datapreprocessorFederate in self.config['userConfig']['oedisi_preprocessor_federates']:
+				if datapreprocessorFederate.replace("_", "").lower() =='dataimputation':
+					print("Adding dataimputation federate...")
+					config_runner['federates'].append({"directory": "dataimputation","name": "dataimputation","exec": "python federate_dataimputation.py","hostname": "localhost"})				
+				elif datapreprocessorFederate.replace("_", "").lower() =='anomalydetection':
+					print("Adding anomalydetection federate...")
+					config_runner['federates'].append({"directory": "anomalydetection","name": "anomalydetection","exec": "python federate_anomalydetection.py","hostname": "localhost"})
+				else:
+					print(f"Datapreprocessor federate:{datapreprocessorFederate} is not supported!")
 
 			for n in range(len(config_runner['federates'])):
 				if config_runner['federates'][n]['name']=='broker':
