@@ -217,7 +217,7 @@ if __name__=="__main__":
 			modified_dockerfile_data = modify_application_dockerfile_content(os.path.join(repositoryFolder,dockerFileName), applicationName,work_dir)
 			data+= '\n' + f'#{applicationName}' +'\n' + modified_dockerfile_data +'\n' #Read Dockerfile and append
 			if applicationName == "dsse_pnnl":
-				data+= '\n' + f'chmod +x /home/{applicationName}/ekf_federate/state-estimator-gadal' +'\n' #permission need to be changed for this executable for dsse_pnnl to work
+				data+= '\n' + f'RUN chmod +x /home/{applicationName}/ekf_federate/state-estimator-gadal' +'\n' #permission need to be changed for this executable for dsse_pnnl to work
 		else:
 			f=open(os.path.join(repositoryFolder,dockerFileName))
 			data+=f.read()+'\n' #Read Dockerfile and append
