@@ -80,7 +80,7 @@ def get_config_dict(config_file):
 	
 	assert ".json" in config_file, f"{config_file} should be JSON file!"
 	if not os.path.exists(config_file):
-		raise ValueError(f"{config_file} is not a valid file!")
+		raise ValueError(f"{config_file} is found!")
 	else:
 		print(f"Reading following config file:{config_file}")
 	

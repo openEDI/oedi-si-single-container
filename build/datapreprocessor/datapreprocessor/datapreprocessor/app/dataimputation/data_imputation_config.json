@@ -1,11 +1,12 @@
 {
 
 "nodeload_data_details":{
-"selected_timeseries_files":["solarhome/solarhome_customers-300_days-365.csv"],
+"selected_timeseries_files":["data/solarhome/solarhome_customers-300_days-365.csv"],
 "selected_month":2,
-"distribution_system":"smartds_large",
-"distribution_system_file":"smartds_large/opendss/Master.dss",
-"load_scaling_type":"simple",
+"distribution_system":"123Bus",
+"distribution_system_file":"123Bus/case123.dss",
+"measurement_column":"load_value",
+"load_scaling_mode":"simple",
 "upsample_original_time_series":true,
 "upsample_time_period":"15Min"},
 
@@ -14,15 +15,17 @@
 "consequtive_corruption_probabilities":{"two":{"conditional_probability":0.2},
                                         "three":{"conditional_probability":0.1},
                                         "four":{"conditional_probability":0.05}},
+"replacement_methods":["ffill"],
+"cyclical_features":["hour_of_day","day_of_week","weekend"],
 "n_days": 25,
 "n_nodes":100,
-"load_block_length":4},
+"window_size":4},
 
 "model_arch_details":{
 "model_type":"lstm"
 },
 
-"model_training_details":{"n_epochs":100,
+"model_training_details":{"n_epochs":10,
 "batch_size": 32,
 "convert_to_tflite":false,
 "model_identifier":"vsolarhome"}
