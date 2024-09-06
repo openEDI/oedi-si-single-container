@@ -118,7 +118,7 @@ di_model = get_compiled_model(di_model)
 model_id = f'di_model-{distribution_system}_m-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}-{model_type}'
 model_checkpoint_id = 'epoch{epoch:02d}-loss{val_loss:.5f}' #'-mae{val_mean_absolute_error:.5f}'
 #model_checkpoint_path=os.path.join(model_checkpoint_folder,f'm-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}_n-{n_train_samples}_{model_type}_'+model_checkpoint_file)
-model_checkpoint_path=os.path.join(model_checkpoint_folder,f'{model_id}_n-{n_train_samples}_{model_checkpoint_id}')
+model_checkpoint_path=os.path.join(folder_model_checkpoints,f'{model_id}_n-{n_train_samples}_{model_checkpoint_id}')
 callbacks = [get_checkpoint_callback(model_checkpoint_path,monitored_metric,save_weights_only=False)]
 
 ## Train model
@@ -131,7 +131,7 @@ best_checkpoint_id = f'epoch{best_epoch:02d}-loss{best_monitored_metric:.5f}.ker
 ## Save best model for inference
 #best_model_savepath = os.path.join(model_checkpoint_folder,f'm-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}_n-{n_train_samples}_{model_type}_'+best_checkpoint_file)
 #best_model_archivepath = os.path.join(folder_model_archive,f'di_model-{model_type}-{distribution_system}_m-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}_{model_identifier}')
-best_model_savepath = os.path.join(model_checkpoint_folder,f'{model_id}_n-{n_train_samples}_{best_checkpoint_id}')
+best_model_savepath = os.path.join(folder_model_checkpoints,f'{model_id}_n-{n_train_samples}_{best_checkpoint_id}')
 best_model_archivepath = os.path.join(folder_model_archive,f'{model_id}_{model_identifier}')
 print(f"Best model checkpoint:{best_model_savepath}")	
 model_to_archive(best_model_savepath,best_model_archivepath)
