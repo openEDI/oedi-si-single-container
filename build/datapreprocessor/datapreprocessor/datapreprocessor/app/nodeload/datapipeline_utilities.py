@@ -58,7 +58,7 @@ def get_input_target_dataset(df,window_size,input_features,target_feature,batch_
 		dataset_target =tf.keras.utils.timeseries_dataset_from_array(
 							data=df[target_feature].values,
 							targets = None,
-							sequence_length =load_block_length ,
+							sequence_length =window_size,
 							sequence_stride=sequence_stride,
 							sampling_rate=1,
 							batch_size=batch_size,

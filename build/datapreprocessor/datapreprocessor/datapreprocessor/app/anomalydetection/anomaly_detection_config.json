@@ -3,8 +3,8 @@
 "nodeload_data_details":{
 "selected_timeseries_files":["data/solarhome/solarhome_customers-300_days-365.csv"],
 "selected_month":2,
-"distribution_system":"8500Bus",
-"distribution_system_file":"opendss/8500Bus/master.dss",
+"distribution_system":"123Bus",
+"distribution_system_file":"opendss/123Bus/case123.dss",
 "measurement_column":"load_value",
 "load_scaling_mode":"simple",
 "upsample_original_time_series":true,
@@ -20,7 +20,7 @@
 "model_type":"lstm"
 },
 
-"model_training_details":{"n_epochs":2,
+"model_training_details":{"n_epochs":25,
 "batch_size": 32,
 "model_identifier":"v0"}
 
