@@ -5,17 +5,8 @@ Created on Wed May 01 00:10:00 2018
 
 import os
 import glob
-import zipfile
 import random
-import math
 import warnings
-from calendar import monthrange
-from collections import OrderedDict
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from tqdm import tqdm,trange
 
 try:
 	import py7zr

@@ -22,11 +22,6 @@ from sklearn.cluster import Birch
 from tqdm import tqdm,trange
 
 try:
-	import py7zr
-except ImportError:
-	warnings.warn('py7zr failed to import', ImportWarning)
-
-try:
 	from bokeh.models import ColumnDataSource
 	from bokeh.plotting import figure, show, output_file
 	from bokeh.layouts import column

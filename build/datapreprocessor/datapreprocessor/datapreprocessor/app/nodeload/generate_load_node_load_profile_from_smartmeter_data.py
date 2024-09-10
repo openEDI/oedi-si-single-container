@@ -8,8 +8,8 @@ import sys
 import argparse
 import calendar
 
-baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  #Add path of home directory e.g.'/home/splathottam/GitHub/oedi'
-workDir=os.path.join(baseDir,"oedianl")
+baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) Add path of home directory 
+workDir=os.path.join(baseDir,"datapreprocessor")
 
 print(f"Adding home directory:{baseDir} to path")
 sys.path.insert(0,baseDir) #Add module path to prevent import errors

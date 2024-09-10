@@ -3,7 +3,6 @@ Created on January 3 3:00:00 2023
 @author: Siby Plathottam
 """
 
-import os
 import time
 from typing import List
 
@@ -29,7 +28,7 @@ def train_model(model,train_dataset,validation_dataset,n_epochs:int,callbacks:Li
 
 	return model,history
 
-def plot_training_history(history,plot_filename:str):
+def plot_training_history(history,plot_filename:str,show_plot=False):
 	"""Plot training and validation loss"""
 
 	print(f"Saving training history plot in {plot_filename}...")
@@ -41,7 +40,8 @@ def plot_training_history(history,plot_filename:str):
 	plt.ylabel("loss")
 	plt.legend()
 	plt.savefig(plot_filename)
-	plt.show()
+	if show_plot:
+		plt.show()
 
 def get_best_model(history,monitored_metric:str):
 	best_monitored_metric = min(history.history[monitored_metric])

@@ -3,23 +3,13 @@ Created on Nov 15 10:00:00 2022
 @author: Siby Plathottam
 """
 
-import glob
 import math
-import calendar
-import os
-import pickle
-import warnings
 from typing import List, Set, Dict, Tuple, Optional, Union
-from statistics import mean
 
-import py7zr
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from numpy.random import default_rng
 from pandas.tseries.offsets import DateOffset
-from tqdm import tqdm
 
 def evaluate_anomalydetection_on_streaming_data_multi_nodes(df_eval,autoencoder,monitored_nodes,load_block_length,input_features,timeinterval_mins=15,reconstruction_error_threshold=1e-2):
 	"""Loop through monitored nodes"""

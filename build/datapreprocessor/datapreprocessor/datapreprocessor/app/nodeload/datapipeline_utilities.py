@@ -6,16 +6,17 @@ import time
 import pickle
 import random
 
+import tqdm
 import tensorflow as tf
 
-def df_to_input_target_dataset(df,load_block_length,input_features,target_feature,batch_size,use_prefetch,df_type = "train"):
+def df_to_input_target_dataset(df,window_size,input_features,target_feature,batch_size,use_prefetch,df_type = "train"):
 	"""Get input target dataset that can be used by model.fit()"""
 	
-	input_dataset, target_dataset =	 get_input_target_dataset(df,load_block_length,input_features,target_feature,batch_size=None,use_moving_window=True)
+	input_dataset, target_dataset =	 get_input_target_dataset(df,window_size,input_features,target_feature,batch_size=None,use_moving_window=True)
 	input_target = tf.data.Dataset.zip((input_dataset, target_dataset))
 	print(f"First two elements in {df_type} dataset:{list(input_target.take(2).as_numpy_iterator())[0]}")
 
-	check_moving_window(input_target,df,load_block_length,input_features)	
+	check_moving_window(input_target,df,window_size,input_features)	
 	cardinality = input_target.cardinality().numpy()
 	
 	print(f"TF {df_type} dataset Cardinality:{cardinality} - df size:{len(df)}")
@@ -33,18 +34,18 @@ def df_to_input_target_dataset(df,load_block_length,input_features,target_featur
 	
 	return input_target
 
-def get_input_target_dataset(df,load_block_length,input_features,target_feature,batch_size=128,use_moving_window=False):
+def get_input_target_dataset(df,window_size,input_features,target_feature,batch_size=128,use_moving_window=False):
 	"""Create TF datasets"""
 		
 	if use_moving_window:
 		sequence_stride = 1
 	else:
-		sequence_stride = load_block_length #Uses a fixed window
+		sequence_stride = window_size #Uses a fixed window
 	
 	dataset_input =tf.keras.utils.timeseries_dataset_from_array(
 							data=df[input_features].values,
 							targets = None,
-							sequence_length =load_block_length ,
+							sequence_length =window_size ,
 							sequence_stride=sequence_stride,
 							sampling_rate=1,
 							batch_size=batch_size,
@@ -70,13 +71,13 @@ def get_input_target_dataset(df,load_block_length,input_features,target_feature,
 	
 	return dataset_input,dataset_target
 
-def check_moving_window(dataset,df,load_block_length,input_features,n_samples = 10):
+def check_moving_window(dataset,df,window_size,input_features,n_samples = 10):
 	"""Check difference between data set and dataframe after applying moving window"""
 	
 	difference_flag = False
-	print(f"Checking moving window for window size {load_block_length} with input features:{input_features} on {n_samples} samples.")
+	print(f"Checking moving window for window size {window_size} with input features:{input_features} on {n_samples} samples.")
 	for i,input_target in enumerate(dataset.take(n_samples).as_numpy_iterator()): #Take n_samples from dataset and iterate
-		difference = list(input_target)[0]-df[input_features][i:i+load_block_length].values
+		difference = list(input_target)[0]-df[input_features][i:i+window_size].values
 		if not difference.sum()==0.0:
 			print(f"Difference detected at:{i} - difference:{difference}")
 			difference_flag = True
@@ -92,7 +93,7 @@ def tfdataset_to_pickle(input_target,pickle_file):
 	array_moving_window = list(input_target.as_numpy_iterator())
 	features = []
 	target = []
-	for i in tqdm(range(n_elements)):
+	for i in tqdm.tqdm(range(n_elements)):
 		features.append(array_moving_window[i][0])
 		target.append(array_moving_window[i][1])
 	features = np.array(features)

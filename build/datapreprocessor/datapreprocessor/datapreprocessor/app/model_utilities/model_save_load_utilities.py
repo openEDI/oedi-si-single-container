@@ -56,11 +56,13 @@ def model_to_archive(model_path:str,model_archivepath:str):
 	"""Converted saved Keras/TensorFlow model to zip archive"""
 
 	if ".keras" in model_path:
-		print(f"Copying keras model to:{model_archivepath}")
-		shutil.copy(model_path, model_archivepath+".keras")	
+		model_archivepath  = model_archivepath + ".keras"
+		print(f"Saving model as Keras archive in:{model_archivepath}")
+		shutil.copy(model_path, model_archivepath)	
 	else:
-		model_to_7ziparchive(model_path,model_archivepath)
-
+		model_archivepath = model_to_7ziparchive(model_path,model_archivepath)
+	
+	return model_archivepath
 
 def model_to_7ziparchive(model_path:str,model_archivepath:str):
 	"""Converted saved Keras/TensorFlow model to zip archive"""
@@ -89,6 +91,8 @@ def model_to_7ziparchive(model_path:str,model_archivepath:str):
 		else:
 			raise ValueError(f"{model_path} is an invalid model save path!")
 
+	return model_archivepath
+
 def modelarchive_to_modelpath(model_archivepath:str,model_folder:str):
 	"""Convert model archive path to model path"""
 	
@@ -99,7 +103,8 @@ def modelarchive_to_modelpath(model_archivepath:str,model_folder:str):
 		with py7zr.SevenZipFile(model_archivepath, 'r') as archive:
 			archive.extractall(path=model_path)
 	elif ".keras" in model_archivepath: #Check if it is a keras archive
-		model_path = os.path.join(model_folder,model_archivepath.split("/")[-1]) #extract file name and add it to model folder
+		_, model_path = os.path.split(model_archivepath)		
+		model_path = os.path.join(model_folder,model_path) #extract file name and add it to model folder		
 		shutil.copy(model_archivepath, model_folder)
 	else:
 		raise ValueError(f"{model_archivepath} is not a valid model archive!")	

@@ -4,8 +4,6 @@ Created on Thursday Feb 16 15:00:00 2023
 """
 
 import os
-import glob
-import math
 import calendar
 import os
 import pickle
@@ -315,7 +313,7 @@ def get_scaling_factor(Pnominal,df_node_load,df_load_fraction):
 	
 	return df_scaling_factor
 
-def get_rated_node_loads(case_file='/data/opendss/123Bus/case123.dss',n_nodes=-1):
+def get_rated_node_loads(case_file,n_nodes=-1):
 	"""Return P and Q in kW and kVAR respectively"""
 	
 	dss=DistModel()

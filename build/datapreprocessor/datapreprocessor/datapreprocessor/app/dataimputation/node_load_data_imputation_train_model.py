@@ -21,17 +21,19 @@ from datapreprocessor.app.nodeload.datapipeline_utilities import get_train_test_
 from datapreprocessor.app.dataimputation.data_imputation_preprocessing import get_df_node_load_selected_nodes,get_knn_array
 from datapreprocessor.app.dataimputation.data_imputation_postprocessing import compare_performance_moving_window
 from datapreprocessor.app.dataimputation.model_utilities import get_knn_imputer_predictions,get_knn_imputer
-from datapreprocessor.app.model_utilities.model_utilities import get_autoencoder_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict
+from datapreprocessor.app.model_utilities.model_utilities import get_autoencoder_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict,check_normalizer
 from datapreprocessor.app.model_utilities.model_training_utilities import train_model,get_best_model
-from datapreprocessor.app.model_utilities.model_save_load_utilities import model_to_archive,load_keras_model
+from datapreprocessor.app.model_utilities.model_save_load_utilities import model_to_archive,modelarchive_to_modelpath,load_keras_model
 
 rng = default_rng()
 
 ## Specify locations of plots and models
 folder_plots = os.path.join(baseDir,"datapreprocessor","app","dataimputation","plots")
-folder_model_archive = os.path.join(baseDir,"datapreprocessor","app","dataimputation","model")
+folder_model_inference = os.path.join(baseDir,"datapreprocessor","app","dataimputation","model")
+folder_model_archive = os.path.join(baseDir,"datapreprocessor","app","dataimputation","model_archives")
 folder_model_checkpoints = os.path.join(baseDir,"datapreprocessor","app","dataimputation","model_checkpoints")
 check_and_create_folder(folder_plots)
+check_and_create_folder(folder_model_inference)
 check_and_create_folder(folder_model_archive)
 check_and_create_folder(folder_model_checkpoints)
 
@@ -54,7 +56,7 @@ selected_month = config_dict["nodeload_data_details"]["selected_month"] #2 # The
 distribution_system = config_dict["nodeload_data_details"]["distribution_system"] ##The distribution system we are generating the profiles
 distribution_system_file = config_dict["nodeload_data_details"]["distribution_system_file"] ##The opendss file
 measurement_column = config_dict["nodeload_data_details"]["measurement_column"]
-opendss_casefile = os.path.join(baseDir,"datapreprocessor","data","opendss",distribution_system,"case123.dss")
+opendss_casefile = os.path.join(baseDir,"datapreprocessor","data",distribution_system_file)
 n_days = config_dict["train_data_details"]["n_days"] #4 #The number of full day profiles that will be generated for training
 n_nodes = config_dict["train_data_details"]["n_nodes"] #4 #The number of nodes that will be used for training
 load_scaling_mode = config_dict["nodeload_data_details"]["load_scaling_mode"] #"simple" #multi
@@ -72,16 +74,16 @@ auxiliary_features = [f'{measurement_column}_corrupted_ffill']#,'load_value_corr
 input_features = [f"{measurement_column}_corrupted"] + auxiliary_features  + ["corruption_encoding"]  + encoded_cyclical_features
 target_feature =  f"{measurement_column}"
 n_input_features = len(input_features)
-n_output_features =  1
+n_target_features =  1
 print(f"Using following {n_input_features} features as input to data imputation model:{input_features}")
 
 ## Data imputation model architecture details
 stateful = False #True #False
-use_prefetch= True
 window_size =  config_dict["train_data_details"]["window_size"] #4 #The length of the time window
 model_type = config_dict["model_arch_details"]["model_type"] #"lstm" #"1dcnn"#"lstm" #Currently enther lstm or 1dcnn
 
 ## Data imputation model training details
+use_prefetch= True
 batch_size =  config_dict["model_training_details"]["batch_size"] #32
 n_epochs =  config_dict["model_training_details"]["n_epochs"] #5
 monitored_metric = "val_loss"#"val_mean_absolute_error" # Performance metric monitored during training
@@ -93,52 +95,45 @@ df_averaged_load,df_averaged_day_load = create_average_timeseries_profiles(times
 ## Generate anonymized node load profiles for the selected distribution system model
 df_node_load,load_node_dict = generate_load_node_profiles(df_averaged_day_load,case_file=opendss_casefile,n_nodes=n_nodes,n_days=n_days,start_year = 2016,start_month=selected_month,start_day=1,scaling_type=load_scaling_mode)
 
-## Specify train and test nodes
+## Specify train, test and eval nodes
 selected_train_nodes,selected_test_nodes,selected_eval_nodes = get_train_test_eval_nodes(load_node_dict,train_fraction=0.75,test_fraction=0.2)
 
-## Generate training and testing data
+## Generate training, testing, and evaluation data
 df_train = get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_train_nodes,measurement_column,corrupted_fraction,multi_corruption=consecutive_corruption,consequtive_corruption_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods)
 df_test = get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_test_nodes,measurement_column,corrupted_fraction,multi_corruption=consecutive_corruption,consequtive_corruption_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods)
+df_eval = get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_eval_nodes,measurement_column,corrupted_fraction,multi_corruption=consecutive_corruption,consequtive_corruption_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods)
 n_train_samples = len(df_train)
 
 ## Convert dataframe into a dataset object that can be used by model training
-train_input_target = df_to_input_target_dataset(df_train,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "train")
-test_input_target = df_to_input_target_dataset(df_test,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "test")
+input_target_dataset_train = df_to_input_target_dataset(df_train,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "train")
+input_target_dataset_test = df_to_input_target_dataset(df_test,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "test")
+input_target_dataset_eval = df_to_input_target_dataset(df_eval,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "eval")
 
 ## Create object to normalize data
 normalizer = get_normalizer(df_train,input_features,skip_normalization=encoded_cyclical_features+["corruption_encoding"]) #Obtain a normalizer using training data
-print(f"Raw data:{test_input_target.take(1).as_numpy_iterator().next()[0][0:2]}")
-print(f"Normalized data:{normalizer(test_input_target.take(1).as_numpy_iterator().next()[0][0:2])}")
+check_normalizer(normalizer,input_target_dataset_test)
 
 ## Create data imputation model
-di_model = get_autoencoder_model(model_type,window_size,n_input_features,n_output_features,normalizer=normalizer)
+di_model = get_autoencoder_model(model_type,window_size,n_input_features,n_target_features,normalizer=normalizer)
 di_model = get_compiled_model(di_model)
 
 ## Create checkpoints
-model_id = f'di_model-{distribution_system}_m-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}-{model_type}'
+model_id = f'di_model-nodeload-{distribution_system}_m-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}-{model_type}'
 model_checkpoint_id = 'epoch{epoch:02d}-loss{val_loss:.5f}' #'-mae{val_mean_absolute_error:.5f}'
-#model_checkpoint_path=os.path.join(model_checkpoint_folder,f'm-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}_n-{n_train_samples}_{model_type}_'+model_checkpoint_file)
 model_checkpoint_path=os.path.join(folder_model_checkpoints,f'{model_id}_n-{n_train_samples}_{model_checkpoint_id}')
 callbacks = [get_checkpoint_callback(model_checkpoint_path,monitored_metric,save_weights_only=False)]
 
 ## Train model
-model,history = train_model(di_model,train_input_target,test_input_target,n_epochs,callbacks)
+di_model,history = train_model(di_model,input_target_dataset_train,input_target_dataset_test,n_epochs,callbacks) #note that is method returns the last model
 
-## Save best model for inference
+## Find best model checkpoint
 best_monitored_metric,best_epoch = get_best_model(history,monitored_metric)
 best_checkpoint_id = f'epoch{best_epoch:02d}-loss{best_monitored_metric:.5f}.keras'
-
-## Save best model for inference
-#best_model_savepath = os.path.join(model_checkpoint_folder,f'm-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}_n-{n_train_samples}_{model_type}_'+best_checkpoint_file)
-#best_model_archivepath = os.path.join(folder_model_archive,f'di_model-{model_type}-{distribution_system}_m-{calendar.month_abbr[selected_month]}_w-{window_size}_f-{n_input_features}_c-{corrupted_fraction}_{model_identifier}')
 best_model_savepath = os.path.join(folder_model_checkpoints,f'{model_id}_n-{n_train_samples}_{best_checkpoint_id}')
-best_model_archivepath = os.path.join(folder_model_archive,f'{model_id}_{model_identifier}')
-print(f"Best model checkpoint:{best_model_savepath}")	
-model_to_archive(best_model_savepath,best_model_archivepath)
+print(f"Best model checkpoint:{best_model_savepath}")
 
-## Create data for evaluation
-df_eval = get_df_node_load_selected_nodes(df_node_load,cyclical_features,selected_eval_nodes,measurement_column,corrupted_fraction,multi_corruption=consecutive_corruption,consequtive_corruption_probabilities=consequtive_corruption_probabilities,replacement_methods=replacement_methods)
-eval_input_target = df_to_input_target_dataset(df_eval,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "eval")
+## Save best model in model archive for inference
+best_model_archivepath = model_to_archive(best_model_savepath,os.path.join(folder_model_archive,f'{model_id}_{model_identifier}'))
 
 ## Get imputation predictions from kNN imputation model for comparison
 knn_array = get_knn_array(df_eval,window_size,measurement_column,n_windows = 1400000)
@@ -146,6 +141,9 @@ knn_imputer = get_knn_imputer(knn_array,n_neighbors=10)
 predictions_eval_knn = get_knn_imputer_predictions(knn_imputer,knn_array)
 
 ## Load and Evaluate pre-trained model
+best_model_savepath = modelarchive_to_modelpath(model_archivepath = best_model_archivepath,model_folder = folder_model_inference)
 best_model = load_keras_model(best_model_savepath)
-predictions_eval = evaluate_predict(best_model,input_target=eval_input_target)
-df_comparison_eval = compare_performance_moving_window(df_eval,predictions_eval,window_size, n_windows = 1400000,alternate_predictions={"knn":predictions_eval_knn})
+predictions_eval = evaluate_predict(best_model,input_target=input_target_dataset_eval)
+
+#Compare imputation performance for missing values
+df_comparison_eval = compare_performance_moving_window(df_eval,predictions_eval,window_size, measurement_column,n_windows = 1400000,alternate_predictions={"knn":predictions_eval_knn})

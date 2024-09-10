@@ -4,40 +4,53 @@ Created on December 29 10:00:00 2023
 """
 
 import keras
-#import keras_nlp #Not used now
-import numpy as np
 import tensorflow as tf
 
 tf.experimental.numpy.experimental_enable_numpy_behavior()
-
 keras.mixed_precision.set_global_policy("float64")  # Use mixed precision to speed up all training #mixed_float16
 
 
 # Create model by subclassing the Model class
+@keras.saving.register_keras_serializable(package="1DCNNAutoEncoder")
 class AutoEncoder1DCNN(keras.Model):
-    def __init__(self, normalizer, window_size: int, n_input_features: int, n_output_features: int, *args, **kwargs):
-        # super(AutoEncoder1DCNN, self).__init__()
+    def __init__(self, window_size: int, n_input_features: int, n_output_features: int, normalizer=None, *args, **kwargs):
         super().__init__(*args, **kwargs)  # This is sufficient since we are inheriting from single class
+        
+        self.window_size = window_size
+        self.n_input_features = n_input_features
+        self.n_output_features = n_output_features
+        self.normalizer = normalizer
 
-        self.encoder = keras.Sequential([
-            keras.Input(shape=(window_size, n_input_features)),
-            normalizer,
-            keras.layers.Conv1D(64, 2, activation='relu'),  # 'relu'#layers.LeakyReLU()
-            keras.layers.Conv1D(64, 2, activation='relu'),
-            keras.layers.Conv1D(64, 2, activation='relu'),
-            keras.layers.Dense(10, activation='relu')], name="encoder")  # "linear"
-
-        self.decoder = keras.Sequential([
-            keras.layers.Conv1DTranspose(64, kernel_size=2, activation='relu'),
-            keras.layers.Conv1DTranspose(32, kernel_size=2, activation='relu'),
-            keras.layers.Conv1DTranspose(n_output_features, kernel_size=2, activation='linear')], name="decoder")
+        encoder_layers =  [keras.Input(shape=(window_size, n_input_features))]
+        if normalizer is not None:
+            encoder_layers.append(normalizer)
+        encoder_layers.append([keras.layers.Conv1D(64, 2, activation='relu'),  # 'relu'#layers.LeakyReLU()
+                               keras.layers.Conv1D(64, 2, activation='relu'),
+                               keras.layers.Conv1D(64, 2, activation='relu'),
+                               keras.layers.Dense(10, activation='relu')]
+                             )
+        self.encoder = keras.Sequential(encoder_layers, name="encoder")  # "linear"
+        self.decoder = keras.Sequential([keras.layers.Conv1DTranspose(64, kernel_size=2, activation='relu'),
+                                         keras.layers.Conv1DTranspose(32, kernel_size=2, activation='relu'),
+                                         keras.layers.Conv1DTranspose(n_output_features, kernel_size=2, activation='linear')], name="decoder")
 
     def call(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
 
         return decoded
+    
+    def get_config(self): #This is required for saved models to load properly with normalizer
+        base_config = super().get_config()
+        config = {"window_size": self.window_size, "n_input_features": self.n_input_features,
+                  "n_output_features": self.n_output_features,"normalizer": keras.saving.serialize_keras_object(self.normalizer)}
 
+        return {**base_config, **config}
+    
+    @classmethod
+    def from_config(cls, config): #This is required for saved models to load properly with normalizer
+        config["normalizer"] = keras.layers.deserialize(config["normalizer"])        
+        return cls(**config)
 
 @keras.saving.register_keras_serializable(package="LSTMAutoEncoder")
 class LSTMAutoEncoder(keras.Model):
@@ -47,6 +60,7 @@ class LSTMAutoEncoder(keras.Model):
         self.window_size = window_size
         self.n_input_features = n_input_features
         self.n_output_features = n_output_features
+        self.normalizer = normalizer
 
         if normalizer is not None:
             self.encoder = keras.Sequential([
@@ -59,11 +73,9 @@ class LSTMAutoEncoder(keras.Model):
                 keras.layers.LSTM(100, activation='relu')])  # "linear"
 
         self.decoder = keras.Sequential([
-            keras.layers.RepeatVector(window_size),
-            # RepeatVector layer repeats the incoming inputs a specific number of time
+            keras.layers.RepeatVector(window_size), # RepeatVector layer repeats the incoming inputs a specific number of time            
             keras.layers.LSTM(100, activation='relu', return_sequences=True),
-            keras.layers.TimeDistributed(keras.layers.Dense(
-                n_output_features))])  # ''#This wrapper allows to apply a layer to every temporal slice of an input.'''
+            keras.layers.TimeDistributed(keras.layers.Dense(n_output_features))])  #TimeDistributed wrapper allows to apply a layer to every temporal slice of an input.'''
 
     def call(self, x):
         encoded = self.encoder(x)
@@ -71,12 +83,18 @@ class LSTMAutoEncoder(keras.Model):
 
         return decoded
 
-    def get_config(self):
+    def get_config(self): #This is required for saved models to load properly with normalizer
         base_config = super().get_config()
         config = {"window_size": self.window_size, "n_input_features": self.n_input_features,
-                  "n_output_features": self.n_output_features}
+                  "n_output_features": self.n_output_features,"normalizer": keras.saving.serialize_keras_object(self.normalizer)}
 
         return {**base_config, **config}
+    
+    @classmethod
+    def from_config(cls, config): #This is required for saved models to load properly with normalizer
+        config["normalizer"] = keras.layers.deserialize(config["normalizer"])        
+        return cls(**config)
+
 class TransformerAutoEncoder(keras.Model):
     def __init__(self,normalizer,window_size:int,n_input_features:int,n_transformer_layers:int=1,heads_per_transformer:int=2,*args,**kwargs):
         print(f"Building transformer autoencoder with {n_transformer_layers} layers with {heads_per_transformer} heads per transformer...")
