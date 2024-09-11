@@ -51,15 +51,17 @@ def read_specification_and_clone_repository(specification_dict:dict,target_direc
 
 import re
 
-def modify_application_dockerfile_content(dockerfile_path:str, application_directory:str,work_directory:str):
+#def modify_application_dockerfile_content(dockerfile_path:str, application_directory:str,work_directory:str):
+def modify_application_dockerfile_content(modified_dockerfile_lines, application_directory:str,work_directory:str):
 	file_pattern_copy = re.compile(r'COPY\s+([^\s]+)\s+([^\s]+)')
 	file_pattern_workdir = r'^WORKDIR\s+(/.*)'
 	modified_lines = []
-	print("Modifying Dockerfile...")
-	with open(dockerfile_path, 'r') as file:
-		dockerfile_content = file.read()
+	#print("Modifying Dockerfile...")
+	#with open(dockerfile_path, 'r') as file:
+	#	dockerfile_content = file.read()
 
-	for line in dockerfile_content.splitlines():
+	#for line in dockerfile_content.splitlines():
+	for line in modified_dockerfile_lines:
 		match_copy = file_pattern_copy.match(line)
 		match_workdir = re.match(file_pattern_workdir, line.strip())
 		if not application_directory == "datapreprocessor":
@@ -82,7 +84,8 @@ def modify_application_dockerfile_content(dockerfile_path:str, application_direc
 		else:
 			modified_lines.append(line)
 
-	return '\n'.join(modified_lines)
+	#return '\n'.join(modified_lines)
+	return modified_lines
 
 def remove_redundant_from_statements(dockerfile_path:str):
 	print("Checking and removing redundant FROM statements...")
@@ -119,24 +122,43 @@ def update_oedisi_dockerfile(dockerfile_content:str, specification_config:dict):
 		
 	return dockerfile_content
 
-def modify_dockerfile_cp_cd(dockerfile_path, append_path):
-	# Compile regular expressions for search patterns
-	patterns = [re.compile(pattern) for pattern in [r'^cp /build', r'^cd /build']]
+def replace_home_paths(lines, replacement='/home/dsse_pnnl/'):
 	
-	with open(dockerfile_path, 'r') as file: # Read the Dockerfile content
-		lines = file.readlines()
+	pattern = r'/home' # Define the pattern to match '/home/'
 
-	# Iterate over each line and modify it if necessary
-	modified_lines = []
-	for line in lines:
-		for pattern in patterns:
-			if pattern.search(line):				
-				line = f"{line.strip()} {append_path}\n" # Append the append_path to the matched line
-				break  # Exit the inner loop if a match is found
-		modified_lines.append(line)
+	print(f"Replacing {pattern} with {replacement}")
+
+	# Compile the regex pattern
+	regex = re.compile(pattern)
+
+	# Define the replacement pattern
+	replacement_pattern = fr'\1{replacement}'
+
+	# Process each line in the list
+	modified_lines = [regex.sub(replacement, line) for line in lines]
+
+	# Replace '/home/' with the specified replacement in each line
+	#modified_lines = [regex.sub(replacement, line) for line in lines]
+
+	return modified_lines
+
+def replace_build_paths(lines, replacement='/home/dsse_pnnl/build'):	
+	pattern = r'(LD_LIBRARY_PATH=/)?(\/)?build' # Define the pattern to match 'build', '/build', and 'LD_LIBRARY_PATH=/build'
+
+	print(f"Replacing {pattern} with {replacement}")
+
+	# Compile the regex pattern
+	regex = re.compile(pattern)
+
+	# Define the replacement pattern
+	#replacement_pattern = fr'\1{replacement}'
+
+	# Process each line in the list
+	modified_lines = [regex.sub(replacement, line) for line in lines]
+
+	return modified_lines
+    
 	
-	with open(dockerfile_path, 'w') as file: # Write the modified content back to the Dockerfile
-		file.writelines(modified_lines)
 
 if __name__=="__main__":	
 	dockerItems = ["datapreprocessor","dsse_pnnl","dopf_pnnl","dopf_ornl","ditto"] #Add applications to be included in the single container image here "datapreprocessor","dopf_ornl","dopf_pnnl"
@@ -162,7 +184,7 @@ if __name__=="__main__":
 		isWindows=True
 	else:
 		isWindows=False
-	tmpFolder= "tmp3"
+	tmpFolder= "tmp"
 	tmpDir=os.path.join(baseDir,tmpFolder)
 	if not os.path.exists(tmpDir):
 		os.system(f'mkdir {tmpDir}')
@@ -196,7 +218,7 @@ if __name__=="__main__":
 	for thisItem in contents:
 		shutil.copy(os.path.join(thisFolder,thisItem),tmpDir)	
 	
-	work_dir = "/home"
+	workDir = "/home"
 	modify_application_dockerfile = True
 	for applicationName in dockerItems:
 		thisFolder=os.path.join(tmpDir)	#Clone application repository into tmp folder
@@ -211,15 +233,29 @@ if __name__=="__main__":
 		else:			
 			repositoryName,dockerFileName = read_specification_and_clone_repository(specification_dict["application"][applicationName],target_directory=thisFolder,repository_name=applicationName,show_details=args.showdetails)
 			repositoryFolder = os.path.join(thisFolder,repositoryName)			
-		print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
-			
-		if modify_application_dockerfile:			
-			modified_dockerfile_data = modify_application_dockerfile_content(os.path.join(repositoryFolder,dockerFileName), applicationName,work_dir)
+		
+		dockerFilePath = os.path.join(repositoryFolder,dockerFileName)
+		if modify_application_dockerfile:
+			print(f"Opening, reading, and modifying build commands in Dockerfile:{dockerFilePath}...")
+			with open(dockerFilePath, 'r') as file: # Read the Dockerfile
+				dockerfile_lines = file.readlines()	
+			#modified_dockerfile_data = modify_application_dockerfile_content(os.path.join(repositoryFolder,dockerFileName), applicationName,workDir)
+			modified_dockerfile_lines = modify_application_dockerfile_content(dockerfile_lines, applicationName,workDir)
+
+			if applicationName == "dsse_pnnl":				
+				#prepend_path = f'/home/{applicationName}'
+				#patterns = ['/home','/build']  # Patterns to prepend the path to
+				#modified_dockerfile_lines = prepend_paths(modified_dockerfile_lines, applicationName, patterns)
+				modified_dockerfile_lines = replace_home_paths(modified_dockerfile_lines, replacement=f'/home/{applicationName}')
+				modified_dockerfile_lines = replace_build_paths(modified_dockerfile_lines, replacement=f'/home/{applicationName}/build')
+				modified_dockerfile_lines.append(f'RUN chmod +x /home/{applicationName}/ekf_federate/state-estimator-gadal') #permission need to be changed for this executable for dsse_pnnl to work
+
+			modified_dockerfile_data = '\n'.join(modified_dockerfile_lines) #Join list of strings to one file
 			data+= '\n' + f'#{applicationName}' +'\n' + modified_dockerfile_data +'\n' #Read Dockerfile and append
-			if applicationName == "dsse_pnnl":
-				data+= '\n' + f'RUN chmod +x /home/{applicationName}/ekf_federate/state-estimator-gadal' +'\n' #permission need to be changed for this executable for dsse_pnnl to work
+			
 		else:
-			f=open(os.path.join(repositoryFolder,dockerFileName))
+			print(f"Opening and reading build commands in Dockerfile:{dockerFilePath}...")
+			f=open(dockerFilePath)
 			data+=f.read()+'\n' #Read Dockerfile and append
 			f.close()
 		if 'copy_statements.txt' in os.listdir(repositoryFolder):
