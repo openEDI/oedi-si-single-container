@@ -8,7 +8,7 @@ import helics as h
 from datapreprocessor.federates.dataimputation.iohelper import IOHelper
 from datapreprocessor.app.dataimputation.data_imputation_postprocessing import update_window_and_impute
 from datapreprocessor.app.dataimputation.model_utilities import sevenziparchive_to_model
-from datapreprocessor.app.model_utilities.model_save_load_utilities import load_keras_model,load_tf_savedmodel
+from datapreprocessor.app.model_utilities.model_save_load_utilities import modelarchive_to_modelpath,load_keras_model,load_tf_savedmodel
 from datapreprocessor.utils.exceptionutil import ExceptionUtil
 import datapreprocessor
 workDir=datapreprocessor.__path__[0]
@@ -30,8 +30,11 @@ class DataimputationFederate(IOHelper):
 			self.config['federate_config']['subscriptions']=self.config['input_mapping']['subscriptions']
 			self.federate_name = federate_name
 			self.dt=dt
-			self.modelDir = os.path.join(workDir,'app','dataimputation','model')
-			self.prediction_model_path = sevenziparchive_to_model(os.path.join(self.modelDir,self.config['static_inputs']['pretrained_model_file']),self.modelDir)
+			#self.modelDir = os.path.join(workDir,'app','dataimputation','model')
+			model_folder = os.path.join(workDir,"app","dataimputation","model")
+			model_archivepath = os.path.join(workDir,self.config['static_inputs']['model_archivepath'])
+			self.model_path = modelarchive_to_modelpath(model_archivepath,model_folder)
+			#self.prediction_model_path = sevenziparchive_to_model(os.path.join(self.modelDir,self.config['static_inputs']['pretrained_model_file']),self.modelDir)
 			self.model_format = self.config['static_inputs']['model_format']
 			LogUtil.logger.info('created dataimputation federate')
 			LogUtil.logger.info(f"config::::{self.config}")
@@ -54,12 +57,12 @@ class DataimputationFederate(IOHelper):
 			self.create_federate(json.dumps(self.config['federate_config']))
 			self.setup_publications(self.config['federate_config'])
 			self.setup_subscriptions(self.config['federate_config'])
-			print(f"Loading data imputation model from {self.prediction_model_path}")
+			print(f"Loading data imputation model from {self.model_path}")
 			if self.model_format == "keras":
-				self.autoencoder_dict =  {'pdemand':load_keras_model(self.prediction_model_path),'qdemand':load_keras_model(self.prediction_model_path)}
+				self.autoencoder_dict =  {'pdemand':load_keras_model(self.model_path),'qdemand':load_keras_model(self.model_path)}
 				self.autoencoder_dict['pdemand'].summary(expand_nested=True) #Summary only works for keras models
 			elif self.model_format == "tfsm":
-				self.autoencoder_dict =  {'pdemand':load_tf_savedmodel(self.prediction_model_path),'qdemand':load_tf_savedmodel(self.prediction_model_path)}
+				self.autoencoder_dict =  {'pdemand':load_tf_savedmodel(self.model_path),'qdemand':load_tf_savedmodel(self.model_path)}
 			else:
 				raise ValueError(f"{self.model_format} is not a valid model format!")
 			

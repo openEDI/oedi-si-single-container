@@ -1,0 +1,14 @@
+{
+    "directory": "anomalydetection",
+    "execute_function": "python federate_anomalydetection.py",
+    "static_inputs": [
+    ],
+    "dynamic_inputs": [       
+        {"type": "PowersReal", "port_id": "powers_real"},
+        {"type": "PowersReal", "port_id": "publication"} 
+        
+    ],
+    "dynamic_outputs": [
+        {"type": "PowersReal", "port_id": "powers_real"}        
+    ]
+}

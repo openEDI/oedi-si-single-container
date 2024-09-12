@@ -1,0 +1,10 @@
+{
+"model_archivepath":"app/anomalydetection/model_archives/ad_model-nodeload-123Bus_m-Feb_w-4_f-3-lstm_v0.7z",
+"model_format":"tfsm",
+"monitored_nodes":["s100c","s102c"],
+"initial_measurements":{"s100c":10.0,"s102c":10.0},
+"window_size":4,
+"input_features":["load_value","cos_hour","sin_hour"],
+"reconstruction_error_threshold":4.0
+
+}
