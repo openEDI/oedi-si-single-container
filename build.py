@@ -162,7 +162,7 @@ if __name__=="__main__":
 		isWindows=True
 	else:
 		isWindows=False
-	tmpFolder= "tmp3"
+	tmpFolder= "tmp"
 	tmpDir=os.path.join(baseDir,tmpFolder)
 	if not os.path.exists(tmpDir):
 		os.system(f'mkdir {tmpDir}')
@@ -213,11 +213,18 @@ if __name__=="__main__":
 			repositoryFolder = os.path.join(thisFolder,repositoryName)			
 		print(f"Opening Dockerfile and reading build commands in {repositoryFolder}...")		
 			
-		if modify_application_dockerfile:			
-			modified_dockerfile_data = modify_application_dockerfile_content(os.path.join(repositoryFolder,dockerFileName), applicationName,work_dir)
-			data+= '\n' + f'#{applicationName}' +'\n' + modified_dockerfile_data +'\n' #Read Dockerfile and append
+		if modify_application_dockerfile:
 			if applicationName == "dsse_pnnl":
-				data+= '\n' + f'RUN chmod +x /home/{applicationName}/ekf_federate/state-estimator-gadal' +'\n' #permission need to be changed for this executable for dsse_pnnl to work
+				dsse_pnnl_folder=os.path.join(buildDir,'pnnl_dsse')
+				f=open(os.path.join(dsse_pnnl_folder,'copy_statements.txt')) #Read dsse_pnnl from here since it is too hard to modify
+				modified_dockerfile_data=f.read()+'\n'
+				f.close()
+				modified_dockerfile_data+= f'RUN chmod +x /home/{applicationName}/ekf_federate/state-estimator-gadal' +'\n' #permission need to be changed for this executable for dsse_pnnl to work
+			else:
+				modified_dockerfile_data = modify_application_dockerfile_content(os.path.join(repositoryFolder,dockerFileName), applicationName,work_dir)
+			data+= '\n' + f'#{applicationName}' +'\n' + modified_dockerfile_data +'\n' #Read Dockerfile and append
+			#if applicationName == "dsse_pnnl":
+			#	data+= '\n' + f'RUN chmod +x /home/{applicationName}/ekf_federate/state-estimator-gadal' +'\n' #permission need to be changed for this executable for dsse_pnnl to work
 		else:
 			f=open(os.path.join(repositoryFolder,dockerFileName))
 			data+=f.read()+'\n' #Read Dockerfile and append

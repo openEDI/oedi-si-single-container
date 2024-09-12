@@ -132,8 +132,7 @@ class Build(object):
 			print(f"Following preprocessor federates are available:{availablePreprocessorFederates}")
 			for thisFederate in preprocessorFederates:
 				thisFederate=thisFederate.replace('-','').replace('_','') #### TODO: foo_bar to foobar
-				if thisFederate in availablePreprocessorFederates:
-					print(f"Creating folder for preprocessor federate:{thisFederate} in /home/run")
+				if thisFederate in availablePreprocessorFederates:					
 					flag=os.system(f'cp -r {os.path.join(preprocessorFederatesDir,thisFederate)} /home/run') #copy datapreprocessor federates to /home/run
 					assert flag==0, f'copying {thisFederate} failed with error flag={flag}'
 
