@@ -181,8 +181,8 @@ class Build(object):
 
 		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
 			json.dump(system_json, file, indent=4)
-		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
-			json.dump(system_json, file, indent=4)
+		with open(components_definitions_json_path, "w") as file: # Save the updated JSON back to the file
+			json.dump(components_definitions_json, file, indent=4)
 		
 		#Create system_runner.json from components.json and system.json
 		directive=f'oedisi build --target-directory /home/run --component-dict {components_definitions_json_path} --system {system_json_path}'		
