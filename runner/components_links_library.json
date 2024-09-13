@@ -55,7 +55,8 @@
 			 "target": "recorder_voltage_magnitude_nrel",
 			 "target_port": "subscription"
 			}  
-      ]
+      ],
+      "component_definitions":{"StateEstimatorNREL": "/home/oedisi/oedisi-example/wls_federate/component_definition.json"}
    },
    
    "state_estimator_pnnl": {
@@ -121,7 +122,8 @@
          "target": "recorder_voltage_mag_pnnl",
          "target_port": "subscription"
      }
-      ]
+      ],
+      "component_definitions":{"StateEstimatorPNNL": "/home/dsse_pnnl/ekf_federate/component_definition.json"}
    },
 
    "dopf_nrel": {
@@ -178,7 +180,8 @@
          "target": "recorder_opf_voltage_magnitude_nrel",
          "target_port": "subscription"
         }  
-      ]
+      ],
+      "component_definitions":{"OptimalPowerFlowNREL": "/home/oedisi/oedisi-example/lindistflow_federate/component_definition.json"}
    },
   
    "dopf_ornl": {
@@ -234,7 +237,8 @@
          "target": "recorder_opf_voltage_magnitude_ornl",
          "target_port": "subscription"
      }
-      ]
+      ],
+      "component_definitions":{"OptimalPowerFlowORNL": "/home/dopf_ornl/dopf_federate/component_definition.json"}
    },
 
    "dopf_pnnl": {
@@ -339,7 +343,8 @@
             "target": "recorder_real_curtail_pnnl",
             "target_port": "subscription"
         }  
-      ]
+      ],
+      "OptimalPowerFlowPNNL": "/home/dopf_pnnl/lindistflow_federate/component_definition.json"
    },
    
    "state_estimator_pnnl2": {

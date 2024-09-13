@@ -5,9 +5,7 @@
     ],
     "dynamic_inputs": [       
         {"type": "PowersReal", "port_id": "powers_real"},
-        {"type": "PowersImaginary", "port_id": "powers_imag"},        
-        {"type": "PowersReal", "port_id": "publication"},
-        {"type": "PowersImaginary", "port_id": "publication"}
+        {"type": "PowersImaginary", "port_id": "powers_imag"}
     ],
     "dynamic_outputs": [
         {"type": "PowersReal", "port_id": "powers_real"},

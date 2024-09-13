@@ -97,16 +97,14 @@ class AnomalyDetectionFederate(IOHelper):
 			while grantedTime<simEndTime:
 				# subscriptions
 				subData=self.get_subscriptions(sub=self.sub,config=self.config,returnType='dict')
-				LogUtil.logger.info(f"Completed subscription")
+				LogUtil.logger.info(f"Completed subscription:{list(subData.keys())}")
 				
 				if subData:
-					powers_real=subData['powers_real']
-					
-					pdemand={'s'+k.replace('.1','a').replace('.2','b').replace('.3','c'):v for k,v in zip(powers_real['ids'],powers_real['values'])}
-					thisTimeStamp=GadalTypes.datetime.datetime.strptime(subData['powers_real']['time'].replace('T',' '),"%Y-%m-%d %H:%M:%S")
-					commData={'pdemand':pdemand} #We use net load seen by the distribution system node as input to anomaly detection
-					#print(f"commData:{commData}")
-					#print(f"TimeStamp:{thisTimeStamp}")
+					powers_real=subData['powers_real'].dict()					
+					pdemand={'s'+k.replace('.1','a').replace('.2','b').replace('.3','c'):v for k,v in zip(powers_real['ids'],powers_real['values'])}					
+					thisTimeStamp=powers_real['time']
+					LogUtil.logger.debug(f"timestamp::::{thisTimeStamp}")
+					commData={'pdemand':pdemand}
 					
 					# run alg
 					anomalydetection_output_dict = {"pdemand":{}} #create dictionary to hold output
@@ -125,7 +123,7 @@ class AnomalyDetectionFederate(IOHelper):
 					anomalydetection_flags = {node:anomalydetection_output_dict['pdemand'][node][last_timestamp]['anomaly'] for node in nodes}
 					#print(f"Nodes:{nodes}")
 					LogUtil.logger.info(f"Output from pdemand anomaly detection model at {last_timestamp}:{anomalydetection_flags}")
-					pubData={'powers_real':{'values':list(anomalydetection_flags.values()),'ids':nodes,'time':last_timestamp}}
+					pubData={'powers_real':{'values':list(anomalydetection_flags.values()),'ids':nodes,'equipment_ids':["ad_1","ad_2"],'time':last_timestamp}}					
 					LogUtil.logger.info(f"Completed anomaly detection algorithm")
 
 					# publications

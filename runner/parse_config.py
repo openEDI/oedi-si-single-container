@@ -150,19 +150,22 @@ class Build(object):
 				
 		components_links_library_path = '/home/runtime/runner/components_links_library.json' #JSON file containing components and links of application federates
 		system_json_path = '/home/runtime/runner/system_custom.json' #'/home/runtime/runner/system.json' 
-		components_json_path = '/home/runtime/runner/components.json' #works
+		components_definitions_json_path = '/home/runtime/runner/components_custom.json' #works
 		removeFederates = []
 		#Update paths in system_json
 		with open(system_json_path, "r") as file:
 			system_json = json.load(file)
+		with open(components_definitions_json_path, "r") as file:
+			components_definitions_json = json.load(file)
 		with open(components_links_library_path, "r") as file:
 			components_links_library = json.load(file)
-
+		
 		for appFederate in appFederates: #Loop through appFederates and add components and links to system_json
 			if appFederate in ["state_estimator_nrel","state_estimator_pnnl","dopf_nrel","dopf_ornl","dopf_pnnl"]:
 				print(f"Adding {appFederate} to system_json...")
 				system_json["components"].extend(components_links_library[appFederate]["components"])
 				system_json["links"].extend(components_links_library[appFederate]["links"])
+				components_definitions_json.update(components_links_library[appFederate]["component_definitions"])
 		
 		for component in system_json["components"]:
 			if "feather_filename" in component["parameters"]:				
@@ -178,9 +181,11 @@ class Build(object):
 
 		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
 			json.dump(system_json, file, indent=4)
+		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
+			json.dump(system_json, file, indent=4)
 		
 		#Create system_runner.json from components.json and system.json
-		directive=f'oedisi build --target-directory /home/run --component-dict {components_json_path} --system {system_json_path}'		
+		directive=f'oedisi build --target-directory /home/run --component-dict {components_definitions_json_path} --system {system_json_path}'		
 		print(f"Executing directive:{directive}")
 		flag=os.system(directive)
 		assert flag==0,f'generating config_runner failed with flag:{flag}'
