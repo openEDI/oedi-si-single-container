@@ -46,8 +46,7 @@ config_file = os.path.join(workDir,"app","dataimputation",config_file)
 config_dict= get_config_dict(config_file)
 
 ## Select timeseries file for use as base file
-selected_timeseries_files  = config_dict["nodeload_data_details"]["selected_timeseries_files"] #Specify file containing zip code level time series data from individual smart meters
-selected_timeseries_files = [os.path.join(workDir,timeseries_file) for timeseries_file in selected_timeseries_files]
+selected_timeseries_files = [os.path.join(workDir,timeseries_file) for timeseries_file in config_dict["nodeload_data_details"]["selected_timeseries_files"]] #Specify file containing zip code level time series data from individual smart meters
 
 ## Specify details of anonymized node load profiles
 upsample_original_time_series = config_dict["nodeload_data_details"]["upsample_original_time_series"] # Should the original time series be upsampled
@@ -57,11 +56,11 @@ distribution_system = config_dict["nodeload_data_details"]["distribution_system"
 distribution_system_file = config_dict["nodeload_data_details"]["distribution_system_file"] ##The opendss file
 measurement_column = config_dict["nodeload_data_details"]["measurement_column"]
 opendss_casefile = os.path.join(baseDir,"datapreprocessor","data",distribution_system_file)
-n_days = config_dict["train_data_details"]["n_days"] #4 #The number of full day profiles that will be generated for training
-n_nodes = config_dict["train_data_details"]["n_nodes"] #4 #The number of nodes that will be used for training
 load_scaling_mode = config_dict["nodeload_data_details"]["load_scaling_mode"] #"simple" #multi
 
 ## Training data specifications
+n_days = config_dict["train_data_details"]["n_days"] #4 #The number of full day profiles that will be generated for training
+n_nodes = config_dict["train_data_details"]["n_nodes"] #4 #The number of nodes that will be used for training
 corrupted_fraction = config_dict["train_data_details"]["corrupted_fraction"]  #0.05 #The minimum fraction of values that will be missing  in the training+test data
 consecutive_corruption = True #Should consecutive values be missing
 consequtive_corruption_probabilities = config_dict["train_data_details"]["consequtive_corruption_probabilities"]  #{"two":{"conditional_probability":0.2},"three":{"conditional_probability":0.1}}

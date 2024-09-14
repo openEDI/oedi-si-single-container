@@ -1,7 +1,7 @@
 {
 
 "nodeload_data_details":{
-"selected_timeseries_file":"solarhome_customers-300_days-365.csv",
+"selected_timeseries_file":"data/solarhome/solarhome_customers-300_days-365.csv",
 "selected_months":[7],
 "n_days":10,
 "n_customers":300,
@@ -12,8 +12,9 @@
 "upsample_time_period":"15Min"},
 
 "train_data_details":{
+"cyclical_features":["hour_of_day","day_of_week","weekend"],
 "n_nodes":100,
-"load_block_length":4},
+"window_size":4},
 
 "model_arch_details":{
 "model_type":"bilstm"

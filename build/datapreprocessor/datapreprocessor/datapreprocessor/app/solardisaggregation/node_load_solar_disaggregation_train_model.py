@@ -31,9 +31,15 @@ from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing 
 
 rng = default_rng()
 
-#folder_name_raw = os.path.join(workDir,"data","solardisaggregation")
-folder_name_timeseries = os.path.join(workDir,"data","solarhome")
-folder_name_plots = os.path.join(workDir,"app","solardisaggregation","plots")
+## Specify locations of plots and models
+folder_plots = os.path.join(baseDir,"datapreprocessor","app","solardisaggregation","plots")
+folder_model_inference = os.path.join(baseDir,"datapreprocessor","app","solardisaggregation","model")
+folder_model_archive = os.path.join(baseDir,"datapreprocessor","app","solardisaggregation","model_archives")
+folder_model_checkpoints = os.path.join(baseDir,"datapreprocessor","app","solardisaggregation","model_checkpoints")
+check_and_create_folder(folder_plots)
+check_and_create_folder(folder_model_inference)
+check_and_create_folder(folder_model_archive)
+check_and_create_folder(folder_model_checkpoints)
 
 parser=argparse.ArgumentParser()
 parser.add_argument('-c','--config',help='config to be passed to the solar disaggregation training script',default = "solar_disaggregation_config.json", required=False)
@@ -43,50 +49,52 @@ config_file = args.config
 config_file = os.path.join(workDir,"app","solardisaggregation",config_file)
 config_dict= get_config_dict(config_file)
 
-selected_timeseries_file  = config_dict["nodeload_data_details"]["selected_timeseries_file"] #Specify file containing time series solar home data
-selected_months = config_dict["nodeload_data_details"]["selected_months"] #[7] # The months for which we are developing the model
-distribution_system = config_dict["nodeload_data_details"]["distribution_system"] #"123Bus"
-distribution_system_file = config_dict["nodeload_data_details"]["distribution_system_file"] #"123Bus"
-upsample_original_time_series = config_dict["nodeload_data_details"]["upsample_original_time_series"] # True
-upsample_time_period = config_dict["nodeload_data_details"]["upsample_time_period"] #"15Min"
-n_days = config_dict["nodeload_data_details"]["n_days"] #31
-n_nodes = config_dict["train_data_details"]["n_nodes"] #4 #The number of node load profiles that will be used for training
+## Select timeseries file for use as base file
+selected_timeseries_file = os.path.join(workDir,config_dict["nodeload_data_details"]["selected_timeseries_file"]) #Specify file containing time series solar home data
+
+## Specify details of anonymized node load profiles
+upsample_original_time_series = config_dict["nodeload_data_details"]["upsample_original_time_series"] # Should the original time series be upsampled
+upsample_time_period = config_dict["nodeload_data_details"]["upsample_time_period"] #"Time period of upsampling
+selected_months = config_dict["nodeload_data_details"]["selected_months"] #2 # The month for which we are developing the model
+distribution_system = config_dict["nodeload_data_details"]["distribution_system"] ##The distribution system we are generating the profiles
+distribution_system_file = config_dict["nodeload_data_details"]["distribution_system_file"] ##The opendss file
+measurement_column = config_dict["nodeload_data_details"]["measurement_column"]
+opendss_casefile = os.path.join(baseDir,"datapreprocessor","data",distribution_system_file)
+load_scaling_mode = config_dict["nodeload_data_details"]["load_scaling_mode"] #"simple" #multi
 n_customers = config_dict["nodeload_data_details"]["n_customers"] #300
-
 max_solar_penetration = config_dict["nodeload_data_details"]["max_solar_penetration"] #0.3 #The maximum solar penetration at a node
-
-load_block_length = config_dict["train_data_details"]["load_block_length"] #4 #The lenghth of the time window
-
-model_type = config_dict["model_arch_details"]["model_type"] #"lstm" #"1dcnn"#"lstm" #Currently enther lstm or 1dcnn
-stateful = False #True #False
-
-use_prefetch= True
-batch_size =  config_dict["model_training_details"]["batch_size"] #32
-n_epochs =  config_dict["model_training_details"]["n_epochs"] #5
-model_identifier = config_dict["model_training_details"]["model_identifier"]  #"v0"
-
-opendss_casefile = os.path.join(workDir,"data","opendss",distribution_system_file)
 month_names = '-'.join([calendar.month_abbr[num] for num in selected_months])
-folder_name_saved_models = os.path.join(workDir,"app","solardisaggregation","saved_models",distribution_system,f'month-{month_names}')
 
-check_and_create_folder(folder_name_plots)
-check_and_create_folder(folder_name_saved_models)
+## Training data specifications
+n_days = config_dict["train_data_details"]["n_days"] #4 #The number of full day profiles that will be generated for training
+n_nodes = config_dict["train_data_details"]["n_nodes"] #4 #The number of nodes that will be used for training
+cyclical_features = config_dict["train_data_details"]["cyclical_features"] #["hour_of_day",'day_of_week','weekend'] #Cyclical features to be added to the training data
 
-## Generated base solar profiles from solar data
-df_solar_timeseries = pd.read_csv(os.path.join(folder_name_timeseries,selected_timeseries_file), parse_dates=['datetime'])
-
-## Generate node solar profiles for the distribution system model we are intrested in
-df_solar_node,solar_node_dict = generate_solar_node_profiles(df_solar_timeseries,opendss_casefile,selected_months,n_solar_nodes=n_nodes,max_solar_penetration = max_solar_penetration,upsample_time_series=upsample_original_time_series,upsample_time_period=upsample_time_period)
-
-## Select features for model training
-cyclical_features = ["hour_of_day",'day_of_week','weekend']
+## Input/target features for data imputation model
 encoded_cyclical_features= ['cos_hour','sin_hour','cos_day_of_week','sin_day_of_week']#,'weekend']
+
+auxiliary_features = []
+input_features = [f"{measurement_column}_corrupted"] + auxiliary_features  + ["corruption_encoding"]  + encoded_cyclical_features
+target_feature =  f"{measurement_column}"
+n_input_features = len(input_features)
+n_target_features =  1
+print(f"Using following {n_input_features} features as input to data imputation model:{input_features}")
 
 input_features = ["net_load"] + encoded_cyclical_features #gross_load
 target_feature =  "solar_power"
 target_features = ["solar_power"]
 n_input_features = len(input_features)
 print(f"Using following {n_input_features} features as input to data imputation model:{input_features}")
+
+## Generated base solar profiles from solar data
+df_solar_timeseries = pd.read_csv(selected_timeseries_file, parse_dates=['datetime'])
+
+## Generate node solar profiles for the distribution system model we are intrested in
+df_solar_node,solar_node_dict = generate_solar_node_profiles(df_solar_timeseries,opendss_casefile,selected_months,n_solar_nodes=n_nodes,max_solar_penetration = max_solar_penetration,upsample_time_series=upsample_original_time_series,upsample_time_period=upsample_time_period)
+
+
+
+
 
 ## Specify train and test nodes
 selected_train_nodes,selected_test_nodes,selected_eval_nodes = get_train_test_eval_nodes(solar_node_dict,train_fraction=0.8,test_fraction=0.2)
