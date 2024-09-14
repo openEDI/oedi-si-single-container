@@ -4,6 +4,7 @@
     "MeasurementComponent": "/home/oedisi/oedisi-example/measuring_federate/component_definition.json",
     "StateEstimatorNREL": "/home/oedisi/oedisi-example/wls_federate/component_definition.json",
     "StateEstimatorPNNL": "/home/dsse_pnnl/ekf_federate/component_definition.json",
+    "StateEstimatorORNL": "/home/dsse_ornl/dsse_federate/component_definition.json",
     "OMOOComponent": "/home/oedisi/oedisi-example/omoo_federate/component_definition.json",    
     "OptimalPowerFlowNREL": "/home/oedisi/oedisi-example/lindistflow_federate/component_definition.json",
     "OptimalPowerFlowPNNL": "/home/dopf_pnnl/lindistflow_federate/component_definition.json",

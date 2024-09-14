@@ -126,6 +126,78 @@
       "component_definitions":{"StateEstimatorPNNL": "/home/dsse_pnnl/ekf_federate/component_definition.json"}
    },
 
+   "state_estimator_ornl": {
+      "components": [
+         {
+         "name": "recorder_voltage_mag_ornl",
+         "type": "Recorder",
+			"host": "recorder-voltage-mag-ornl",
+			"container_port": 5681,
+            "parameters": {"feather_filename": "voltage_mag.feather",
+                           "csv_filename": "voltage_mag.csv"
+                          }
+         },
+         {
+          "name": "recorder_voltage_angle_ornl",
+          "type": "Recorder",
+			 "host": "recorder-voltage-angle-ornl",
+			 "container_port": 5682,
+          "parameters": {"feather_filename": "voltage_angle.feather",
+                           "csv_filename": "voltage_angle.csv"
+                          }
+        },
+        {
+         "name": "state_estimator_ornl",
+         "type": "StateEstimatorORNL",
+         "host": "state-estimator-ornl",
+         "container_port": 5683,
+         "parameters": {
+             "algorithm_parameters": {"tol": 1e-5}
+               }
+        }        
+         
+      ],
+      "links": [
+        {
+            "source": "feeder",
+            "source_port": "topology",
+            "target": "state_estimator_ornl",
+            "target_port": "topology"
+        },
+        {
+            "source": "sensor_voltage_magnitude",
+            "source_port": "publication",
+            "target": "state_estimator_ornl",
+            "target_port": "voltages_magnitude"
+        },
+        {
+            "source": "sensor_power_real",
+            "source_port": "publication",
+            "target": "state_estimator_ornl",
+            "target_port": "powers_real"
+        },
+        {
+            "source": "sensor_power_imaginary",
+            "source_port": "publication",
+            "target": "state_estimator_ornl",
+            "target_port": "powers_imaginary"
+        },
+        {
+            "source": "state_estimator_ornl",
+            "source_port": "voltage_angle",
+            "target": "recorder_voltage_angle_ornl",
+            "target_port": "subscription"
+        },
+        {
+            "source": "state_estimator_ornl",
+            "source_port": "voltage_mag",
+            "target": "recorder_voltage_mag_ornl",
+            "target_port": "subscription"
+        }
+      ],
+      "component_definitions":{"StateEstimatorORNL": "/home/dsse_ornl/dsse_federate/component_definition.json"}
+   },
+
    "dopf_nrel": {
       "components": [
          {
@@ -344,7 +416,7 @@
             "target_port": "subscription"
         }  
       ],
-      "OptimalPowerFlowPNNL": "/home/dopf_pnnl/lindistflow_federate/component_definition.json"
+      "component_definitions":{"OptimalPowerFlowPNNL": "/home/dopf_pnnl/lindistflow_federate/component_definition.json"}      
    },
    
    "state_estimator_pnnl2": {

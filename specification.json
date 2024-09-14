@@ -7,6 +7,7 @@
 "application":{
 "dsse_pnnl_not_working":{"url":"https://github.com/GRIDAPPSD/gridappsd-state-estimator","tag":"OEDISI.1.1.0"},
 "dsse_pnnl":{"url":"https://github.com/pnnl/oedisi_dopf","branch":"master","dockerfilename":"Dockerfile.ekf"},
+"dsse_ornl":{"url":"https://github.com/bol22/oedisi-dsse-ornl","branch":"main","dockerfilename":"Dockerfile"},
 "dopf_pnnl":{"url":"https://github.com/pnnl/oedisi_dopf","tag":"v0.1.1","dockerfilename":"Dockerfile"},
 "dopf_ornl":{"url":"https://github.com/bol22/oedisi-dopf-ornl","tag":"v0.0.0","dockerfilename":"Dockerfile"}
 },

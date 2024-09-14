@@ -151,7 +151,7 @@ class Build(object):
 		components_links_library_path = '/home/runtime/runner/components_links_library.json' #JSON file containing components and links of application federates
 		system_json_path = '/home/runtime/runner/system_custom.json' #'/home/runtime/runner/system.json' 
 		components_definitions_json_path = '/home/runtime/runner/components_custom.json' #works
-		removeFederates = []
+		
 		#Update paths in system_json
 		with open(system_json_path, "r") as file:
 			system_json = json.load(file)
@@ -161,7 +161,7 @@ class Build(object):
 			components_links_library = json.load(file)
 		
 		for appFederate in appFederates: #Loop through appFederates and add components and links to system_json
-			if appFederate in ["state_estimator_nrel","state_estimator_pnnl","dopf_nrel","dopf_ornl","dopf_pnnl"]:
+			if appFederate in ["state_estimator_nrel","state_estimator_pnnl","state_estimator_ornl","dopf_nrel","dopf_ornl","dopf_pnnl"]:
 				print(f"Adding {appFederate} to system_json...")
 				system_json["components"].extend(components_links_library[appFederate]["components"])
 				system_json["links"].extend(components_links_library[appFederate]["links"])
@@ -175,10 +175,8 @@ class Build(object):
 			if "topology_output" in component["parameters"]:				
 				component["parameters"]["topology_output"] = component["parameters"]["topology_output"].replace("../../", "/home/") #assign the result of replace back to the dictionary key.
 		
-		print(f"Following federates are present:{[item['name'] for item in system_json['components'] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]}")
-		system_json["components"] = [item for item in system_json["components"] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]
-		system_json["links"] = [item for item in system_json["links"] if not any(keyword in str(value).lower() for value in item.values() for keyword in removeFederates)]
-
+		print(f"Following federates are present:{[item['name'] for item in system_json['components']]}")
+		
 		with open(system_json_path, "w") as file: # Save the updated JSON back to the file
 			json.dump(system_json, file, indent=4)
 		with open(components_definitions_json_path, "w") as file: # Save the updated JSON back to the file

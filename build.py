@@ -77,6 +77,11 @@ def modify_application_dockerfile_content(dockerfile_path:str, application_direc
 				print(f"Changing work directory to {new_work_directory}")
 				modified_lines.append(f'WORKDIR {new_work_directory}') # Replace the line with the new WORKDIR directive
 			
+			elif '/simulation' in line:
+				print(f"Found '/simulation' in line {line.strip()}")			
+				line = line.replace('/simulation', f'{work_directory}/{application_directory}')
+				modified_lines.append(line)
+
 			else:
 				modified_lines.append(line)
 		else:
@@ -139,7 +144,7 @@ def modify_dockerfile_cp_cd(dockerfile_path, append_path):
 		file.writelines(modified_lines)
 
 if __name__=="__main__":	
-	dockerItems = ["datapreprocessor","dsse_pnnl","dopf_pnnl","dopf_ornl","ditto"] #Add applications to be included in the single container image here "datapreprocessor","dopf_ornl","dopf_pnnl"
+	dockerItems = ["datapreprocessor","dsse_pnnl","dopf_pnnl","dsse_ornl","dopf_ornl","ditto"] #Add applications to be included in the single container image here "datapreprocessor","dopf_ornl","dopf_pnnl"
 	fix_white_space=lambda x:'"'+x+'"' if len(x.split(' '))>1 else x
 	parser=argparse.ArgumentParser()
 	parser.add_argument('-t','--tag',help='tag to be applied during docker build',required=True)
