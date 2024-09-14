@@ -4,30 +4,26 @@ Created on Friday March 17 11:00:00 2023
 """
 import os
 import sys
-import random
 import argparse
 import calendar
 
 import pandas as pd
-import tensorflow as tf
 
 from numpy.random import default_rng
 
-baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  #Add path of home directory e.g.'/home/splathottam/GitHub/oedi'
-workDir=os.path.join(baseDir,"oedianl")
+baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  #Add path of home directory
+workDir=os.path.join(baseDir,"datapreprocessor")
 
 print(f"Adding home directory:{baseDir} to path")
 sys.path.insert(0,baseDir) #Add module path to prevent import errors
 
-from datapreprocessor.app.nodeload.smartmeter_data_preprocessing import valid_load_types_v2,get_time_series_dataframe,valid_load_types
 from datapreprocessor.app.nodeload.timeseries_data_utilities import get_config_dict
-from datapreprocessor.app.nodeload.nodeload_preprocessing import encode_cyclical_features
-from datapreprocessor.app.nodeload.datapipeline_utilities import get_input_target_dataset,check_moving_window,get_train_test_eval_nodes,df_to_input_target_dataset
-from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder,get_upsampled_df
-from datapreprocessor.app.model_utilities.model_utilities import get_autoencoder_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict
+from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import generate_solar_node_profiles,get_df_train_solar_disaggregation
+from datapreprocessor.app.nodeload.datapipeline_utilities import get_train_test_eval_nodes,df_to_input_target_dataset
+from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder
+from datapreprocessor.app.model_utilities.model_utilities import get_autoencoder_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict,check_normalizer
 from datapreprocessor.app.model_utilities.model_training_utilities import train_model,get_best_model
-from datapreprocessor.app.model_utilities.model_save_load_utilities import model_to_archive,load_keras_model
-from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import convert_solardata_to_timeseries,generate_solar_node_profiles,get_df_train_solar_disaggregation
+from datapreprocessor.app.model_utilities.model_save_load_utilities import model_to_archive,modelarchive_to_modelpath,load_keras_model
 
 rng = default_rng()
 
@@ -72,19 +68,23 @@ cyclical_features = config_dict["train_data_details"]["cyclical_features"] #["ho
 
 ## Input/target features for data imputation model
 encoded_cyclical_features= ['cos_hour','sin_hour','cos_day_of_week','sin_day_of_week']#,'weekend']
-
 auxiliary_features = []
-input_features = [f"{measurement_column}_corrupted"] + auxiliary_features  + ["corruption_encoding"]  + encoded_cyclical_features
-target_feature =  f"{measurement_column}"
+input_features = [f"{measurement_column}"] + auxiliary_features + encoded_cyclical_features
+target_feature =   "solar_power"
 n_input_features = len(input_features)
 n_target_features =  1
 print(f"Using following {n_input_features} features as input to data imputation model:{input_features}")
 
-input_features = ["net_load"] + encoded_cyclical_features #gross_load
-target_feature =  "solar_power"
-target_features = ["solar_power"]
-n_input_features = len(input_features)
-print(f"Using following {n_input_features} features as input to data imputation model:{input_features}")
+## Data imputation model architecture details
+stateful = False #True #False
+window_size =  config_dict["train_data_details"]["window_size"] #4 #The length of the time window
+model_type = config_dict["model_arch_details"]["model_type"] #"lstm" #"1dcnn"#"lstm" #Currently enther lstm or 1dcnn
+
+## Data imputation model training details
+batch_size =  config_dict["model_training_details"]["batch_size"] #32
+n_epochs =  config_dict["model_training_details"]["n_epochs"] #5
+monitored_metric = "val_loss"#"val_mean_absolute_error" # Performance metric monitored during training
+model_identifier = config_dict["model_training_details"]["model_identifier"]  #"v0"
 
 ## Generated base solar profiles from solar data
 df_solar_timeseries = pd.read_csv(selected_timeseries_file, parse_dates=['datetime'])
@@ -92,56 +92,47 @@ df_solar_timeseries = pd.read_csv(selected_timeseries_file, parse_dates=['dateti
 ## Generate node solar profiles for the distribution system model we are intrested in
 df_solar_node,solar_node_dict = generate_solar_node_profiles(df_solar_timeseries,opendss_casefile,selected_months,n_solar_nodes=n_nodes,max_solar_penetration = max_solar_penetration,upsample_time_series=upsample_original_time_series,upsample_time_period=upsample_time_period)
 
-
-
-
-
-## Specify train and test nodes
-selected_train_nodes,selected_test_nodes,selected_eval_nodes = get_train_test_eval_nodes(solar_node_dict,train_fraction=0.8,test_fraction=0.2)
+## Specify train, test and eval nodes
+selected_train_nodes,selected_test_nodes,selected_eval_nodes = get_train_test_eval_nodes(solar_node_dict,train_fraction=0.75,test_fraction=0.2)
 
 ## Generate training and testing data
 df_train = get_df_train_solar_disaggregation(df_solar_node,cyclical_features,selected_train_nodes)
 df_test = get_df_train_solar_disaggregation(df_solar_node,cyclical_features,selected_test_nodes)
+df_eval = get_df_train_solar_disaggregation(df_solar_node,cyclical_features,selected_eval_nodes)
 n_train_samples = len(df_train)
 
 ## Convert dataframe into a dataset object that can be used by model training
-train_input_target = df_to_input_target_dataset(df_train,load_block_length,input_features,target_feature,batch_size,use_prefetch,df_type = "train")
-test_input_target = df_to_input_target_dataset(df_test,load_block_length,input_features,target_feature,batch_size,use_prefetch,df_type = "test")
+input_target_dataset_train = df_to_input_target_dataset(df_train,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "train")
+input_target_dataset_test = df_to_input_target_dataset(df_test,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "test")
+input_target_dataset_eval = df_to_input_target_dataset(df_eval,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "eval")
 
 ## Create object to normalize data
 normalizer = get_normalizer(df_train,input_features,skip_normalization=encoded_cyclical_features) #Obtain a normalizer using training data
-print(f"Raw data:{test_input_target.take(1).as_numpy_iterator().next()[0][0:2]}")
-print(f"NOrmalized data:{normalizer(test_input_target.take(1).as_numpy_iterator().next()[0][0:2])}")
+check_normalizer(normalizer,input_target_dataset_test)
 
 ## Create solar disaggregation model
-predictor = get_dnn_model(model_type,normalizer,load_block_length,n_input_features)
-#predictor.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(),metrics=[tf.keras.metrics.MeanAbsoluteError()]) #losses.MeanAbsoluteError()
+disagg_model = get_autoencoder_model(model_type,window_size,n_input_features,n_target_features,normalizer=normalizer)
+disagg_model = get_compiled_model(disagg_model)
 
-monitored_metric = "val_loss"#"val_mean_absolute_error" #"val_loss"
-checkpoint_file = 'disag_multi_model.epoch{epoch:02d}-loss{val_loss:.5f}' #'-mae{val_mean_absolute_error:.5f}'
-checkpoint =  tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(folder_name_saved_models,f'm-{month_names}_w-{load_block_length}_f-{n_input_features}_msp-{max_solar_penetration}_n-{n_train_samples}_{model_type}_'+checkpoint_file),
-                             monitor=monitored_metric,
-                             verbose=1, 
-                             save_best_only=True,
-                             mode="min")
-
-callbacks = [checkpoint]
+## Create checkpoints
+model_id = f'da_model-solarpower-{distribution_system}_m-{month_names}_w-{window_size}_f-{n_input_features}-{model_type}'
+model_checkpoint_id = 'epoch{epoch:02d}-loss{val_loss:.5f}' #'-mae{val_mean_absolute_error:.5f}'
+model_checkpoint_path=os.path.join(folder_model_checkpoints,f'{model_id}_n-{n_train_samples}_{model_checkpoint_id}')
+callbacks = [get_checkpoint_callback(model_checkpoint_path,monitored_metric,save_weights_only=False)]
 
 ## Train model
-tic = time.perf_counter()
-history = predictor.fit(train_input_target,epochs=n_epochs,shuffle=True,validation_data=test_input_target,callbacks=callbacks)
-toc = time.perf_counter()
+disagg_model,history = train_model(disagg_model,input_target_dataset_train,input_target_dataset_test,n_epochs,callbacks) #note that is method returns the last model
 
-plot_training_history(history,os.path.join(folder_name_plots,f"loss_history_{distribution_system}_m-{month_names}_w-{load_block_length}_f-{n_input_features}_n-{n_train_samples}_{model_type}.png"))
-predictor.summary(expand_nested=True)
-print(f"Training took:{toc-tic} s")
+## Find best model checkpoint
+best_monitored_metric,best_epoch = get_best_model(history,monitored_metric)
+best_checkpoint_id = f'epoch{best_epoch:02d}-loss{best_monitored_metric:.5f}.keras'
+best_model_savepath = os.path.join(folder_model_checkpoints,f'{model_id}_n-{n_train_samples}_{best_checkpoint_id}')
+print(f"Best model checkpoint:{best_model_savepath}")
 
-## Convert best saved model into a 7z file which can be used by the inference script
-best_val_loss = min(history.history['val_loss'])
-best_epoch = history.history['val_loss'].index(best_val_loss) +1
+## Save best model in model archive for inference
+best_model_archivepath = model_to_archive(best_model_savepath,os.path.join(folder_model_archive,f'{model_id}_{model_identifier}'))
 
-prediction_model_folder = os.path.join(folder_name_saved_models,f'm-{month_names}_w-{load_block_length}_f-{n_input_features}_msp-{max_solar_penetration}_n-{n_train_samples}_{model_type}_disag_multi_model.epoch{best_epoch:02d}-loss{best_val_loss:.5f}')
-
-model_archive = os.path.join(workDir,"app","solardisaggregation","model",f'disagg_model-{model_type}_dss-{distribution_system}_m-{month_names}_w-{load_block_length}_f-{n_input_features}_{model_identifier}.7z')
-assert model_type in prediction_model_folder, f"model type:{model_type} not found in {prediction_model_folder}"
-model_to_7ziparchive(model_archive,prediction_model_folder)
+## Load and Evaluate pre-trained model
+best_model_savepath = modelarchive_to_modelpath(model_archivepath = best_model_archivepath,model_folder = folder_model_inference)
+best_model = load_keras_model(best_model_savepath)
+predictions_eval = evaluate_predict(best_model,input_target=input_target_dataset_eval)
