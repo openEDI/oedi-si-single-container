@@ -21,7 +21,7 @@ from datapreprocessor.app.nodeload.timeseries_data_utilities import get_config_d
 from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import generate_solar_node_profiles,get_df_train_solar_disaggregation
 from datapreprocessor.app.nodeload.datapipeline_utilities import get_train_test_eval_nodes,df_to_input_target_dataset
 from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder
-from datapreprocessor.app.model_utilities.model_utilities import get_autoencoder_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict,check_normalizer
+from datapreprocessor.app.model_utilities.model_utilities import get_disaggregator_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict,check_normalizer,get_tfdataset_element
 from datapreprocessor.app.model_utilities.model_training_utilities import train_model,get_best_model
 from datapreprocessor.app.model_utilities.model_save_load_utilities import model_to_archive,modelarchive_to_modelpath,load_keras_model
 
@@ -105,13 +105,14 @@ n_train_samples = len(df_train)
 input_target_dataset_train = df_to_input_target_dataset(df_train,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "train")
 input_target_dataset_test = df_to_input_target_dataset(df_test,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "test")
 input_target_dataset_eval = df_to_input_target_dataset(df_eval,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "eval")
-
+data1,data2 = get_tfdataset_element(input_target_dataset_train)
+print("Data:",data1.shape,data2.shape)
 ## Create object to normalize data
 normalizer = get_normalizer(df_train,input_features,skip_normalization=encoded_cyclical_features) #Obtain a normalizer using training data
 check_normalizer(normalizer,input_target_dataset_test)
 
 ## Create solar disaggregation model
-disagg_model = get_autoencoder_model(model_type,window_size,n_input_features,n_target_features,normalizer=normalizer)
+disagg_model = get_disaggregator_model(model_type,window_size,n_input_features,n_target_features,normalizer=normalizer)
 disagg_model = get_compiled_model(disagg_model)
 
 ## Create checkpoints
@@ -121,7 +122,7 @@ model_checkpoint_path=os.path.join(folder_model_checkpoints,f'{model_id}_n-{n_tr
 callbacks = [get_checkpoint_callback(model_checkpoint_path,monitored_metric,save_weights_only=False)]
 
 ## Train model
-disagg_model,history = train_model(disagg_model,input_target_dataset_train,input_target_dataset_test,n_epochs,callbacks) #note that is method returns the last model
+disagg_model,history = train_model(disagg_model,input_target_dataset_test,input_target_dataset_test,n_epochs,callbacks) #note that this method returns the last model
 
 ## Find best model checkpoint
 best_monitored_metric,best_epoch = get_best_model(history,monitored_metric)

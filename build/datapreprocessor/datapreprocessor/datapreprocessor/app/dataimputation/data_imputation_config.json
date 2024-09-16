@@ -22,7 +22,7 @@
 "window_size":4},
 
 "model_arch_details":{
-"model_type":"lstm"
+"model_type":"1dcnn"
 },
 
 "model_training_details":{"n_epochs":5,

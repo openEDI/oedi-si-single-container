@@ -87,7 +87,6 @@ n_epochs =  config_dict["model_training_details"]["n_epochs"] #5
 monitored_metric = "val_loss"#"val_mean_absolute_error" # Performance metric monitored during training
 model_identifier = config_dict["model_training_details"]["model_identifier"]  #"v0"
 
-
 ## Generated averaged load profiles for all load type within the selected time series file
 df_averaged_load,df_averaged_day_load = create_average_timeseries_profiles(timeseries_files=selected_timeseries_files,month=selected_month,convert_to_kW=True,upsample=upsample_original_time_series,upsample_time_period=upsample_time_period)
 ## Generate anonymized node load profiles for the selected distribution system model

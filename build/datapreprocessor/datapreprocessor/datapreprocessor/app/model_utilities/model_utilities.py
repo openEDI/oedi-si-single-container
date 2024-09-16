@@ -5,7 +5,7 @@ Created on December 29 10:00:00 2023
 
 import keras
 
-from datapreprocessor.app.model_utilities.models import AutoEncoder1DCNN,LSTMAutoEncoder
+from datapreprocessor.app.model_utilities.models import AutoEncoder1DCNN,LSTMAutoEncoder,BiLSTMRegressor,LSTMRegressor
 
 def get_compiled_model(model):
 
@@ -62,6 +62,21 @@ def get_autoencoder_model(model_type,window_size,n_input_features,n_output_featu
 	
 	return model
 
+def get_disaggregator_model(model_type,window_size,n_input_features,n_target_features,normalizer=None,**kwargs):
+	"""Return uncompiled model"""
+	
+	print(f"Selecting disaggregator model type:{model_type}")
+	if model_type.lower() == "bilstm":
+		model = BiLSTMRegressor(window_size,n_input_features,n_target_features,normalizer,**kwargs)
+	elif model_type.lower() == "lstm":
+		model = LSTMRegressor(window_size,n_input_features,n_target_features,normalizer,**kwargs)
+		
+	else:
+		raise ValueError(f"{model_type} is an invalid model!")	
+	print(f"Returning model of type:{type(model)}")
+	
+	return model
+
 def get_checkpoint_callback(model_checkpoint_path,monitored_metric:str,save_weights_only:bool=False):
 
 	if save_weights_only:
@@ -101,13 +116,17 @@ def get_tfdataset_element(dataset):
 
 	element = dataset.take(1).as_numpy_iterator().next()
 	if isinstance(element,tuple):
-		print("Taking only first element of tuple in dataset...")
-		element = element[0]
-	return element
+		print("Dataset is a tuple...")
+		element1 = element[0]
+		element2 = element[1]
+	else:
+		element1 = element
+		element2 = None
+	return element1,element2
 
 def check_normalizer(normalizer,dataset,n_elements=2):
 	print("Checking normalizer...")
-	data = get_tfdataset_element(dataset)
+	data,_ = get_tfdataset_element(dataset)
 	print(f"Data shape:{data[0:n_elements].shape}")
 	print(f"Raw data:{data[0:n_elements]}")
 	print(f"Normalized data:{normalizer(data[0:n_elements])}")

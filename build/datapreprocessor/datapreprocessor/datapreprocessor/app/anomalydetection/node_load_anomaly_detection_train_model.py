@@ -44,8 +44,7 @@ config_file = os.path.join(workDir,"app","anomalydetection",config_file)
 config_dict= get_config_dict(config_file)
 
 ## Select timeseries file for use as base file
-selected_timeseries_files  = config_dict["nodeload_data_details"]["selected_timeseries_files"] #Specify file containing zip code level time series data from individual smart meters
-selected_timeseries_files = [os.path.join(workDir,timeseries_file) for timeseries_file in selected_timeseries_files]
+selected_timeseries_files = [os.path.join(workDir,timeseries_file) for timeseries_file in config_dict["nodeload_data_details"]["selected_timeseries_files"]] #Specify file containing zip code level time series data from individual smart meters
 
 ## Specify details of anonymized node load profiles
 upsample_original_time_series = config_dict["nodeload_data_details"]["upsample_original_time_series"] # Should the original time series be upsampled
@@ -77,7 +76,6 @@ window_size =  config_dict["train_data_details"]["window_size"] #4 #The length o
 model_type = config_dict["model_arch_details"]["model_type"] #"lstm" #"1dcnn"#"lstm" #Currently enther lstm or 1dcnn
 
 ## Anomaly detection model training details
-use_prefetch= True
 batch_size =  config_dict["model_training_details"]["batch_size"] #32
 n_epochs =  config_dict["model_training_details"]["n_epochs"] #5
 monitored_metric = "val_loss"#"val_mean_absolute_error" # Performance metric monitored during training

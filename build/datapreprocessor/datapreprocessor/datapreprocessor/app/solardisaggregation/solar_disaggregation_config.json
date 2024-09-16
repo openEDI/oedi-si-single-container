@@ -6,8 +6,8 @@
 "n_days":10,
 "n_customers":300,
 "max_solar_penetration":0.3,
-"distribution_system":"8500Bus",
-"distribution_system_file":"opendss/8500Bus/master.dss",
+"distribution_system":"123Bus",
+"distribution_system_file":"opendss/123Bus/case123.dss",
 "measurement_column":"net_load",
 "load_scaling_mode":"simple",
 "upsample_original_time_series":true,
@@ -16,7 +16,7 @@
 "train_data_details":{
 "cyclical_features":["hour_of_day","day_of_week","weekend"],
 "n_days": 25,
-"n_nodes":100,
+"n_nodes":91,
 "window_size":4},
 
 "model_arch_details":{
