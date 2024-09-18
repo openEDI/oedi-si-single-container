@@ -148,7 +148,7 @@ class BiLSTMRegressor(keras.Model):
 							  keras.layers.Bidirectional(keras.layers.LSTM(100, activation='relu',return_sequences=True)),
 							  keras.layers.TimeDistributed(keras.layers.Dense(n_target_features, activation='relu'))]
 							)
-		self.bilstm = keras.Sequential(bilstm_layers, name="bilstm")
+		self.bilstm = keras.Sequential(bilstm_layers, name="bilstmregressor")
 			
 	def call(self, x):
 		y = self.bilstm(x)
@@ -200,3 +200,8 @@ class LSTMRegressor(keras.Model):
 				  "n_output_features": self.n_output_features,"normalizer": keras.saving.serialize_keras_object(self.normalizer)}
 
 		return {**base_config, **config}
+	
+	@classmethod
+	def from_config(cls, config): #This is required for saved models to load properly with normalizer
+		config["normalizer"] = keras.layers.deserialize(config["normalizer"])
+		return cls(**config)

@@ -19,9 +19,9 @@ sys.path.insert(0,baseDir) #Add module path to prevent import errors
 
 from datapreprocessor.app.nodeload.timeseries_data_utilities import get_config_dict
 from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import generate_solar_node_profiles,get_df_train_solar_disaggregation
-from datapreprocessor.app.nodeload.datapipeline_utilities import get_train_test_eval_nodes,df_to_input_target_dataset
+from datapreprocessor.app.nodeload.datapipeline_utilities import get_train_test_eval_nodes,df_to_input_target_dataset,df_to_tfdataset,tfdataset_to_windowed_tfdataset
 from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder
-from datapreprocessor.app.model_utilities.model_utilities import get_disaggregator_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict,check_normalizer,get_tfdataset_element
+from datapreprocessor.app.model_utilities.model_utilities import get_disaggregator_model,get_compiled_model,get_checkpoint_callback,get_normalizer,evaluate_predict,check_normalizer,get_tfdataset_element,get_autoencoder_model
 from datapreprocessor.app.model_utilities.model_training_utilities import train_model,get_best_model
 from datapreprocessor.app.model_utilities.model_save_load_utilities import model_to_archive,modelarchive_to_modelpath,load_keras_model
 
@@ -105,15 +105,14 @@ n_train_samples = len(df_train)
 input_target_dataset_train = df_to_input_target_dataset(df_train,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "train")
 input_target_dataset_test = df_to_input_target_dataset(df_test,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "test")
 input_target_dataset_eval = df_to_input_target_dataset(df_eval,window_size,input_features,target_feature,batch_size,use_prefetch=True,df_type = "eval")
-data1,data2 = get_tfdataset_element(input_target_dataset_train)
-print("Data:",data1.shape,data2.shape)
+
 ## Create object to normalize data
 normalizer = get_normalizer(df_train,input_features,skip_normalization=encoded_cyclical_features) #Obtain a normalizer using training data
 check_normalizer(normalizer,input_target_dataset_test)
 
 ## Create solar disaggregation model
 disagg_model = get_disaggregator_model(model_type,window_size,n_input_features,n_target_features,normalizer=normalizer)
-disagg_model = get_compiled_model(disagg_model)
+disagg_model = get_compiled_model(disagg_model,jit_compile=False) #Jit compile needs to be false for Bidirectional lstm to work
 
 ## Create checkpoints
 model_id = f'da_model-solarpower-{distribution_system}_m-{month_names}_w-{window_size}_f-{n_input_features}-{model_type}'

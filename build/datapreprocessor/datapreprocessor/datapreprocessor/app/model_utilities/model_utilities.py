@@ -7,11 +7,11 @@ import keras
 
 from datapreprocessor.app.model_utilities.models import AutoEncoder1DCNN,LSTMAutoEncoder,BiLSTMRegressor,LSTMRegressor
 
-def get_compiled_model(model):
+def get_compiled_model(model,jit_compile=True):
 
 	print(f"Compiling model using Keras backend:{keras.backend.backend()}...")
 	model.compile(optimizer=keras.optimizers.AdamW(5e-5), loss=keras.losses.MeanSquaredError(),metrics=[keras.metrics.MeanAbsoluteError()], #keras.metrics.RootMeanSquaredError()
-			     jit_compile=True,) #losses.MeanAbsoluteError()
+			     jit_compile=jit_compile,) #losses.MeanAbsoluteError()
 	
 	model.summary(expand_nested=True,show_trainable=True)
 	

@@ -271,6 +271,9 @@ class Build(object):
 				elif datapreprocessorFederate.replace("_", "").lower() =='anomalydetection':
 					print("Adding anomalydetection federate...")
 					config_runner['federates'].append({"directory": "anomalydetection","name": "anomalydetection","exec": "python federate_anomalydetection.py","hostname": "localhost"})
+				elif datapreprocessorFederate.replace("_", "").lower() =='solardisaggregation':
+					print("Adding solardisaggregation federate...")
+					config_runner['federates'].append({"directory": "solardisaggregation","name": "solardisaggregation","exec": "python federate_solardisaggregation.py","hostname": "localhost"})
 				else:
 					print(f"Datapreprocessor federate:{datapreprocessorFederate} is not supported!")
 

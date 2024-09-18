@@ -3,13 +3,9 @@
       
       {
          "required": false,
-         "key": "local_feeder/powers_real",
+         "key": "feeder/powers_real",
          "type": "string"
-      },      
-      {
-         "required": false,
-         "key": "sensor_power_real/publication",
-         "type": "string"
-      }
+      }     
+      
    ]
 }

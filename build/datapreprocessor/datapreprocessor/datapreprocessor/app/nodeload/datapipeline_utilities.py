@@ -5,6 +5,7 @@ Created on Thursday Feb 26 15:00:00 2023
 import time
 import pickle
 import random
+from typing import List
 
 import tqdm
 import tensorflow as tf
@@ -56,7 +57,7 @@ def get_input_target_dataset(df,window_size,input_features,target_feature,batch_
 	  
 	if target_feature:
 		dataset_target =tf.keras.utils.timeseries_dataset_from_array(
-							data=df[target_feature].values,
+							data=df[[target_feature]].values,
 							targets = None,
 							sequence_length =window_size,
 							sequence_stride=sequence_stride,
@@ -184,3 +185,21 @@ def get_train_test_eval_timesteps(timestamps,train_fraction=0.8,test_fraction=0.
 	print(f"Train samples:{len(train_timestamps)},Test nodes:{len(test_timestamps)},Eval nodes:{len(eval_timestamps)}")
 	
 	return train_timestamps,test_timestamps,eval_timestamps
+
+def df_to_tfdataset(df,selected_columns:List[str]):
+	"""Convert dataframe to a tfdataset"""
+	
+	print(f"Selecting:{selected_columns} from df to create numeric tfdataset...")
+	dataset = tf.data.Dataset.from_tensor_slices(df[selected_columns])
+	print(f"Dataset cardinality:{tf.data.experimental.cardinality(dataset)}")
+	
+	return dataset
+def tfdataset_to_windowed_tfdataset(dataset,window_size:int):
+	"""Create windowed dataset from dataframe"""
+		
+	dataset = dataset.window(window_size, shift=1, drop_remainder=True)
+	dataset = dataset.flat_map(lambda window: window.batch(window_size + 1))
+
+	return dataset
+
+

@@ -23,7 +23,7 @@
 "model_type":"bilstm"
 },
 
-"model_training_details":{"n_epochs":2,
+"model_training_details":{"n_epochs":10,
 "batch_size": 32,
 "model_identifier":"v0"}
 
