@@ -1,13 +1,10 @@
 import os
 import json
-import sys
 
-#import tensorflow as tf
 import helics as h
 
 from datapreprocessor.federates.dataimputation.iohelper import IOHelper
 from datapreprocessor.app.dataimputation.data_imputation_postprocessing import update_window_and_impute
-from datapreprocessor.app.dataimputation.model_utilities import sevenziparchive_to_model
 from datapreprocessor.app.model_utilities.model_save_load_utilities import modelarchive_to_modelpath,load_keras_model,load_tf_savedmodel
 from datapreprocessor.utils.exceptionutil import ExceptionUtil
 import datapreprocessor
@@ -17,24 +14,19 @@ LogUtil=ExceptionUtil()
 logFilePath=os.path.join(LogUtil.logDir,f'federate_dataimputation_process.log')
 LogUtil.create_logger('federate_dataimputation_logger',logFilePath=logFilePath,logLevel=20,mode='w')
 
-
-
 class DataimputationFederate(IOHelper):
 
 	def __init__(self,config,federate_name='federate_dataimputation',dt=1):
 		try:
 			self.config=config
 			for thisConf in ['component_definition','static_inputs','input_mapping']:
-				self.config.update({thisConf:\
-					json.load(open(os.path.join(workDir,'federates','dataimputation',f'{thisConf}.json')))})
+				self.config.update({thisConf:json.load(open(os.path.join(workDir,'federates','dataimputation',f'{thisConf}.json')))})
 			self.config['federate_config']['subscriptions']=self.config['input_mapping']['subscriptions']
 			self.federate_name = federate_name
 			self.dt=dt
-			#self.modelDir = os.path.join(workDir,'app','dataimputation','model')
 			model_folder = os.path.join(workDir,"app","dataimputation","model")
 			model_archivepath = os.path.join(workDir,self.config['static_inputs']['model_archivepath'])
 			self.model_path = modelarchive_to_modelpath(model_archivepath,model_folder)
-			#self.prediction_model_path = sevenziparchive_to_model(os.path.join(self.modelDir,self.config['static_inputs']['pretrained_model_file']),self.modelDir)
 			self.model_format = self.config['static_inputs']['model_format']
 			LogUtil.logger.info('created dataimputation federate')
 			LogUtil.logger.info(f"config::::{self.config}")
@@ -110,23 +102,20 @@ class DataimputationFederate(IOHelper):
 					LogUtil.logger.debug(f"timestamp::::{thisTimeStamp}")
 					commData={'pdemand':pdemand,'qdemand':qdemand}
 
-					# run alg
-					#create dictionary to hold output
-					preprocessed_output_dict = {node_id:{"pdemand":{},"qdemand":{}} for node_id in self.config['static_inputs']['monitored_nodes']}
+					# run alg					
+					preprocessed_output_dict = {node_id:{"pdemand":{},"qdemand":{}} for node_id in self.config['static_inputs']['monitored_nodes']} #create dictionary to hold output
 					for monitored_node in self.config['static_inputs']['monitored_nodes']:
 						LogUtil.logger.info(f"{monitored_node}:pdemand measured at {thisTimeStamp}:{commData['pdemand'][monitored_node]}")
 
 						#Update pdemand ffill only if missing data is not detected
 						if not commData['pdemand'][monitored_node] == 0.0: #Check if data is not missing
 							self.streaming_data_dict[monitored_node]['pdemand'].update({"data_ffill":commData['pdemand'][monitored_node]})
-						self.streaming_data_dict[monitored_node]['pdemand'].update(\
-							{"timestamp":thisTimeStamp,"hour":thisTimeStamp.hour,"data_raw":commData['pdemand'][monitored_node]}) #update all other values
+						self.streaming_data_dict[monitored_node]['pdemand'].update({"timestamp":thisTimeStamp,"hour":thisTimeStamp.hour,"data_raw":commData['pdemand'][monitored_node]}) #update all other values
 
 						#Update qdemand ffill only if missing data is not detected
 						if not commData['qdemand'][monitored_node] == 0.0: #Check if data is not missing
 							self.streaming_data_dict[monitored_node]['qdemand'].update({"data_ffill":commData['qdemand'][monitored_node]})
-						self.streaming_data_dict[monitored_node]['qdemand'].update(\
-							{"timestamp":thisTimeStamp,"hour":thisTimeStamp.hour,"data_raw":commData['qdemand'][monitored_node]}) #update all other values
+						self.streaming_data_dict[monitored_node]['qdemand'].update({"timestamp":thisTimeStamp,"hour":thisTimeStamp.hour,"data_raw":commData['qdemand'][monitored_node]}) #update all other values
 
 						# pdemand -- Update output dict by calling imputation model
 						preprocessed_output_dict[monitored_node]['pdemand'].update(update_window_and_impute(\
@@ -147,7 +136,7 @@ class DataimputationFederate(IOHelper):
 					LogUtil.logger.info(f"Output from pdemand imputation model at {last_timestamp}:{imputed_pdemand_measurements}")
 					LogUtil.logger.info(f"Output from qdemand imputation model at {last_timestamp}:{imputed_qdemand_measurements}")
 					pubData={'powers_real':{'values':list(imputed_pdemand_measurements.values()),'ids':nodes,'equipment_ids':["di_1","di_2"],'time':last_timestamp},\
-						'powers_imag':{'values':list(imputed_qdemand_measurements.values()),'ids':nodes,'equipment_ids':["di_1","di_2"],'time':last_timestamp}}
+						     'powers_imag':{'values':list(imputed_qdemand_measurements.values()),'ids':nodes,'equipment_ids':["di_1","di_2"],'time':last_timestamp}}
 					LogUtil.logger.info(f"Completed data imputation algorithm")
 
 					# publications
