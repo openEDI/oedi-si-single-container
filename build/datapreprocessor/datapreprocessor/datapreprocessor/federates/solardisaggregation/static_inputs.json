@@ -1,0 +1,9 @@
+{
+"model_archivepath":"app/solardisaggregation/model_archives/disagg_model-bilstm_dss-123Bus_m-7_w-4_f-5_v0.7z",
+"model_format":"tfsm",
+"monitored_solar_nodes":["s100c","s102c"],
+"initial_measurements":{"s100c":10.0,"s102c":10.0},
+"window_size":4,
+"input_features":["net_load", "cos_hour", "sin_hour", "cos_day_of_week", "sin_day_of_week"]
+
+}
