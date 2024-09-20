@@ -20,11 +20,13 @@ class Build(object):
 		self.config['userConfig']=json.load(open(userConfigPath))
 
 		self.config['links']=self._convertToOedisiLinks(json.load(open(os.path.join(self._baseDir,'links.json'))))
-		self.config['oedisi_runtime_federates']=['feeder','sensor_voltage_real','sensor_voltage_imaginary',\
-			'sensor_power_real','sensor_power_imaginary','recorder_voltage_real','recorder_voltage_imag']
+		self.config['oedisi_runtime_federates']=['feeder',
+										   		 'sensor_voltage_real','sensor_voltage_imaginary','sensor_power_real','sensor_power_imaginary',
+												 'recorder_voltage_real','recorder_voltage_imag']
 		self.config['oedisi_runtime_wiring_diagram']=json.load(open(os.path.join(self._baseDir,'oedisi_runtime_wiring_diagram.json')))
 		self.userFederateOptions={'allowedApplicationTypes':['dsse','dopf'],'supportedLanguages':['python']}
 
+	"""
 	def _get_template_federate_config(self,name,type,directory,exec,hostname='localhost',parameters=None,src=None):
 		conf=copy.deepcopy(self.config['federate_template_config'])
 		conf['wiringDiagramData']['components']['name']=name
@@ -45,7 +47,8 @@ class Build(object):
 	def _update_wiring_diagram_data(self,wiringDiagramData,conf):
 		wiringDiagramData['components'].append(conf['wiringDiagramData']['components'])
 		wiringDiagramData['links'].extend(conf['wiringDiagramData']['links'])
-
+	"""
+	
 	def _convertToOedisiLinks(self,data):
 		res=[]
 		for sourceData,targetData in data:
@@ -104,7 +107,7 @@ class Build(object):
 		appFederates=list(set(userConfig['federates']).difference(self.config['oedisi_runtime_federates']))
 		print(f"Following application federates will be added:{appFederates}")
 
-		wiringDiagramData={'name':userConfig['name'],'components':[],'links':[]}
+		#wiringDiagramData={'name':userConfig['name'],'components':[],'links':[]} #wiringDiagramData is not used anymore
 		# add components even if userConfig['use_oedisi_runtime'] is False and remove later as needed
 		temp=copy.deepcopy(self.config['oedisi_runtime_wiring_diagram'])
 
@@ -112,8 +115,8 @@ class Build(object):
 			if temp['components'][n]['name']=='feeder':
 				temp['components'][n]['parameters'].update(simulationConfig)
 
-		wiringDiagramData['components'].extend(temp['components'])
-		wiringDiagramData['links'].extend(temp['links'])
+		#wiringDiagramData['components'].extend(temp['components']) #wiringDiagramData is not used anymore
+		#wiringDiagramData['links'].extend(temp['links']) #wiringDiagramData is not used anymore
 
 		#for thisAppFederate in appFederates: #Not using this anymore
 			#assert thisAppFederate in stateEstimatorWiringData,f'{thisAppFederate} not in stateEstimatorWiringData'
@@ -131,6 +134,7 @@ class Build(object):
 			availablePreprocessorFederates=os.listdir(preprocessorFederatesDir) #Check datapreprocessor folder for available federates
 			print(f"Following preprocessor federates are available:{availablePreprocessorFederates}")
 			for thisFederate in preprocessorFederates:
+				print(f"Following preprocessor federate folder is created:{thisFederate}")
 				thisFederate=thisFederate.replace('-','').replace('_','') #### TODO: foo_bar to foobar
 				if thisFederate in availablePreprocessorFederates:					
 					flag=os.system(f'cp -r {os.path.join(preprocessorFederatesDir,thisFederate)} /home/run') #copy datapreprocessor federates to /home/run
@@ -182,7 +186,7 @@ class Build(object):
 		with open(components_definitions_json_path, "w") as file: # Save the updated JSON back to the file
 			json.dump(components_definitions_json, file, indent=4)
 		
-		#Create system_runner.json from components.json and system.json
+		#Generate system_runner.json from components.json and system.json
 		directive=f'oedisi build --target-directory /home/run --component-dict {components_definitions_json_path} --system {system_json_path}'		
 		print(f"Executing directive:{directive}")
 		flag=os.system(directive)
@@ -241,6 +245,7 @@ class Build(object):
 		# modifications for user defined dsse and dopf federates
 		userInterfaceSourceDir='/home/runtime/user_interface'
 		for entry in userConfig['user_provided_federates']:
+			print(f"Adding user federate:{entry['name']}")
 			userInterfaceDestinationDir=f'/home/run/{entry["name"]}'
 
 			# copy
@@ -281,7 +286,7 @@ class Build(object):
 				if config_runner['federates'][n]['name']=='broker':
 					config_runner['federates'][n]['exec']=\
 						f'helics_broker -f {len(config_runner["federates"])-1} --loglevel=warning'
-
+		print(f"Modified system_runner:{config_runner}")
 		# write config_runner
 		json.dump(config_runner,open('/home/run/system_runner.json','w'),indent=3) #Save modified syster_runner.json
 
