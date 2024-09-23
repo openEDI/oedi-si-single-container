@@ -91,9 +91,9 @@ class UserFederate(IOHelper):
 
 			while grantedTime<=simEndTime:
 				# subscriptions
-				subData=self.get_subscriptions(sub=self.sub,config=self.config)
+				subData=self.get_subscriptions(sub=self.sub,config=self.config,returnType='dict')
 				LogUtil.logger.info(f"Completed subscription with data {subData.keys()}")
-
+				
 				inputData={}
 				for entry in subData:
 					inputData[subData[entry].__class__.__name__]=subData[entry].dict()
