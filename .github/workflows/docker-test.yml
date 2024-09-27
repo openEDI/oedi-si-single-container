@@ -28,7 +28,7 @@ jobs:
         oedisisc init -p sampleProject
         oedisisc run -p sampleProject -c sampleProject/config/user_config.json --tag singlecontainerapp:0.3.0
     - name: Archive logs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: always()
       with:
         name: docker_logs
