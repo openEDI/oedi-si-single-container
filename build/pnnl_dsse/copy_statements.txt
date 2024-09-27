@@ -1,0 +1,85 @@
+USER root
+# ----------------------------------------------------
+# INSTALL HELICS
+# ----------------------------------------------------
+
+RUN apt-get update \
+    && export DEBIAN_FRONTEND="noninteractive" \
+    && export TZ="America/Pacific" \
+    && apt install -y \
+       libboost-dev \
+       libzmq5-dev \
+       git \
+       cmake-curses-gui \
+       build-essential
+
+WORKDIR /home/dsse_pnnl
+
+RUN mkdir /home/dsse_pnnl/build \
+    && cd /home/dsse_pnnl/build \
+    && git clone https://github.com/GMLC-TDC/HELICS \
+    && cd HELICS \
+    && mkdir build \
+    && cd build \
+    && cmake -DHELICS_BUILD_CXX_SHARED_LIB=True ../ \
+    && make \
+    && make install
+
+# ----------------------------------------------------
+# INSTALL Activemq c++ extensions
+# ----------------------------------------------------
+RUN apt install -y m4 \
+       wget \
+       libaprutil1-dev
+       
+RUN cd /home/dsse_pnnl/build \
+    && wget http://archive.apache.org/dist/activemq/activemq-cpp/3.9.5/activemq-cpp-library-3.9.5-src.tar.gz \
+    && tar -xzf activemq-cpp-library-3.9.5-src.tar.gz \
+    && cd activemq-cpp-library-3.9.5 \
+    && ./configure \
+    && make \
+    && make install 
+
+RUN apt install -y liblapack-dev \
+       libblas-dev \
+       libssl-dev
+
+# ----------------------------------------------------
+# INSTALL State Estimator
+# ----------------------------------------------------
+RUN cd /home/dsse_pnnl/build \
+    && git clone --depth 1 --branch OEDISI.1.1.0 https://github.com/GRIDAPPSD/gridappsd-state-estimator \
+    && cd gridappsd-state-estimator \
+    && git clone https://github.com/GRIDAPPSD/SuiteSparse \
+    && git clone https://github.com/GRIDAPPSD/json \
+    && LD_LIBRARY_PATH=/home/dsse_pnnl/build/gridappsd-state-estimator/SuiteSparse/lib/ make -C SuiteSparse LAPACK=-llapack BLAS=-lblas \
+    && make -C state-estimator \
+    && rm -rf .git SuiteSparse/.git json/.git 
+
+
+
+# ----------------------------------------------------
+# INSTALL Python requirements 
+# ----------------------------------------------------
+RUN apt install -y python3 \
+        python3-pip \
+        python-is-python3 \
+        sudo \
+        vim
+		
+COPY dsse_pnnl/requirements.txt /home/dsse_pnnl/requirements.txt
+RUN pip install -r /home/dsse_pnnl/requirements.txt
+	
+ARG SCENARIO
+COPY dsse_pnnl/feeder_federate /home/dsse_pnnl/feeder_federate
+COPY dsse_pnnl/measuring_federate /home/dsse_pnnl/measuring_federate
+COPY dsse_pnnl/recorder_federate /home/dsse_pnnl/recorder_federate
+COPY dsse_pnnl/ekf_federate /home/dsse_pnnl/ekf_federate
+COPY dsse_pnnl/scenario/${SCENARIO} /home/dsse_pnnl/scenario/${SCENARIO}
+RUN cp /home/dsse_pnnl/build/gridappsd-state-estimator/state-estimator/bin/* /home/dsse_pnnl/ekf_federate
+RUN mkdir -p /home/outputs/${SCENARIO} 
+COPY dsse_pnnl/ekf_workflow.ipynb /home/dsse_pnnl/ekf_workflow.ipynb
+
+WORKDIR /home/dsse_pnnl
+EXPOSE 8888
+ENTRYPOINT ["jupyter", "notebook", "--allow-root", "--ip=0.0.0.0", "--no-browser"]
