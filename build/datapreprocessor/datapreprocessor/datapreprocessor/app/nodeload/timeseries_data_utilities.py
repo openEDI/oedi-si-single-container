@@ -199,8 +199,8 @@ def get_n_days_in_df(df,datetime_column = "datetime"):
 
 	# calculate the number of days for each month
 	for name, group in df_month:
-		n_days = n_days + (group['datetime'].max() - group['datetime'].min()).days + 1
-		print(f"Month: {name.month}, Number of days: {(group['datetime'].max() - group['datetime'].min()).days + 1}")
+		n_days = n_days + (group[datetime_column].max() - group[datetime_column].min()).days + 1
+		print(f"Month: {name.month}, Number of days: {(group[datetime_column].max() - group[datetime_column].min()).days + 1}")
 	
 	return n_days
 

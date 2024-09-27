@@ -18,7 +18,7 @@ sys.path.insert(0,baseDir) #Add module path to prevent import errors
 
 from datapreprocessor.app.nodeload.timeseries_data_utilities import get_n_days_in_df
 from datapreprocessor.app.nodeload.nodeload_utilities import check_and_create_folder
-from datapreprocessor.app.solardisaggregation.solardisaggregation_preprocessing import generate_solar_node_profiles
+from datapreprocessor.app.nodeload.solarnode_utilities import generate_solar_node_profiles
 
 parser=argparse.ArgumentParser()
 parser.add_argument('-f','--file',help='Raw solar home data to be used for generating solar node load',default = "solarhome_customers-300_days-365.csv", required=False)
@@ -27,7 +27,6 @@ parser.add_argument('-n','--nsolarnodes',type=int,help='Number of solar nodes fo
 parser.add_argument('-m','--months',nargs='+', type=int,help='Number of months for which load shapes are generated',default = [7], required=False)
 parser.add_argument('-max','--maxsolar',type=float,help='Maximum solar penetration at any solar node',default = 0.3, required=False)
 
-parser.add_argument('-u','--upsample',type=bool,help='Whether to upsample',default = True, required=False)
 parser.add_argument('-t','--timeperiod',type=str,help='Upsample time period',default = "15Min", required=False)
 parser.add_argument('-p','--profilepath',type=str,help='path to save the generated data as profiles',default = "", required=False)
 parser.add_argument('--fill',type=int,help='Fill the loadshape by repeating the data to have the given number of points. '+\
@@ -35,7 +34,6 @@ parser.add_argument('--fill',type=int,help='Fill the loadshape by repeating the 
 parser.add_argument('--normalize',type=bool,help='When True the returned values are from [0,1]',default = True, required=False)
 
 args=parser.parse_args()
-
 
 folder_name_timeseries = os.path.join(workDir,"data","solarhome")
 folder_name_solarnode = os.path.join(workDir,"data","nodeload")
@@ -52,14 +50,13 @@ check_and_create_folder(folder_name_solarnode)
 n_solar_nodes = args.nsolarnodes #10
 selected_months = args.months #10
 max_solar_penetration  = args.maxsolar #0.3
-upsample_original_time_series = args.upsample #True
-upsample_time_period = args.timeperiod #"15Min"
+sample_time_period = args.timeperiod #"15Min"
 
 ## Select solar data file for use as base file and generate time series file
 df_solar_timeseries = pd.read_csv(os.path.join(folder_name_timeseries,args.file), parse_dates=['datetime'])
 
 ## Generate node solar profiles for the distribution system model we are intrested in
-df_solar_node,_ = generate_solar_node_profiles(df_solar_timeseries,opendss_casefile,selected_months,n_solar_nodes,max_solar_penetration,upsample_time_series=upsample_original_time_series,upsample_time_period=upsample_time_period)
+df_solar_node,_ = generate_solar_node_profiles(df_solar_timeseries,opendss_casefile,selected_months,n_solar_nodes,max_solar_penetration,sample_time_period=sample_time_period)
 
 ## Save solar node profiles
 month_names = '-'.join([calendar.month_abbr[num] for num in selected_months])

@@ -30,14 +30,13 @@ from datapreprocessor.app.nodeload.timeseries_data_utilities import get_time_ser
 def find_df_timeperiod(df,datetime_column="datetime"):
 	"""Upsample origina time series"""
 	
-	delta_t_seconds = (df["datetime"].iloc[-1]-df["datetime"].iloc[-2]).total_seconds()
+	delta_t_seconds = (df[datetime_column].iloc[-1]-df[datetime_column].iloc[-2]).total_seconds()
 	delta_t_minutes = int(delta_t_seconds/60.0)
-	print(f"Original time period:{delta_t_seconds} seconds")
-	print(f"Original time period:{delta_t_minutes} minutes")
+	print(f"Original time period:{delta_t_seconds} seconds ({delta_t_minutes} minutes)")	
 
-def get_upsampled_df(df_timeseries,datetime_column="datetime",upsample_time_period="15Min"):
-	"""Upsample origina time series"""
-	    
+def get_upsampled_df(df_timeseries,upsample_time_period="15Min",datetime_column="datetime",index_name="block_index"):
+	"""Upsample original time series"""
+	print(f"Upsampling to {upsample_time_period}...")    
 	find_df_timeperiod(df_timeseries,datetime_column=datetime_column)
 	
     #print(f"Columns in upsampled df:{list(df_timeseries.columns)}")
@@ -47,7 +46,8 @@ def get_upsampled_df(df_timeseries,datetime_column="datetime",upsample_time_peri
 	df_timeseries_upsampled = df_timeseries_upsampled.interpolate(method='linear')
 	
 	df_timeseries_upsampled = df_timeseries_upsampled.reset_index()
-	df_timeseries_upsampled.index.name = "block_index"
+	if index_name:
+		df_timeseries_upsampled.index.name = index_name
 	
 	delta_t_minutes = int((df_timeseries_upsampled[datetime_column].iloc[-1]-df_timeseries_upsampled[datetime_column].iloc[-2]).total_seconds()/60.0)
 	print(f"Resampled time period:{delta_t_minutes} minutes")
@@ -57,19 +57,20 @@ def get_upsampled_df(df_timeseries,datetime_column="datetime",upsample_time_peri
 	
 	return df_timeseries_upsampled
 
-def get_downsampled_df(df_timeseries,datetime_column="datetime",downsample_time_period="1S"):
+def get_downsampled_df(df_timeseries,downsample_time_period="1S",datetime_column="datetime",index_name="block_index"):
 	"""Downsample origina time series"""
-
-	find_df_timeperiod(df_timeseries,datetime_column="datetime")
+	print(f"Downsampling to {downsample_time_period}...")
+	find_df_timeperiod(df_timeseries,datetime_column=datetime_column)
 	#print(f"Columns in upsampled df:{list(df_timeseries.columns)}")
 	df_timeseries_downsampled = df_timeseries.set_index(datetime_column)
     
 	df_timeseries_downsampled = df_timeseries_downsampled.resample(downsample_time_period).mean()  # '5T' represents 5-minute interval '1S' represents 1 second interval
 
 	df_timeseries_downsampled = df_timeseries_downsampled.reset_index()
-	df_timeseries_downsampled.index.name = "block_index"
+	if index_name:
+		df_timeseries_downsampled.index.name = index_name
 	print("After downsampling...")
-	find_df_timeperiod(df_timeseries_downsampled,datetime_column="datetime")
+	find_df_timeperiod(df_timeseries_downsampled,datetime_column=datetime_column)
 	
 	return df_timeseries_downsampled
 
@@ -79,15 +80,19 @@ def find_unique_loads(column_names):
 
     #pattern1 = r'customer_\d+_(\d+\.\d+)_' #Pattern for solar home data
     pattern1 = r'gross_load_customer_(\d+\.\d+)_\d+' #Pattern for solar home data
-    pattern2 = r'Load_\w+_'   #Pattern for time series data
+    pattern2 = r'gross_load_customer_(\d+\.\d+)' #Pattern for solar home data
+    pattern3 = r'Load_\w+_'   #Pattern for time series data
 
     for col in column_names:
         match1 = re.search(pattern1, col)
         match2 = re.search(pattern2, col)
+        match3 = re.search(pattern3, col)
         if match1:
             unique_loads.add(match1.group(1))
         elif match2:
-            unique_loads.add(match2.group(0)[:-1])
+            unique_loads.add(match2.group(1))
+        elif match3:
+            unique_loads.add(match3.group(0)[:-1])
 
     print(f"Found following {len(unique_loads)} unique_loads:")
     
@@ -120,10 +125,10 @@ def get_load_dict(df_timeseries,timeseries_file,load_identifier="load_"):
 	
 	return load_dict
 
-def create_average_timeseries_profiles(timeseries_files,month,convert_to_kW=False,upsample=False,upsample_time_period="15Min",datetime_column = "datetime"):
+def create_average_timeseries_profiles(timeseries_files,month,convert_to_kW=False,sample_time_period="15Min",datetime_column = "datetime",index_name="block_index"):
 	"""Create load profiles by averaging across individual loads"""
 	
-	assert len(timeseries_files) == 1, "Will only work with one timeseries file for now"
+	assert len(timeseries_files) == 1, f"Will only work with one timeseries file for now, but found:{timeseries_files}"
 	df_averaged_load = pd.DataFrame()
 	load_dict = {}
 	
@@ -139,14 +144,14 @@ def create_average_timeseries_profiles(timeseries_files,month,convert_to_kW=Fals
 		print("'datetime' column not found in time series dataframe -- adding datetime column to time series dataframe")		
 		df_timeseries = add_datetime(df_timeseries,show_details = True)
 	else:
-		print("'datetime' column found in time series dataframe -- using datetime column from time series dataframe")
+		print(f"{datetime_column} column found in time series dataframe -- using datetime column from time series dataframe")
 		assert not any('24:' in time_str for time_str in df_timeseries[datetime_column].to_list()), "timestamp contain 24 which is not valid" 
 	df_averaged_load[datetime_column]  = pd.to_datetime(df_timeseries[datetime_column], infer_datetime_format=True) #, format='%Y-%m-%d-%H:%M:%S'
 	
 	assert df_averaged_load[datetime_column].dtype == 'datetime64[ns]', "Should be date time data type"
 	
 	df_averaged_load[datetime_column]  = df_averaged_load[datetime_column].dt.strftime('%Y-%m-%d-%H:%M:%S')
-	df_averaged_load[datetime_column]  = pd.to_datetime(df_averaged_load['datetime'], format='%Y-%m-%d-%H:%M:%S')
+	df_averaged_load[datetime_column]  = pd.to_datetime(df_averaged_load[datetime_column], format='%Y-%m-%d-%H:%M:%S')
 	
 	df_averaged_load = df_averaged_load[df_averaged_load[datetime_column].dt.month == month]
 	found_month = list(set(df_averaged_load[datetime_column].dt.month.to_list()))[0]
@@ -161,27 +166,25 @@ def create_average_timeseries_profiles(timeseries_files,month,convert_to_kW=Fals
 	load_type_example = load_types[0]
 	total_kWh_before_resampling = sum(df_averaged_load[load_type_example].values) #Find total kWh before resampling for verification
 	
-	del_hour = 24/len(df_averaged_load[df_averaged_load["datetime"].dt.day==1]) #Find the time delta between each load measurement in hours
+	del_hour = 24/len(df_averaged_load[df_averaged_load[datetime_column].dt.day==1]) #Find the time delta between each load measurement in hours
 	if convert_to_kW:
 		print(f"Converting kWh to kW with a time delta of:{del_hour} hour")
 		df_averaged_load = convert_kwh_columns(df_averaged_load,list(load_dict.keys()),del_hour)
-		
-	if upsample:
-		assert convert_to_kW, "Upsampling will only work if measurements have been converted from kWh to kW"
-		print(f"Upsampling to {upsample_time_period}")
-		df_averaged_load = get_upsampled_df(df_averaged_load,datetime_column="datetime",upsample_time_period=upsample_time_period)
-		del_hour = 24/len(df_averaged_load[df_averaged_load["datetime"].dt.day==1]) #Find the time delta between each load measurement in hours
-		total_kWh_after_resampling = sum(df_averaged_load[load_type_example].values*del_hour) #Find total kWh after resampling for verification
-		print(f"Load type:{load_type_example} - Total kWH:Before resampling:{total_kWh_before_resampling:.2f},After resampling with time delta of {del_hour} hr:{total_kWh_after_resampling:.2f}")	  
+
+	df_averaged_load = get_updownsampled_df(df_averaged_load,datetime_column=datetime_column,sample_time_period=sample_time_period,index_name=index_name)
 	
-	df_averaged_load["day_of_week"] = df_averaged_load["datetime"].dt.weekday
+	del_hour = 24/len(df_averaged_load[df_averaged_load[datetime_column].dt.day==1]) #Find the time delta between each load measurement in hours
+	total_kWh_after_resampling = sum(df_averaged_load[load_type_example].values*del_hour) #Find total kWh after resampling for verification
+	print(f"Load type:{load_type_example} - Total kWH:Before resampling:{total_kWh_before_resampling:.2f},After resampling with time delta of {del_hour} hr:{total_kWh_after_resampling:.2f}")
+	
+	df_averaged_load["day_of_week"] = df_averaged_load[datetime_column].dt.weekday
 	df_averaged_load["weekend"] = df_averaged_load["day_of_week"] >= 5
 		
-	assert load_types == [load_type for load_type in list(df_averaged_load.columns) if load_type not in ['day_of_week', 'weekend','datetime']], "Expected load types in dictionary and data frame to be same"
+	assert load_types == [load_type for load_type in list(df_averaged_load.columns) if load_type not in ['day_of_week', 'weekend',datetime_column]], "Expected load types in dictionary and data frame to be same"
 			
-	n_timesteps_per_day = len(df_averaged_load[df_averaged_load["datetime"].dt.day==1]) #Find number of time stamps in one day
+	n_timesteps_per_day = len(df_averaged_load[df_averaged_load[datetime_column].dt.day==1]) #Find number of time stamps in one day
 	df_averaged_day_load = pd.DataFrame()
-	df_averaged_day_load["datetime"] = df_averaged_load.loc[0:n_timesteps_per_day-1,"datetime"]
+	df_averaged_day_load[datetime_column] = df_averaged_load.loc[0:n_timesteps_per_day-1,datetime_column]
 	
 	for j,load_type in enumerate(load_types):
 		cols = []
@@ -204,9 +207,9 @@ def create_average_timeseries_profiles(timeseries_files,month,convert_to_kW=Fals
 	print(f"Total weekday days:{weekday_days}")
 	
 	df_averaged_load_weekend.reset_index(drop=True, inplace=True)
-	df_averaged_load_weekend.index.rename('block_index', inplace=True)
+	df_averaged_load_weekend.index.rename(index_name, inplace=True)
 	df_averaged_load_weekday.reset_index(drop=True, inplace=True)
-	df_averaged_load_weekday.index.rename('block_index', inplace=True)	 
+	df_averaged_load_weekday.index.rename(index_name, inplace=True)	 
 	
 	for j,load_type in enumerate(load_types):
 		weekend_cols = []
@@ -230,26 +233,26 @@ def create_average_timeseries_profiles(timeseries_files,month,convert_to_kW=Fals
 		
 	return df_averaged_load,df_averaged_day_load
 	
-def plot_averaged_load(df,days=[1],selected_load_types=[]):
+def plot_averaged_load(df,days=[1],selected_load_types=[],datetime_column = "datetime"):
 	"Plot average load across different instances of same load type"
 	
 	print(f"Found load types:{selected_load_types}")
 	
 	for load_type in selected_load_types:
 		for day in days:
-			df[df["datetime"].dt.day==day].plot(x="datetime",y=[load_type])
+			df[df[datetime_column].dt.day==day].plot(x=datetime_column,y=[load_type])
 
-def plot_averaged_day_load(df,selected_load_types=[]):
+def plot_averaged_day_load(df,selected_load_types=[],datetime_column = "datetime"):
 	"Plot average load across different instances and days of same load type"
 		
 	print(f"Found load types:{selected_load_types}")
 	
 	for load_type in selected_load_types:
-		df.plot(x="datetime",y=[load_type,f"{load_type}_weekday",f"{load_type}_weekend"])
+		df.plot(x=datetime_column,y=[load_type,f"{load_type}_weekday",f"{load_type}_weekend"])
 
-def get_df_load_fraction(df_averaged_day_load,df_load_fraction,month):	  
+def get_df_load_fraction(df_averaged_day_load,df_load_fraction,month,datetime_column = "datetime"):	  
 	df_node_load = pd.DataFrame()
-	df_node_load["datetime"] = df_averaged_day_load["datetime"]
+	df_node_load[datetime_column] = df_averaged_day_load[datetime_column]
 	node_load_fraction_dict = df_load_fraction.iloc[0,:].to_dict()
 	df_node_load[f'node_load_equal'] = df_averaged_day_load.apply(lambda row: mean([row[load_type]*1.0 for load_type in list(node_load_fraction_dict.keys())]), axis=1) #Each load with equal fraction
 	n_samples = len(df_load_fraction)
@@ -431,10 +434,10 @@ def scale_weighted_load(L,k_scale,show_details=False): #,nProfile=7,nPts=96
 	
 	return load_shape
 
-def generate_load_node_profiles(df_averaged_day_load,case_file,n_nodes=-1,n_days=1,start_year = 2016,start_month=1,start_day=1,scaling_type="simple"):
+def generate_load_node_profiles(df_averaged_day_load,case_file,n_nodes=-1,n_days=1,start_year = 2016,start_month=1,start_day=1,scaling_type="simple",datetime_column = "datetime"):
 	"""Generate profiles for each node in openDSS distribution feeder using the averaged day load"""
 	
-	available_load_types = [load_type for load_type in list(df_averaged_day_load.columns) if load_type not in ['day_of_week', 'weekend','datetime']] #Remove non-load columns	
+	available_load_types = [load_type for load_type in list(df_averaged_day_load.columns) if load_type not in ['day_of_week', 'weekend',datetime_column]] #Remove non-load columns	
 	available_load_types = [load_type for load_type in available_load_types if not any(s in load_type for s in ["_day_","_weekday","_weekend"])] #Remove unnecssary loads
 	#missing_load_types = [load_type for load_type in available_load_types if load_type not in list(df_averaged_day_load.columns.unique())]
 	#if missing_load_types:
@@ -449,10 +452,10 @@ def generate_load_node_profiles(df_averaged_day_load,case_file,n_nodes=-1,n_days
 	n_timesteps_per_day = len(df_averaged_day_load)
 	print(f"Number of time steps per day:{n_timesteps_per_day}")
 	time_interval_in_minutes = f"{int((24*60)/n_timesteps_per_day)} min" #"30min" #Calculating time interval in minutes
-	print(f"Time interval in minutes:{time_interval_in_minutes}")
-	time_interval_in_minutes = f"{int((df_averaged_day_load['datetime'].iloc[-1]-df_averaged_day_load['datetime'].iloc[-2]).total_seconds()/60.0)} min"
-	
-	print(f"Time interval in minutes:{time_interval_in_minutes}")
+	print(f"Expected time interval in minutes:{time_interval_in_minutes}")	
+	time_interval_in_minutes = f"{int((df_averaged_day_load[datetime_column].iloc[-1]-df_averaged_day_load[datetime_column].iloc[-2]).total_seconds()/60.0)} min"	
+	print(f"Calculated time interval in minutes:{time_interval_in_minutes}")
+
 	load_node_dict = {node:generate_load_array(df_averaged_day_load,available_load_types,min_n_load_types=2) for node in Pnominal.keys()} #Assign base load type profiles to each node
 	
 	for i in tqdm(range(n_days)): #Each sample is a new day. The base load profiles are fixed for each node for all the samples
@@ -484,7 +487,7 @@ def generate_load_node_profiles(df_averaged_day_load,case_file,n_nodes=-1,n_days
 			start_day = 1
 	
 	df_node_load = pd.DataFrame.from_dict(load_profiles) #Faster
-	df_node_load.insert(0,'datetime',time_stamps) #Insert at first columns
+	df_node_load.insert(0,datetime_column,time_stamps) #Insert at first columns
 	
 	return df_node_load,load_node_dict
 
@@ -655,3 +658,18 @@ def check_and_create_folder(folder_path):
 	if not os.path.exists(folder_path):
 		os.makedirs(folder_path)
 		print(f'Folder "{folder_path}" created successfully.')
+
+def get_updownsampled_df(df:pd.DataFrame,datetime_column:str,sample_time_period:str,index_name:str=""):
+
+	current_timedelta = df[datetime_column].diff().min()	
+	#current_timedelta = pd.to_timedelta(current_timedelta, unit='s')
+	desired_timedelta = pd.to_timedelta(sample_time_period)
+	print(f"Current time delta is:{current_timedelta}, desired time delta is:{desired_timedelta}")
+	if desired_timedelta > current_timedelta: # Downsample
+		df = get_downsampled_df(df,datetime_column=datetime_column,downsample_time_period=sample_time_period,index_name=index_name)
+	elif desired_timedelta < current_timedelta: # Upsample
+		df = get_upsampled_df(df,datetime_column=datetime_column,upsample_time_period=sample_time_period,index_name=index_name)
+	else:
+		print("No resampling required!")
+	
+	return df

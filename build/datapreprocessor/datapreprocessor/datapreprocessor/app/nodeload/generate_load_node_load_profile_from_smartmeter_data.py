@@ -8,7 +8,7 @@ import sys
 import argparse
 import calendar
 
-baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) Add path of home directory 
+baseDir=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) #Add path of home directory 
 workDir=os.path.join(baseDir,"datapreprocessor")
 
 print(f"Adding home directory:{baseDir} to path")
@@ -17,19 +17,18 @@ sys.path.insert(0,baseDir) #Add module path to prevent import errors
 from datapreprocessor.app.nodeload.nodeload_utilities import create_average_timeseries_profiles,generate_load_node_profiles,check_and_create_folder
 
 parser=argparse.ArgumentParser()
-parser.add_argument('-f','--timeseries',help='Time series files to be used for generating node load',default = "solarhome/solarhome_customers-300_days-365.csv", required=False)
+parser.add_argument('-f','--file',help='Time series files to be used for generating node load',default = "solarhome/solarhome_customers-300_days-365.csv", required=False)
 parser.add_argument('-id','--timeseriesid',help='Identification for time series file',default = "solarhome_aus", required=False)
 parser.add_argument('-d','--distribution',help='Distribution system',default = "123Bus/case123.dss", required=False)
 parser.add_argument('-m','--month',type=int,help='Month for which load shapes are generated',default = 2, required=False)
 parser.add_argument('-n','--ndays', type=int,help='Number of days',default = 10, required=False)
-parser.add_argument('-u','--upsample',type=bool,help='Whether to upsample',default = True, required=False)
 parser.add_argument('-t','--timeperiod',help='Upsample time period',default = "15Min", required=False)
 
 args=parser.parse_args()
 
 folder_name_timeseries = os.path.join(workDir,"data")
 folder_name_nodeload = os.path.join(workDir,"data","nodeload")
-timeseries_file = os.path.join(folder_name_timeseries,args.timeseries)
+timeseries_file = os.path.join(folder_name_timeseries,args.file)
 opendss_casefile = os.path.join(workDir,'data','opendss',args.distribution)
 model_folder = args.distribution.split("/")[0]
 
@@ -46,14 +45,13 @@ else:
 
 check_and_create_folder(folder_name_nodeload)
 
-upsample_original_time_series = args.upsample #True
-upsample_time_period = args.timeperiod #"15Min"
+sample_time_period = args.timeperiod #"15Min"
 selected_month = args.month #10
 n_days = args.ndays #10
+datetime_column = "datetime"
 
-df_averaged_load,df_averaged_day_load = create_average_timeseries_profiles(timeseries_files=timeseries_files,month=selected_month,convert_to_kW=True,upsample=upsample_original_time_series,upsample_time_period=upsample_time_period)
-
-df_node_load,load_node_dict = generate_load_node_profiles(df_averaged_day_load,case_file=opendss_casefile,n_days=n_days)
+df_averaged_load,df_averaged_day_load = create_average_timeseries_profiles(timeseries_files=timeseries_files,month=selected_month,convert_to_kW=True,sample_time_period=sample_time_period,datetime_column =datetime_column,index_name="block_index")
+df_node_load,load_node_dict = generate_load_node_profiles(df_averaged_day_load,case_file=opendss_casefile,n_days=n_days,datetime_column=datetime_column)
 month = list(set(df_averaged_day_load["datetime"].dt.month))[0] #Find month from time series - assume data from only one month is present
 
 csv_file_name = f"smartmeter_averaged_day_load_m-{calendar.month_abbr[month]}.csv"
