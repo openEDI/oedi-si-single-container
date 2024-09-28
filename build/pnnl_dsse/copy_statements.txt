@@ -72,7 +72,7 @@ RUN pip install -r /home/dsse_pnnl/requirements.txt
 	
 ARG SCENARIO
 COPY dsse_pnnl/feeder_federate /home/dsse_pnnl/feeder_federate
-COPY dsse_pnnl/measuring_federate /home/dsse_pnnl/measuring_federate
+COPY dsse_pnnl/sensor_federate /home/dsse_pnnl/sensor_federate
 COPY dsse_pnnl/recorder_federate /home/dsse_pnnl/recorder_federate
 COPY dsse_pnnl/ekf_federate /home/dsse_pnnl/ekf_federate
 COPY dsse_pnnl/scenario/${SCENARIO} /home/dsse_pnnl/scenario/${SCENARIO}
