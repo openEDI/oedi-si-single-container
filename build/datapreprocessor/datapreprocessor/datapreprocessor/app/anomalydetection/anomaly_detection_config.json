@@ -1,0 +1,26 @@
+{
+
+"nodeload_data_details":{
+"selected_timeseries_files":["data/solarhome/solarhome_customers-300_days-365.csv"],
+"selected_month":2,
+"distribution_system":"123Bus",
+"distribution_system_file":"opendss/123Bus/case123.dss",
+"measurement_column":"load_value",
+"load_scaling_mode":"simple",
+"sample_time_period":"15Min"},
+
+"train_data_details":{
+"cyclical_features":["hour_of_day","day_of_week","weekend"],
+"n_days": 4,
+"n_nodes":100,
+"window_size":4},
+
+"model_arch_details":{
+"model_type":"lstm"
+},
+
+"model_training_details":{"n_epochs":25,
+"batch_size": 32,
+"model_identifier":"v0"}
+
+}

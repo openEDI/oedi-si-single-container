@@ -1,0 +1,10 @@
+{
+   "subscriptions": [
+      
+      {
+         "required": false,
+         "key": "feeder/powers_real",
+         "type": "string"
+      }
+   ]
+}

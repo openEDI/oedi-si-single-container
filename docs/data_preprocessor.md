@@ -1,12 +1,16 @@
-# Introduction
-The Data preprocessing application contains the following applications:
+# Data pre-processor Federates
+There are three data pre-processor federates, each of which is described below:
+1. **Data Imputation**:  Data imputation generating a returning an estimated measurement when missing measurements are detected.. This federate will take node measurements (e.g. net load)  from the distribution system simulation as input and perform data imputation if missing measurements are detected at any time stamps on user specified nodes. The missing measurement must be encoded as a 0 for the imputation logic to work. The application source code can be found [here](https://github.com/openEDI/oedi-si-single-container/tree/main/build/datapreprocessor/datapreprocessor/datapreprocessor/app/dataimputation). New models can be trained using:
 
-1. **Data Imputation**: Takes net load at any distribution system node as input. If missing data is encountered at any time stamp at any node, the federate returns an estimated load for that time stamp.  The application source code can be found [here](https://github.com/openEDI/oedi-si-single-container/tree/main/build/datapreprocessor/datapreprocessor/datapreprocessor/app/dataimputation). New data imputation models can be trained using: ```python app/dataimputation/node_load_data_imputation_train_model.py -c "data_imputation_config.json" ```
+```shell
+cd /home/datapreprocessor/datapreprocessor/app/dataimputation
+python node_load_data_imputation_train_model.py -c "data_imputation_config.json"
+```
+The trained data imputation model can be used within the data imputation [federate](https://github.com/openEDI/oedi-si-single-container/tree/main/build/datapreprocessor/datapreprocessor/datapreprocessor/federates/dataimputation) by modifying the **static_inputs.json** file.
 
-   The trained data imputation model can be used within the data imputation [federate](https://github.com/openEDI/oedi-si-single-container/tree/main/build/datapreprocessor/datapreprocessor/datapreprocessor/federates/dataimputation).
-
-### How does data imputation work?
-We use Denoising AutoEncoders for performing data imputation. We use this model because it applies to any data type, can ingest a contextual window, and is scalable. ![Fig. 1 shows the block diagram of how the data impuation works](figures\anomaly_detection_block_diagram.jpg)
+## How does data imputation work?
+We use Denoising AutoEncoders for performing data imputation. We use this model because it applies to any data type, can ingest a contextual window, and is scalable.
+![Fig. 1 shows the block diagram of how the data impuation works](figures\anomaly_detection_block_diagram.jpg)
 
 
 2. **Solar Disaggregation**: Takes net load at distribution system solar node as input and outputs the estimated solar power produced. The application source code can be found [here](https://github.com/openEDI/oedi-si-single-container/tree/main/build/datapreprocessor/datapreprocessor/datapreprocessor/app/solardisaggregation).

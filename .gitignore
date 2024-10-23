@@ -6,3 +6,7 @@
 !build/dopf_ornl/dopf_ornl_src/*.csv
 runner/wiring_diagram.json
 *egg-info
+*.keras
+*.pb
+*.index
+*.data-00000-of-00001

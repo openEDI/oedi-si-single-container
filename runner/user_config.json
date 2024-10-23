@@ -2,9 +2,9 @@
    "name": "runtime_example",
    "use_oedisi_runtime": true,
    "oedisi_runtime_federates": [
-      "state_estimator_pnnl"
+     "state_estimator_nrel"
    ],
-   "use_oedisi_preprocessor": true,
+   "use_oedisi_preprocessor": false,
    "oedisi_preprocessor_federates": [
       "load_profile",
       "data_imputation",
@@ -19,9 +19,9 @@
 	],
    "externally_connected_federates": [],
    "simulation_config": {
-      "opendss_location": "/home/oedisi/gadal-ieee123/qsts",
-      "profile_location": "/home/oedisi/gadal-ieee123/profiles",
-      "sensor_location": "/home/oedisi/gadal-ieee123/sensors.json",
+      "opendss_location": "/home/oedisi/oedisi-ieee123/qsts",
+      "profile_location": "/home/oedisi/oedisi-ieee123/profiles",
+      "sensor_location": "/home/oedisi/oedisi-ieee123/sensors.json",
       "start_date": "2017-01-01 00:00:00",
       "number_of_timesteps": 4,
       "run_freq_sec": 900

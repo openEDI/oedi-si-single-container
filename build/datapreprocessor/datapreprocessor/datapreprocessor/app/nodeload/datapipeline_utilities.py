@@ -5,17 +5,19 @@ Created on Thursday Feb 26 15:00:00 2023
 import time
 import pickle
 import random
+from typing import List
 
+import tqdm
 import tensorflow as tf
 
-def df_to_input_target_dataset(df,load_block_length,input_features,target_feature,batch_size,use_prefetch,df_type = "train"):
+def df_to_input_target_dataset(df,window_size,input_features,target_feature,batch_size,use_prefetch,df_type = "train"):
 	"""Get input target dataset that can be used by model.fit()"""
 	
-	input_dataset, target_dataset =	 get_input_target_dataset(df,load_block_length,input_features,target_feature,batch_size=None,use_moving_window=True)
+	input_dataset, target_dataset =	 get_input_target_dataset(df,window_size,input_features,target_feature,batch_size=None,use_moving_window=True)
 	input_target = tf.data.Dataset.zip((input_dataset, target_dataset))
 	print(f"First two elements in {df_type} dataset:{list(input_target.take(2).as_numpy_iterator())[0]}")
 
-	check_moving_window(input_target,df,load_block_length,input_features)	
+	check_moving_window(input_target,df,window_size,input_features)	
 	cardinality = input_target.cardinality().numpy()
 	
 	print(f"TF {df_type} dataset Cardinality:{cardinality} - df size:{len(df)}")
@@ -33,18 +35,18 @@ def df_to_input_target_dataset(df,load_block_length,input_features,target_featur
 	
 	return input_target
 
-def get_input_target_dataset(df,load_block_length,input_features,target_feature,batch_size=128,use_moving_window=False):
+def get_input_target_dataset(df,window_size,input_features,target_feature,batch_size=128,use_moving_window=False):
 	"""Create TF datasets"""
 		
 	if use_moving_window:
 		sequence_stride = 1
 	else:
-		sequence_stride = load_block_length #Uses a fixed window
+		sequence_stride = window_size #Uses a fixed window
 	
 	dataset_input =tf.keras.utils.timeseries_dataset_from_array(
 							data=df[input_features].values,
 							targets = None,
-							sequence_length =load_block_length ,
+							sequence_length =window_size ,
 							sequence_stride=sequence_stride,
 							sampling_rate=1,
 							batch_size=batch_size,
@@ -55,9 +57,9 @@ def get_input_target_dataset(df,load_block_length,input_features,target_feature,
 	  
 	if target_feature:
 		dataset_target =tf.keras.utils.timeseries_dataset_from_array(
-							data=df[target_feature].values,
+							data=df[[target_feature]].values,
 							targets = None,
-							sequence_length =load_block_length ,
+							sequence_length =window_size,
 							sequence_stride=sequence_stride,
 							sampling_rate=1,
 							batch_size=batch_size,
@@ -70,13 +72,13 @@ def get_input_target_dataset(df,load_block_length,input_features,target_feature,
 	
 	return dataset_input,dataset_target
 
-def check_moving_window(dataset,df,load_block_length,input_features,n_samples = 10):
+def check_moving_window(dataset,df,window_size,input_features,n_samples = 10):
 	"""Check difference between data set and dataframe after applying moving window"""
 	
 	difference_flag = False
-	print(f"Checking moving window for window size {load_block_length} with input features:{input_features} on {n_samples} samples.")
+	print(f"Checking moving window for window size {window_size} with input features:{input_features} on {n_samples} samples.")
 	for i,input_target in enumerate(dataset.take(n_samples).as_numpy_iterator()): #Take n_samples from dataset and iterate
-		difference = list(input_target)[0]-df[input_features][i:i+load_block_length].values
+		difference = list(input_target)[0]-df[input_features][i:i+window_size].values
 		if not difference.sum()==0.0:
 			print(f"Difference detected at:{i} - difference:{difference}")
 			difference_flag = True
@@ -92,7 +94,7 @@ def tfdataset_to_pickle(input_target,pickle_file):
 	array_moving_window = list(input_target.as_numpy_iterator())
 	features = []
 	target = []
-	for i in tqdm(range(n_elements)):
+	for i in tqdm.tqdm(range(n_elements)):
 		features.append(array_moving_window[i][0])
 		target.append(array_moving_window[i][1])
 	features = np.array(features)
@@ -160,3 +162,44 @@ def get_train_test_eval_nodes(node_dict,train_fraction=0.8,test_fraction=0.2):
 	print(f"Train nodes:{len(train_nodes)},Test nodes:{len(test_nodes)},Eval nodes:{len(eval_nodes)}")
 	
 	return train_nodes,test_nodes,eval_nodes
+
+def get_train_test_eval_timesteps(timestamps,train_fraction=0.8,test_fraction=0.2):
+	"""Specify train and test timestamps"""
+	n_available_samples = len(timestamps)
+	train_test_fraction = train_fraction + test_fraction #1.0
+	
+	assert train_test_fraction <= 1.0, f"Train + test:{train_test_fraction} should be <= 1.0!"
+	n_train_test_samples = int(n_available_samples*train_test_fraction) #80# # int(len(df_load_fraction)*train_test_fraction)
+	
+	n_train_samples = int(n_train_test_samples*train_fraction)
+	n_test_samples = n_train_test_samples -	 n_train_samples
+	n_eval_samples = n_available_samples - n_train_test_samples #len(df_load_fraction) - n_train_test_samples
+	
+	print(f"Total train samples:{n_train_samples}")
+	print(f"Total test samples:{n_test_samples}")
+	print(f"Total eval samples:{n_eval_samples}")
+	available_timestamps = list(timestamps)
+	train_timestamps = available_timestamps[0:n_train_samples]
+	test_timestamps = available_timestamps[n_train_samples:n_train_samples+n_test_samples]
+	eval_timestamps = available_timestamps[n_train_samples+n_test_samples:n_train_samples+n_test_samples+n_eval_samples]
+	print(f"Train samples:{len(train_timestamps)},Test nodes:{len(test_timestamps)},Eval nodes:{len(eval_timestamps)}")
+	
+	return train_timestamps,test_timestamps,eval_timestamps
+
+def df_to_tfdataset(df,selected_columns:List[str]):
+	"""Convert dataframe to a tfdataset"""
+	
+	print(f"Selecting:{selected_columns} from df to create numeric tfdataset...")
+	dataset = tf.data.Dataset.from_tensor_slices(df[selected_columns])
+	print(f"Dataset cardinality:{tf.data.experimental.cardinality(dataset)}")
+	
+	return dataset
+def tfdataset_to_windowed_tfdataset(dataset,window_size:int):
+	"""Create windowed dataset from dataframe"""
+		
+	dataset = dataset.window(window_size, shift=1, drop_remainder=True)
+	dataset = dataset.flat_map(lambda window: window.batch(window_size + 1))
+
+	return dataset
+
+

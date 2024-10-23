@@ -3,28 +3,21 @@ Created on Wed December 5 10:00:00 2022
 @author: Siby Plathottam
 """
 
-import os
-import sys
-import time
 import math
-import pickle
-import random
 from typing import List, Set, Dict, Tuple, Optional, Union
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tqdm import tqdm
 from pandas.tseries.offsets import DateOffset
-from numpy.random import default_rng
 
-def compare_performance_moving_window(df,predictions,load_block_length,input_features,target_features, n_windows = 3000000,alternate_predictions={}):
+def compare_performance_moving_window(df:pd.Dataframe,predictions,window_size:int,input_features:List,target_features, n_windows:int = 3000000,alternate_predictions:Dict={}):
 	"""Compare performance for moving window"""
 	
 	dataset_input =tf.keras.utils.timeseries_dataset_from_array(
 							data=df[input_features].values,
 							targets = None,
-							sequence_length =load_block_length,
+							sequence_length =window_size,
 							sequence_stride=1,
 							sampling_rate=1,
 							batch_size=None,

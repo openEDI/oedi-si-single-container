@@ -80,7 +80,7 @@ def get_config_dict(config_file):
 	
 	assert ".json" in config_file, f"{config_file} should be JSON file!"
 	if not os.path.exists(config_file):
-		raise ValueError(f"{config_file} is not a valid file!")
+		raise ValueError(f"{config_file} is found!")
 	else:
 		print(f"Reading following config file:{config_file}")
 	
@@ -199,8 +199,8 @@ def get_n_days_in_df(df,datetime_column = "datetime"):
 
 	# calculate the number of days for each month
 	for name, group in df_month:
-		n_days = n_days + (group['datetime'].max() - group['datetime'].min()).days + 1
-		print(f"Month: {name.month}, Number of days: {(group['datetime'].max() - group['datetime'].min()).days + 1}")
+		n_days = n_days + (group[datetime_column].max() - group[datetime_column].min()).days + 1
+		print(f"Month: {name.month}, Number of days: {(group[datetime_column].max() - group[datetime_column].min()).days + 1}")
 	
 	return n_days
 

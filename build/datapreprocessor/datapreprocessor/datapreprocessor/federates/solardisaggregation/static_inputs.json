@@ -1,0 +1,9 @@
+{
+"model_archivepath":"app/solardisaggregation/model_archives/da_model-solarpower-123Bus_m-Jul_w-4_f-5-bilstm_v0.keras",
+"model_format":"keras",
+"monitored_solar_nodes":["s100c","s102c"],
+"initial_measurements":{"s100c":10.0,"s102c":10.0},
+"window_size":4,
+"input_features":["net_load", "cos_hour", "sin_hour", "cos_day_of_week", "sin_day_of_week"]
+
+}
