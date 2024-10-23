@@ -7,8 +7,7 @@
 "distribution_system_file":"opendss/8500Bus/master.dss",
 "measurement_column":"load_value",
 "load_scaling_mode":"simple",
-"upsample_original_time_series":true,
-"upsample_time_period":"15Min"},
+"sample_time_period":"15Min"},
 
 "train_data_details":{
 "corrupted_fraction":0.05,

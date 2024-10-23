@@ -49,8 +49,7 @@ config_dict= get_config_dict(config_file)
 selected_timeseries_files = [os.path.join(workDir,timeseries_file) for timeseries_file in config_dict["nodeload_data_details"]["selected_timeseries_files"]] #Specify file containing zip code level time series data from individual smart meters
 
 ## Specify details of anonymized node load profiles
-upsample_original_time_series = config_dict["nodeload_data_details"]["upsample_original_time_series"] # Should the original time series be upsampled
-upsample_time_period = config_dict["nodeload_data_details"]["upsample_time_period"] #"Time period of upsampling
+sample_time_period = config_dict["nodeload_data_details"]["sample_time_period"] #"Time period of upsampling
 selected_month = config_dict["nodeload_data_details"]["selected_month"] #2 # The month for which we are developing the model
 distribution_system = config_dict["nodeload_data_details"]["distribution_system"] ##The distribution system we are generating the profiles
 distribution_system_file = config_dict["nodeload_data_details"]["distribution_system_file"] ##The opendss file
@@ -88,7 +87,7 @@ monitored_metric = "val_loss"#"val_mean_absolute_error" # Performance metric mon
 model_identifier = config_dict["model_training_details"]["model_identifier"]  #"v0"
 
 ## Generated averaged load profiles for all load type within the selected time series file
-df_averaged_load,df_averaged_day_load = create_average_timeseries_profiles(timeseries_files=selected_timeseries_files,month=selected_month,convert_to_kW=True,upsample=upsample_original_time_series,upsample_time_period=upsample_time_period)
+df_averaged_load,df_averaged_day_load = create_average_timeseries_profiles(timeseries_files=selected_timeseries_files,month=selected_month,convert_to_kW=True,sample_time_period=sample_time_period)
 ## Generate anonymized node load profiles for the selected distribution system model
 df_node_load,load_node_dict = generate_load_node_profiles(df_averaged_day_load,case_file=opendss_casefile,n_nodes=n_nodes,n_days=n_days,start_year = 2016,start_month=selected_month,start_day=1,scaling_type=load_scaling_mode)
 

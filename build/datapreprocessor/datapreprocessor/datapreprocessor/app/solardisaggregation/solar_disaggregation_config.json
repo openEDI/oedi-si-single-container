@@ -10,8 +10,7 @@
 "distribution_system_file":"opendss/123Bus/case123.dss",
 "measurement_column":"net_load",
 "load_scaling_mode":"simple",
-"upsample_original_time_series":true,
-"upsample_time_period":"15Min"},
+"sample_time_period":"15Min"},
 
 "train_data_details":{
 "cyclical_features":["hour_of_day","day_of_week","weekend"],
