@@ -4,6 +4,8 @@ import uuid
 import re
 import json
 import pdb
+import subprocess
+import shlex
 from io import StringIO
 
 import pandas as pd
@@ -202,12 +204,15 @@ def stop(podman):
 	help="Python command to use i.e. python or python3")
 @click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
 @click.option("-t","--tag", required=False, default=defaultConfig['tag'], help="Tag to be applied during docker build")
-def set_default(python_cmd,podman,tag):
+@click.option("-r","--run_as_admin", required=False, default=defaultConfig['run_as_admin'],\
+	help="Should docker be run as root",type=bool)
+def set_default(python_cmd,podman,tag,run_as_admin):
 	"""Set default settings"""
 	defaultConfig=json.load(open(defaultConfigPath))
 	defaultConfig['python_cmd']=python_cmd
 	defaultConfig['podman']=podman
 	defaultConfig['tag']=tag
+	defaultConfig['run_as_admin']=run_as_admin
 	json.dump(defaultConfig,open(defaultConfigPath,'w'),indent=3)
 
 
@@ -236,5 +241,72 @@ def list_tags(podman):
 	print([f'{name}:{entry}' for entry in availableTags])
 
 
+@main.command(name="gui_start")
+@click.option("-r","--run_as_admin", required=False, default=defaultConfig['run_as_admin'],\
+	help="Should docker be run as root",type=bool)
+@click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
+def gui_start(run_as_admin,podman):
+	"""Starts GUI containers -- uiruntime and uiserver"""
+	containerEngine='podman' if podman else 'docker'
+
+	directive=''
+	if run_as_admin:
+		directive+='sudo '
+
+	directive+=f'{containerEngine} run --rm --name='
+	proc1=subprocess.Popen(shlex.split(f'{directive}uiruntime --net=host uiruntime:sc'),shell=False,\
+		stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+	proc2=subprocess.Popen(shlex.split(f'{directive}uiserver --net=host uiserver:latest'),shell=False,\
+		stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+
+
+@main.command(name="gui_stop")
+@click.option("-r","--run_as_admin", required=False, default=defaultConfig['run_as_admin'],\
+	help="Should docker be run as root",type=bool)
+@click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
+def gui_stop(run_as_admin,podman):
+	containerEngine='podman' if podman else 'docker'
+
+	directive=''
+	if run_as_admin:
+		directive+='sudo '
+
+	os.system(directive+f'{containerEngine} stop -t=0 uiruntime')
+	os.system(directive+f'{containerEngine} stop -t=0 uiserver')
+
+
+@main.command(name="gui_status")
+@click.option("-r","--run_as_admin", required=False, default=defaultConfig['run_as_admin'],\
+	help="Should docker be run as root",type=bool)
+@click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
+def gui_status(run_as_admin,podman):
+	containerEngine='podman' if podman else 'docker'
+	directive=''
+	if run_as_admin:
+		directive+='sudo '
+	os.system(directive+f'{containerEngine} ps --filter name=ui')
+
+
+@main.command(name="gui_update")
+def gui_update():
+	pass
+
+
+@main.command(name="gui_list_images")
+@click.option("-r","--run_as_admin", required=False, default=defaultConfig['run_as_admin'],\
+	help="Should docker be run as root",type=bool)
+@click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
+def gui_list_images(run_as_admin,podman):
+	containerEngine='podman' if podman else 'docker'
+	directive=''
+	if run_as_admin:
+		directive+='sudo '
+	os.system(directive+f'{containerEngine} images "ui*"')
+
+
+
+
 if __name__ == '__main__':
 	main()
+
+
