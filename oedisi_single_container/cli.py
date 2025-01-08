@@ -254,9 +254,9 @@ def gui_start(run_as_admin,podman):
 		directive+='sudo '
 
 	directive+=f'{containerEngine} run --rm --name='
-	proc1=subprocess.Popen(shlex.split(f'{directive}uiruntime --net=host uiruntime:sc'),shell=False,\
+	proc1=subprocess.Popen(shlex.split(f'{directive}uiruntime --net=host openenergydatainitiative/uiruntime:latest'),shell=False,\
 		stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-	proc2=subprocess.Popen(shlex.split(f'{directive}uiserver --net=host uiserver:latest'),shell=False,\
+	proc2=subprocess.Popen(shlex.split(f'{directive}uiserver --net=host openenergydatainitiative/uiserver:latest'),shell=False,\
 		stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
 
@@ -288,8 +288,16 @@ def gui_status(run_as_admin,podman):
 
 
 @main.command(name="gui_update")
-def gui_update():
-	pass
+@click.option("-r","--run_as_admin", required=False, default=defaultConfig['run_as_admin'],\
+	help="Should docker be run as root",type=bool)
+@click.option("--podman", required=False, default=defaultConfig['podman'], help="Use podman instead of docker")
+def gui_update(run_as_admin,podman):
+	containerEngine='podman' if podman else 'docker'
+	directive=''
+	if run_as_admin:
+		directive+='sudo '
+	os.system(directive+"docker pull openenergydatainitiative/uiruntime:latest")
+	os.system(directive+"docker pull openenergydatainitiative/uiserver:latest")
 
 
 @main.command(name="gui_list_images")
