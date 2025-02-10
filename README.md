@@ -86,3 +86,6 @@ One can integrate DSSE (supported in this version) and DOPF (to be supported in 
 # Deep Dive
 * [Build and Runtime System](docs/build_and_runtime_system.md)
 * [Data Preprocessor](docs/data_preprocessor.md)
+
+# Edit Scenario
+* [Using CLI for Edit Scenario](docs/edit_scenario_uiruntime_uiserver.md)
