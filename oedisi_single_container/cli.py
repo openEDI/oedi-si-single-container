@@ -252,12 +252,16 @@ def gui_start(run_as_admin,podman):
 	directive=''
 	if run_as_admin:
 		directive+='sudo '
-
 	directive+=f'{containerEngine} run --rm --name='
+
+	f_rtout=open(os.path.join(baseDir,'logs','uiruntime_out'),'w')
+	f_rterr=open(os.path.join(baseDir,'logs','uiruntime_err'),'w')
+	f_servout=open(os.path.join(baseDir,'logs','uiserver_out'),'w')
+	f_serverr=open(os.path.join(baseDir,'logs','uiserver_err'),'w')
 	proc1=subprocess.Popen(shlex.split(f'{directive}uiruntime --net=host openenergydatainitiative/uiruntime:latest'),shell=False,\
-		stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+		stdout=f_rtout,stderr=f_rterr)
 	proc2=subprocess.Popen(shlex.split(f'{directive}uiserver --net=host openenergydatainitiative/uiserver:latest'),shell=False,\
-		stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+		stdout=f_servout,stderr=f_serverr)
 
 
 @main.command(name="gui_stop")
@@ -310,6 +314,29 @@ def gui_list_images(run_as_admin,podman):
 	if run_as_admin:
 		directive+='sudo '
 	os.system(directive+f'{containerEngine} images "ui*"')
+
+
+@main.command(name="gui_get_logs")
+def gui_get_logs():
+	"""Gets the current uiruntime and uiserver logs"""
+
+	data='\nuiserver\n'+'='*len('uiserver')+'\n\n'
+	for entry in ['uiserver_out','uiserver_err']:
+		f=open(os.path.join(baseDir,'logs',entry),'r')
+		thisFileData=f.read()
+		if thisFileData:
+			data+=thisFileData+'\n\n'
+		f.close()
+
+	data+='uiruntime\n'+'='*len('uiruntime')+'\n\n'
+	for entry in ['uiruntime_out','uiruntime_err']:
+		f=open(os.path.join(baseDir,'logs',entry),'r')
+		thisFileData=f.read()
+		if thisFileData:
+			data+=thisFileData+'\n\n'
+		f.close()
+
+	print(data)
 
 
 
