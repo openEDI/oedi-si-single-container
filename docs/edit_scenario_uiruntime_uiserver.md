@@ -37,3 +37,9 @@ The following command will stop both the UIRuntime and UIServer containers. Most
 To get the status of the UIRuntime and UIServer containers use,
 
     oedisisc gui_status
+
+## Getting UIRuntime and UIServer Logs
+
+To get the status of the UIRuntime and UIServer containers use,
+
+    oedisisc gui_get_logs

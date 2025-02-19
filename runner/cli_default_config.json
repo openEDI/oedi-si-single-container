@@ -1,6 +1,6 @@
 {
-   "podman": false,
-   "python_cmd": "python3",
+   "podman": true,
+   "python_cmd": "python",
    "tag": "singlecontainerapp:0.2.1",
-   "run_as_admin": true
+   "run_as_admin": false
 }

@@ -300,8 +300,8 @@ def gui_update(run_as_admin,podman):
 	directive=''
 	if run_as_admin:
 		directive+='sudo '
-	os.system(directive+"docker pull openenergydatainitiative/uiruntime:latest")
-	os.system(directive+"docker pull openenergydatainitiative/uiserver:latest")
+	os.system(directive+f"{containerEngine} pull openenergydatainitiative/uiruntime:latest")
+	os.system(directive+f"{containerEngine} pull openenergydatainitiative/uiserver:latest")
 
 
 @main.command(name="gui_list_images")
