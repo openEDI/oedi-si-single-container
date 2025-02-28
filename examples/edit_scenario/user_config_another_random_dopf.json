@@ -1,0 +1,28 @@
+{
+   "name": "runtime_example_1",
+   "use_oedisi_runtime": true,
+   "oedisi_runtime_federates": [
+   ],
+   "oedisi_preprocessor_federates": [
+   ],
+   "user_provided_federates": [
+      {
+         "name": "another_random_dopf",
+         "language": "python",
+         "executable": "python main.py",
+         "application_type": "dopf",
+         "filepath": "main.py",
+         "parameters": {},
+         "user_model_name":"another_random_dopf"
+      }
+   ],
+   "run_broker": true,
+   "simulation_config": {
+      "opendss_location": "data/smartds_small",
+      "profile_location": "data/smartds_small/profiles",
+      "sensor_location": "data/smartds_small/sensors",
+      "start_date": "2024-01-01 00:00:00",
+      "number_of_timesteps": 4,
+      "run_freq_sec": 900
+   }
+}

@@ -1,0 +1,20 @@
+{
+   "name": "Extended_Kalman_Filter_DSSE",
+   "use_oedisi_runtime": true,
+   "oedisi_runtime_federates": [
+      "dsseekf"
+   ],
+   "oedisi_preprocessor_federates": [
+   ],
+   "user_provided_federates": [
+   ],
+   "run_broker": true,
+   "simulation_config": {
+      "opendss_location": "data/ieee123",
+      "profile_location": "data/ieee123/profiles",
+      "sensor_location": "data/ieee123/sensors",
+      "start_date": "2024-01-01 00:00:00",
+      "number_of_timesteps": 4,
+      "run_freq_sec": 900
+   }
+}

@@ -1,0 +1,21 @@
+{
+   "name": "runtime_example_1",
+   "use_oedisi_runtime": false,
+   "oedisi_runtime_federates": [
+      "dopfnlp"
+   ],
+   "oedisi_preprocessor_federates": [
+   ],
+   "user_provided_federates": [
+   ],
+   "run_broker": true,
+   "simulation_config": {
+      "opendss_location": "data/smartds_large",
+      "profile_location": "data/smartds_large/profiles",
+      "sensor_location": "data/smartds_large/sensors",
+      "start_date": "2024-01-01 00:00:00",
+      "number_of_timesteps": 4,
+      "run_freq_sec": 900
+   }
+}
+

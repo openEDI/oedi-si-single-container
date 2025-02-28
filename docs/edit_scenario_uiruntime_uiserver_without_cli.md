@@ -30,11 +30,11 @@ P.S. You will need to do this only once.
 
 uiruntime
 
-    docker uiruntime --net=oedisi_local_network --ip=172.20.0.2 -p 12500:12500 openenergydatainitiative/uiruntime:lates
+    docker run --name=uiruntime --net=oedisi_local_network --ip=172.20.0.2 -p 12500:12500 openenergydatainitiative/uiruntime:latest
 
 uiserver
 
-    docker uiserver --net=oedisi_local_network --ip=172.20.0.3 -p 8080:80 openenergydatainitiative/uiserver:latest
+    docker run --name=uiserver --net=oedisi_local_network --ip=172.20.0.3 -p 8080:80 openenergydatainitiative/uiserver:latest
 
 ## Stop the Container
 
@@ -46,4 +46,23 @@ uiserver
 
     docker stop -t=0 uiserver
 
+## Loading the webpage
 
+Open your browser and go to the following address,
+
+For edit scenario,
+
+    localhost:8080
+
+For analysis (viewing logs and visualization)
+
+    localhost:8080/analysis
+
+If localhost does not resolve as expected, then replace it with 127.0.0.1
+
+
+## Examples
+
+You can find sample configurations at the following folder,
+
+    examples/edit_scenario/

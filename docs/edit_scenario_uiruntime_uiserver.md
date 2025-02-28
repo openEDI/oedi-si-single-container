@@ -43,3 +43,25 @@ To get the status of the UIRuntime and UIServer containers use,
 To get the status of the UIRuntime and UIServer containers use,
 
     oedisisc gui_get_logs
+
+## Loading the webpage
+
+Open your browser and go to the following address,
+
+For edit scenario,
+
+    localhost:8080
+
+For analysis (viewing logs and visualization)
+
+    localhost:8080/analysis
+
+If localhost does not resolve as expected, then replace it with 127.0.0.1
+
+
+## Examples
+
+You can find sample configurations at the following folder,
+
+    examples/edit_scenario/
+
