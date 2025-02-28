@@ -249,6 +249,18 @@ def gui_start(run_as_admin,podman):
 	"""Starts GUI containers -- uiruntime and uiserver"""
 	containerEngine='podman' if podman else 'docker'
 
+	# check if oedisi_local_network exists
+	thisUUID=uuid.uuid4().hex
+	tempFPath=f'{thisUUID}.txt'
+	prefix=''
+	if run_as_admin:
+		prefix+='sudo '
+	os.system(f'{prefix}{containerEngine} network ls > {tempFPath}')
+	f=open(tempFPath); availableNetworks=f.read(); f.close(); os.remove(tempFPath)
+	if not 'oedisi_local_network' in availableNetworks:
+		directive=f'{prefix}{containerEngine} network create --gateway 172.20.0.1 --subnet 172.20.0.0/24 oedisi_local_network'
+		os.system(directive)
+
 	directive=''
 	if run_as_admin:
 		directive+='sudo '
@@ -258,10 +270,11 @@ def gui_start(run_as_admin,podman):
 	f_rterr=open(os.path.join(baseDir,'logs','uiruntime_err'),'w')
 	f_servout=open(os.path.join(baseDir,'logs','uiserver_out'),'w')
 	f_serverr=open(os.path.join(baseDir,'logs','uiserver_err'),'w')
-	proc1=subprocess.Popen(shlex.split(f'{directive}uiruntime --net=host openenergydatainitiative/uiruntime:latest'),shell=False,\
-		stdout=f_rtout,stderr=f_rterr)
-	proc2=subprocess.Popen(shlex.split(f'{directive}uiserver --net=host openenergydatainitiative/uiserver:latest'),shell=False,\
-		stdout=f_servout,stderr=f_serverr)
+
+	proc1=subprocess.Popen(shlex.split(f'{directive}uiruntime --net=oedisi_local_network --ip=172.20.0.2 -p 12500:12500 openenergydatainitiative/uiruntime:latest'),\
+		shell=False,stdout=f_rtout,stderr=f_rterr)
+	proc2=subprocess.Popen(shlex.split(f'{directive}uiserver --net=oedisi_local_network --ip=172.20.0.3 -p 8080:80 openenergydatainitiative/uiserver:latest'),\
+		shell=False,stdout=f_servout,stderr=f_serverr)
 
 
 @main.command(name="gui_stop")
