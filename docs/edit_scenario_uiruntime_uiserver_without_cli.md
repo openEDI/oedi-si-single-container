@@ -30,11 +30,11 @@ P.S. You will need to do this only once.
 
 uiruntime
 
-    docker run --name=uiruntime --net=oedisi_local_network --ip=172.20.0.2 -p 12500:12500 openenergydatainitiative/uiruntime:latest
+    docker run --rm --name=uiruntime --net=oedisi_local_network --ip=172.20.0.2 -p 12500:12500 openenergydatainitiative/uiruntime:latest
 
 uiserver
 
-    docker run --name=uiserver --net=oedisi_local_network --ip=172.20.0.3 -p 8080:80 openenergydatainitiative/uiserver:latest
+    docker run --rm --name=uiserver --net=oedisi_local_network --ip=172.20.0.3 -p 8080:80 openenergydatainitiative/uiserver:latest
 
 ## Stop the Container
 
@@ -66,3 +66,25 @@ If localhost does not resolve as expected, then replace it with 127.0.0.1
 You can find sample configurations at the following folder,
 
     examples/edit_scenario/
+
+## Troubleshooting
+
+### Conflict, container name already in use
+
+This implies that a previously run container is either still running or stopped but not removed. The following command will list running containers,
+
+    docker ps
+
+If **uiruntime** and/or **uiserver** is in the list, then you can use,
+
+    docker stop -t=0 uiruntime
+    docker stop -t=0 uiserver
+
+The **ps** command with **-a** flag will list all containers, even the stopped ones. 
+
+    docker ps -a
+
+If **uiruntime** and/or **uiserver** is in the list, then you can use,
+
+    docker container rm uiruntime
+    docker container rm uiserver
