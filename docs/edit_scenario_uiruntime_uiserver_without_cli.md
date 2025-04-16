@@ -34,7 +34,7 @@ uiruntime
 
 uiserver
 
-    docker run --rm --name=uiserver --net=oedisi_local_network --ip=172.20.0.3 -p 8080:80 openenergydatainitiative/uiserver:latest
+    docker run --rm --name=uiserver --net=oedisi_local_network --ip=172.20.0.3 -p 8080:80 -p 8088:8088 openenergydatainitiative/uiserver:latest
 
 ## Stop the Container
 
@@ -54,12 +54,13 @@ For edit scenario,
 
     localhost:8080
 
-For analysis (viewing logs and visualization)
+For analysis (viewing logs and visualization). This page can also be reached by clicking the "Dashboard" button on localhost:8080.
 
     localhost:8080/analysis
 
 If localhost does not resolve as expected, then replace it with 127.0.0.1
 
+The analysis page comes with an interactive wiring diagram (flow chart on the left side of the screen). Each block in the wiring diagram is clickable. The context of the click is dependent on the "View Type" selection on the right panel i.e. log or plot. When the view type selection is log, a click event on the wiring diagram block will display that federates log output. The plot event context is available only for the rightmost recorder federates i.e. federates with the naming convention "recorder_*".   
 
 ## Examples
 
