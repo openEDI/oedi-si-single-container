@@ -30,7 +30,7 @@ P.S. You will need to do this only once.
 
 uiruntime
 
-    docker run --rm --name=uiruntime --net=oedisi_local_network --ip=172.20.0.2 -p 12500:12500 openenergydatainitiative/uiruntime:latest
+    docker run --rm --name=uiruntime --net=oedisi_local_network --ip=172.20.0.2 -p 12500:12500 -p 8888:8888 openenergydatainitiative/uiruntime:latest
 
 uiserver
 
@@ -89,3 +89,7 @@ If **uiruntime** and/or **uiserver** is in the list, then you can use,
 
     docker container rm uiruntime
     docker container rm uiserver
+
+## Getting system_runner
+
+    http://127.0.0.1:12500/get_system_runner?uuid=<uuid>
